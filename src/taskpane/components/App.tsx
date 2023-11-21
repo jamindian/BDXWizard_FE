@@ -3,7 +3,7 @@ import * as React from "react";
 import { makeStyles } from "@fluentui/react-components";
 import AuthContext from "../context/AuthContext";
 import AppLoader from "./AppLoader";
-import DashboardButtonsGroup from "./DashboardButtons/DashboardButtons";
+import DashboardButtons from "./DashboardButtons/DashboardButtons";
 
 const useStyles = makeStyles({
   root: {
@@ -19,7 +19,7 @@ const App = () => {
     <AuthContext.Provider value={{ setLoader }}>
       <div className={styles.root}>
         {loader ? <AppLoader /> : null}
-        <DashboardButtonsGroup />
+        <DashboardButtons />
       </div>
     </AuthContext.Provider>
   );

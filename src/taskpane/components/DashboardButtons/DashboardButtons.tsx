@@ -3,8 +3,11 @@ import React, { useState, FC } from "react";
 import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
+import AutoGraphIcon from "@mui/icons-material/AutoGraph";
+import AuthContext from "../../context/AuthContext";
 
-const DashboardButtonsGroup: FC<{}> = () => {
+const DashboardButtons: FC<{}> = () => {
+  const { setLoader } = React.useContext(AuthContext);
   const toastId = React.useRef(null);
 
   const [activeBtn, setActiveBtn] = useState<
@@ -47,7 +50,7 @@ const DashboardButtonsGroup: FC<{}> = () => {
       label: "Append Claim BDX",
       icon: <HealingIcon />,
       hover: "append_claim_bdx",
-      onClick: () => console.log(),
+      onClick: () => setLoader(true),
     },
     {
       id: 3,
@@ -85,6 +88,15 @@ const DashboardButtonsGroup: FC<{}> = () => {
       hover: "merge_premium_bdx",
       onClick: () => console.log(),
     },
+    {
+      id: 6,
+      condition: true,
+      disabled: false,
+      label: "Train AI",
+      icon: <AutoGraphIcon />,
+      hover: "train_AI",
+      onClick: () => console.log()
+    },
   ];
 
   return (
@@ -107,4 +119,4 @@ const DashboardButtonsGroup: FC<{}> = () => {
   );
 };
 
-export default DashboardButtonsGroup;
+export default DashboardButtons;
