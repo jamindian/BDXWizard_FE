@@ -6,7 +6,6 @@ import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AuthContext from "@context/AuthContext";
 import { onCleanSOV } from "@taskpaneutilities/Office-helper";
-import { tryCatch } from "@taskpaneutilities/Helpers";
 
 const DashboardButtons: FC<{}> = () => {
   const { setLoader } = React.useContext(AuthContext);
@@ -40,7 +39,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Claim BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => tryCatch(onCleanSOV(setLoader), setLoader),
+      onClick: () => onCleanSOV(setLoader),
     },
     {
       id: 2,
@@ -67,7 +66,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Premium BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_premium_bdx",
-      onClick: () => tryCatch(onCleanSOV(setLoader), setLoader),
+      onClick: () => onCleanSOV(setLoader),
     },
     {
       id: 5,

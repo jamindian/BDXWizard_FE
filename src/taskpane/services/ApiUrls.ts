@@ -5,6 +5,7 @@ class Urls {
   public readonly mapColumns = '/process/map-columns/';
   public readonly stagingColumnsToMap  = '/meta_data/staging_area_column/staging-columns-to-map/';
   public readonly downloadCustomTemplate = '';
+  public readonly trainAI = '/process/save-maps/';
 }
   
 const ApiUrls = new Urls();

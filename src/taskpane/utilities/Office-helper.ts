@@ -9,6 +9,7 @@ import { isEqual, uniqWith } from "lodash";
 import NetworkCalls from "../services/ApiNetworkCalls";
 
 export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void> {
+  const { worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
     workbook.load(ExcelLoadEnumerator.name);
@@ -16,7 +17,6 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
 
     let sheets: Excel.WorksheetCollection = workbook.worksheets;
     sheets.load(ExcelLoadEnumerator.items_name);
-    let activeWorkSheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
     await context.sync();
 
     if (workbook.protection.protected) {
@@ -31,7 +31,7 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
 
     // add new tab called TempData
     let sheet: Excel.Worksheet = workbook.worksheets.getItemOrNullObject(
-      activeWorkSheet.name.split(" ").join("") + "Temp DataSheet"
+      worksheetName + " Temp DataSheet"
     );
     await context.sync();
 
@@ -40,10 +40,10 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
     if (!sheet.isNullObject) {
       sheet.delete();
     }
-    sheet = sheets.add(activeWorkSheet.name.split(" ").join("") + "Temp DataSheet");
+    sheet = sheets.add(worksheetName + " Temp DataSheet");
 
     // activate newly added tab
-    sheet = context.workbook.worksheets.getItem(activeWorkSheet.name.split(" ").join("") + "Temp DataSheet");
+    sheet = context.workbook.worksheets.getItem(worksheetName + " Temp DataSheet");
     sheet.activate();
     await context.sync();
 
@@ -88,11 +88,9 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
     sheet.getRange("B2:" + last_cell.address).load(ExcelLoadEnumerator.address);
     sheet.getRange("B2:" + last_cell.address).load(ExcelLoadEnumerator.rowCount);
 
-    sheet.activate();
-
     // Convert the range to a table.
     let tempTable: Excel.Table = sheet.tables.add("A1:" + end_cell.address, true);
-    tempTable.name = activeWorkSheet.name.split(" ").join("") + "TempTable";
+    tempTable.name = worksheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(" ").join("") + "TempTable";
     sheet.visibility = Excel.SheetVisibility.hidden;
     sheet.getUsedRange().format.autofitColumns();
     sheet.getUsedRange().format.autofitRows();
@@ -105,26 +103,32 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
 // function to create statging area sheet and table
 export async function createStagingArea(raw_sov_data: string, setLoader: (f: boolean) => void) {
   try {
-    const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+    const { worksheetName, worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
+    console.log({ worksheetName, worksheetTableName, worksheetStagingArea });
     await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
 
       // get staging area sheet and sync the context
-      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(worksheetName);
+      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(worksheetStagingArea);
       await context.sync();
+
+      console.log("1");
 
       // if  there is already a old staging area sheet available, delete it
       if (!sheet.isNullObject) {
         sheet.delete();
       }
-      sheet = sheets.add(worksheetName);
+      sheet = sheets.add(worksheetStagingArea);
       // activate newly added tab
-      sheet = sheets.getItem(worksheetName);
+      sheet = sheets.getItem(worksheetStagingArea);
       sheet.activate();
       sheet.tabColor = "#0292CF";
+      await context.sync();
+
+      console.log("2");
 
       // get TempData sheet and sync the context
-      let temp_sheet: Excel.Worksheet = sheets.getItem(worksheetName + "Temp DataSheet");
+      let temp_sheet: Excel.Worksheet = sheets.getItem(worksheetName + " Temp DataSheet");
       let last_header_cell = temp_sheet
         .getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")))
         .load(ExcelLoadEnumerator.address);
@@ -445,10 +449,10 @@ export async function stagingTableOnChange(e) {
 }
 
 export async function reCalculate(eventArgs) {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetName);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
     let table: Excel.Table = sheet.tables
       .getItem(worksheetTableName)
       .load(ExcelLoadEnumerator.columns)

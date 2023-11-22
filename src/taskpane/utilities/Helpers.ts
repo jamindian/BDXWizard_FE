@@ -23,8 +23,8 @@ export async function formulaPasteUnPasteWhileChangeMappings(
   event: Excel.WorksheetChangedEventArgs
 ): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
-    const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
-    const sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetName);
+    const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+    const sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
     const table: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.rows);
     await context.sync();
 
@@ -120,9 +120,9 @@ export async function formulaPasteUnPasteWhileChangeMappings(
 
 // function which reads staging area table data and converts formulas and other formats into normal values.
 export async function onConfirmData(showToast: boolean): Promise<void> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetName);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
     await context.sync();
 
     const usedRange: Excel.Range = sheet.getUsedRange();
@@ -143,11 +143,11 @@ export async function unmappedcolumn(
   hitPercentageFunction: boolean,
   changeAddress?: string
 ): Promise<void> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetStagingArea, worksheetTableName, worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const sheet: Excel.Worksheet = sheets.getItem(worksheetName);
+    const sheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
     const stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName);
     const stagingTableHeader = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
     await context.sync();
@@ -161,7 +161,7 @@ export async function unmappedcolumn(
     staging_last_cell.load(ExcelLoadEnumerator.address);
 
     // get tempdata sheet and get last header cell and sync the context
-    let temp_sheet = sheets.getItem(worksheetName + "Temp DataSheet");
+    let temp_sheet = sheets.getItem(worksheetName + " Temp DataSheet");
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -240,11 +240,11 @@ export async function unmappedcolumn(
 }
 
 export async function deleteUnMappedColumnValues(): Promise<void> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetName);
+    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
     const stagingTable: Excel.Table = stagingSheet.tables.getItem(worksheetTableName);
     stagingTable.load(ExcelLoadEnumerator.rows);
     await context.sync();
@@ -287,15 +287,15 @@ export async function deleteUnMappedColumnValues(): Promise<void> {
 }
 
 export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string): Promise<string[]> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
   const manualMappedColumns: string[] = await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetName);
+    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
     await context.sync();
 
     // get TempData sheet and sync the context
-    let temp_sheet = sheets.getItem(worksheetName + "Temp DataSheet");
+    let temp_sheet = sheets.getItem(worksheetName + " Temp DataSheet");
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -440,9 +440,9 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
 }
 
 export async function adjustColorGradients(color: string): Promise<void> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetName);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
     let stagingTable: Excel.Table = sheet.tables
       .getItem(worksheetTableName)
       .load(ExcelLoadEnumerator.columns)
@@ -495,13 +495,13 @@ export async function adjustColorGradients(color: string): Promise<void> {
 }
 
 export async function setStagingAreaColorSchemes(): Promise<void> {
-  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { worksheetStagingArea, worksheetTableName, worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
   const StagingColumns: IStagingAreaColumns = columnsResponse?.data;
 
   await Excel.run(async (context: Excel.RequestContext) => {
     // Format the staging header
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetName);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetStagingArea);
     await context.sync();
     let stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.values);
     stagingTable.load(ExcelLoadEnumerator.columns);

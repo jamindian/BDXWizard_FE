@@ -97,7 +97,7 @@ class Methods {
     return name;
   }
 
-  public async getActiveWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; }> {
+  public async getActiveWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; worksheetStagingArea: string; }> {
     const name: string = await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
       let activeWorkSheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
@@ -107,7 +107,7 @@ class Methods {
 
     global.worksheetName = name;
 
-    return { worksheetName: name, worksheetTableName: `${name.split(' ').join("")}StagingTable` };
+    return { worksheetName: name, worksheetStagingArea: name.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", worksheetTableName: `${name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable` };
   }
 
   public nextChar = (str: string): string => {
