@@ -5,7 +5,7 @@ import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AuthContext from "@context/AuthContext";
-import { onCleanSOV } from "@taskpaneutilities/Office-helper";
+import { onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 
 const DashboardButtons: FC<{}> = () => {
@@ -18,6 +18,7 @@ const DashboardButtons: FC<{}> = () => {
     | "clean_premium_bdx"
     | "append_premium_bdx"
     | "merge_premium_bdx"
+    | "train_AI"
   >("clean_claim_bdx");
 
   const onSetActiveBtn = (
@@ -28,6 +29,7 @@ const DashboardButtons: FC<{}> = () => {
       | "clean_premium_bdx"
       | "append_premium_bdx"
       | "merge_premium_bdx"
+      | "train_AI"
   ): void => {
     setActiveBtn(active);
   };
@@ -40,7 +42,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Claim BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => tryCatch(onCleanSOV(setLoader)),
+      onClick: () => tryCatch(onCleanSOV(setLoader, true)),
     },
     {
       id: 2,
@@ -67,7 +69,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Premium BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_premium_bdx",
-      onClick: () => onCleanSOV(setLoader),
+      onClick: () => tryCatch(onCleanSOV(setLoader, false)),
     },
     {
       id: 5,
@@ -94,7 +96,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Train AI",
       icon: <AutoGraphIcon />,
       hover: "train_AI",
-      onClick: () => console.log(),
+      onClick: () => tryCatch(onTrainAI(setLoader)),
     },
   ];
 

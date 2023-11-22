@@ -5,6 +5,7 @@ import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 /* global document, Office, module, require */
 import "./global.css";
+import Toast from "@components/Toaster";
 
 const rootElement: HTMLElement = document.getElementById("container");
 const root = createRoot(rootElement);
@@ -14,6 +15,9 @@ Office.onReady(() => {
   root.render(
     <FluentProvider theme={webLightTheme}>
       <App />
+      <div className="app-toaster">
+        <Toast />
+      </div>
     </FluentProvider>
   );
 });

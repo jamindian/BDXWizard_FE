@@ -7,7 +7,7 @@ import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constan
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 
-export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void> {
+export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive: boolean): Promise<void> {
   setLoader(true);
   const { worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
@@ -96,12 +96,12 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    await tryCatch(createStagingArea(setLoader));
+    await tryCatch(createStagingArea(setLoader, isClaimActive));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(setLoader): Promise<void> {
+export async function createStagingArea(setLoader, isClaimActive: boolean): Promise<void> {
     const { worksheetName, worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();    await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
 
@@ -135,11 +135,11 @@ export async function createStagingArea(setLoader): Promise<void> {
 
       let result_list = [];
       let match_percentage_list = [];
-      const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+      const columnsResponse = isClaimActive ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
       const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
       let argments: any = {
-        source_columns: StagingColumns?.map(column => column.column_name), category: worksheetName.includes('CLAIMS') ? "Claims" : "Premium"
+        source_columns: StagingColumns?.map(column => column.column_name), category: isClaimActive ? "Claims" : "Premium"
       }
       
       // get map percentage list
@@ -515,5 +515,71 @@ export async function reCalculate(eventArgs) {
         );
       }
     }
+  });
+}
+
+export async function onTrainAI(
+  setloader: (f: boolean) => void
+) {
+  setloader(true);
+
+  await Excel.run(async (context: Excel.RequestContext) => {
+    // get staging area sheet and staging table and sync the context
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+    let stagingTable: Excel.Table = sheet.tables
+      .getItemAt(0)
+      .load(ExcelLoadEnumerator.columns)
+      .load(ExcelLoadEnumerator.columnCount);
+    await context.sync();
+
+    // get TempData sheet and sync the context
+    let temp_sheet: Excel.Worksheet = context.workbook.worksheets.getItem("Temp DataSheet");
+    let last_header_cell = temp_sheet.getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")));
+    last_header_cell.load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    let raw_sov_columns_range: Excel.Range = temp_sheet.getRange("B1:" + last_header_cell.address);
+    raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    // get the staging table coumn count to get last cell address
+    let colLength: number = stagingTable.columns.count;
+    let staging_last_cell = sheet.getCell(1, colLength);
+    staging_last_cell.load(ExcelLoadEnumerator.address);
+    await context.sync();
+    // get mapped coloumns from sourcedata and staging table columns
+    let mapped_columns_range: Excel.Range = sheet.getRange(
+      `C4:${CommonMethods.columnAddressSlice(staging_last_cell.address, 2)}4`
+    );
+    let staging_columns_range: Excel.Range = sheet.getRange(
+      `C15:${CommonMethods.columnAddressSlice(staging_last_cell.address, 2)}15`
+    );
+    await context.sync();
+
+    mapped_columns_range.load(ExcelLoadEnumerator.values);
+    staging_columns_range.load(ExcelLoadEnumerator.values);
+    await context.sync();
+
+    // store user's manuall mappings in the database by sending these mapped columns to the server
+    await NetworkCalls.onTrainAI({
+      mapped_columns: JSON.stringify(mapped_columns_range.values),
+      staging_columns: JSON.stringify(staging_columns_range.values),
+      all_source_column_range: JSON.stringify(raw_sov_columns_range.values),
+    })
+    .then((response) => {
+      if (response.status === API_UNAUTHORISED) {
+        setloader(false);
+      } else {
+        toast.success("Mappings learned.");
+        setloader(false);
+      }
+    })
+    .catch(() => {
+      setloader(false);
+    });
+
+    await context.sync();
+
+    tryCatch(adjustColorGradients(AppColors.primacy_green));
   });
 }
