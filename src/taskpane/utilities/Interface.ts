@@ -40,89 +40,38 @@ export interface IAppColor {
 export interface IStagingAreaColumns {
   FLAG: IColumnIdentify;
   ID: IColumnIdentify;
-  LOCATION_NAME: IColumnIdentify;
-  STREET: IColumnIdentify;	
-  CITY: IColumnIdentify;	
-  STATE: IColumnIdentify;	
-  POSTAL: IColumnIdentify;	
-  REPORTED_COUNTY: IColumnIdentify;
-  MAPPED_COUNTY: IColumnIdentify;	
-  COUNTY_TIER: IColumnIdentify;	
-  HU_ZONE: IColumnIdentify;	
-  EQ_ZONE: IColumnIdentify;	
-  LATITUDE: IColumnIdentify;	
-  LONGITUDE: IColumnIdentify;
-  GEOCODE_CONFIDENCE: IColumnIdentify;
-  GEOCODE_SOURCE: IColumnIdentify;	
-  COUNTRY: IColumnIdentify;
-  ELEVATION: IColumnIdentify;	
-  CONSTRUCTION_CODE: IColumnIdentify;	
-  OCCUPANCY_CODE: IColumnIdentify;	
-  NUMBER_OF_STORIES: IColumnIdentify;	
-  YEAR_BUILT: IColumnIdentify;	
-  FLOOR_AREA: IColumnIdentify;	
-  PRIMARY_BUILDING: IColumnIdentify;	
-  LOCATION_GROUP: IColumnIdentify;	
-  NUMBER_OF_BUILDINGS: IColumnIdentify;	
-  TOTAL_BUILDING_VALUE: IColumnIdentify;	
-  BUILDING_VALUE_1: IColumnIdentify; // Newly added
-  BUILDING_VALUE_2: IColumnIdentify; // Newly added
-  TOTAL_OTHER_VALUE: IColumnIdentify;
-  TOTAL_CONTENTS_VALUE: IColumnIdentify;
-  CONTENTS_VALUE_1: IColumnIdentify; // Newly added
-  CONTENTS_VALUE_2: IColumnIdentify; // Newly added
-  CONTENTS_VALUE_3: IColumnIdentify; // Newly added
-  CONTENTS_VALUE_4: IColumnIdentify; // Newly added
-  CONTENTS_VALUE_5: IColumnIdentify; // Newly added
-  TOTAL_BI_VALUE: IColumnIdentify;
-  BI_VALUE_1: IColumnIdentify; // Newly added
-  BI_VALUE_2: IColumnIdentify; // Newly added
-  TOTAL_INSURED_VALUES: IColumnIdentify;
-  LOCPERILS: IColumnIdentify;
-  LOCLIMITTYPE: IColumnIdentify;
-  BUILDING_LIMIT: IColumnIdentify;
-  OTHER_LIMIT: IColumnIdentify;
-  CONTENTS_LIMIT: IColumnIdentify;	
-  BI_LIMIT: IColumnIdentify;
-  DAYS_COVERED: IColumnIdentify;
-  TOTAL_LIMITS: IColumnIdentify;
-  DEDUCTTYPE: IColumnIdentify;
-  DEDUCTBLDG: IColumnIdentify;
-  DEDUCTOTHER: IColumnIdentify;
-  DEDUCTCONTENT: IColumnIdentify;
-  DEDUCTTIME: IColumnIdentify;
-  SITEDEDUCTIBLE: IColumnIdentify;
-  SPRINKLER: IColumnIdentify;
-  UPGRADE_YEAR: IColumnIdentify;
-  PROTECTION_CLASS: IColumnIdentify;
-  NUMBER_OF_UNITS: IColumnIdentify;
-  ROOF_ANCHORAGE: IColumnIdentify;
-  ROOF_GEOMETRY: IColumnIdentify;
-  ROOF_YEAR_BUILT: IColumnIdentify;
-  WINDOW_PROTECTION: IColumnIdentify;
-  ROOF_COVER: IColumnIdentify;
-  ROOF_DECK: IColumnIdentify;
-  ROOF_PITCH: IColumnIdentify;
-  ROOF_COVER_ATTACHMENT: IColumnIdentify;
-  ROOF_DECK_ATTACHMENT: IColumnIdentify;
-  ROOF_ATTACHED_STRUCTURE: IColumnIdentify;
-  BUILDING_HEIGHT: IColumnIdentify;
-  BUILDING_HEIGHT_UNIT_CODE: IColumnIdentify;
-  FLOORS_OCCUPIED: IColumnIdentify;
-  SHORT_COLUMN: IColumnIdentify;
-  ORNAMENTATION: IColumnIdentify;
-  FIRST_FLOOR_HEIGHT: IColumnIdentify;
-  FIRST_FLOOR_HEIGHT_UNIT: IColumnIdentify;
-  POUNDING: IColumnIdentify;
-  CHIMNEY: IColumnIdentify;
-  FOUNDATION_CONNECTION: IColumnIdentify;
-  TORSION: IColumnIdentify;
-  TANK: IColumnIdentify;
-  BUILDING_SHAPE: IColumnIdentify;
-  BUILDING_CONDITION: IColumnIdentify;
-  REDUNDANCY: IColumnIdentify;
-  EXTERNAL_DOORS: IColumnIdentify;
-  TREE_EXPOSURE: IColumnIdentify;
-  LARGE_MISSILE: IColumnIdentify;
-  WALL_SIDING: IColumnIdentify;
+  INSURER: IColumnIdentify;
+  REPORTING_MONTH: IColumnIdentify;	
+  UNDERWRITING_YEAR: IColumnIdentify;	
+  UMR: IColumnIdentify;	
+  MGA: IColumnIdentify;	
+  TPA: IColumnIdentify;
+  CLAIM_POLICY_NUMBER: IColumnIdentify;	
+  UNIQUE_CLAIM_REFERENCE: IColumnIdentify;	
+  LINE_OF_BUSINESS: IColumnIdentify;	
+  CLASS_OF_BUSINESS: IColumnIdentify;	
+  PRODUCT: IColumnIdentify;	
+  RISK_INCEPTION_DATE: IColumnIdentify;
+  RISK_EXPIRY_DATE: IColumnIdentify;
+  INSURED_NAME: IColumnIdentify;	
+  LOCATION_OF_LOSS_STATE_PROVINCE_TERRITORY_CANTON: IColumnIdentify;
+  RISK_STATE_PROVINCE_TERRITORY_CANTON_ETC: IColumnIdentify;	
+  RISK_COUNTRY: IColumnIdentify;	
+  CLAIM_STATUS: IColumnIdentify;	
+  INCIDENT_TYPECAUSE_OF_LOSS: IColumnIdentify;	
+  LOSS_DESCRIPTION: IColumnIdentify;
+  ORIGINAL_CURRENCY: IColumnIdentify;	
+  NOTIFICATION_DATE: IColumnIdentify;	
+  DATE_OF_LOSS: IColumnIdentify;	
+  CAT_CODE: IColumnIdentify;	
+  TOTAL_TPA_FEES_PAID: IColumnIdentify;	
+  TOTAL_INDEMNITY_PAID: IColumnIdentify;
+  TOTAL_PAID_INCLUDING_FEES: IColumnIdentify;
+  TOTAL_RECOVERY_RESERVES: IColumnIdentify;
+  TOTAL_PAID_LESS_TOTAL_RECOVERIES: IColumnIdentify;
+  TOTAL_TPA_FEES_RESERVES: IColumnIdentify; // Newly added
+  TOTAL_RESERVES_INDEMNITY: IColumnIdentify; // Newly added
+  TOTAL_RESERVES_INCLUDING_FEES: IColumnIdentify; // Newly added
+  'Total Incurred Including Recoveries (excludes Reserve recoveries/salvage)': IColumnIdentify;
+  DATE_CLAIM_FIRST_ADVISED_CLAIMS_MADE_DATE: IColumnIdentify;
 }

@@ -35,6 +35,7 @@
       "@main/*": ["*"],
       "@services/*": ["./src/services/*"],
       "@components/*": ["./src/taskpane/components/*"],
+      "@context/*": ["./src/taskpane/context/*"],
       "@taskpaneutilities/*": ["./src/taskpane/utilities/*"],
       "@taskpane/*": ["./src/taskpane/*"],
     }

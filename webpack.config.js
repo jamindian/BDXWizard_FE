@@ -16,6 +16,16 @@ async function getHttpsOptions() {
 }
 
 module.exports = async (env, options) => {
+
+  const isProduction = options.mode === 'production';
+  const isStaging = options.mode === 'none';
+  const isDevelopment = options.mode === "development";
+  const buildType = isProduction ? "prod" : isStaging ? "stage" : "dev";
+
+  const envFile = isProduction ? '.env.production' : isStaging ? '.env.staging' : '.env.development';
+  const envPath = path.resolve(__dirname, envFile);
+  const envVars = require('dotenv').config({ path: envPath }).parsed || {};
+
   const dev = options.mode === "development";
   const config = {
     devtool: "source-map",
@@ -35,6 +45,7 @@ module.exports = async (env, options) => {
         "@main": path.resolve(__dirname, ''),
         "@services": path.resolve(__dirname, 'src/services/'),
         "@components": path.resolve(__dirname, 'src/taskpane/components/'),
+        "@context": path.resolve(__dirname, 'src/taskpane/context/'),
         "@taskpaneutilities": path.resolve(__dirname, 'src/taskpane/utilities/'),
         "@taskpane": path.resolve(__dirname, 'src/taskpane/')
       },
@@ -108,6 +119,9 @@ module.exports = async (env, options) => {
       }),
       new webpack.ProvidePlugin({
         Promise: ["es6-promise", "Promise"],
+      }),
+      new webpack.DefinePlugin({
+        'process.env': JSON.stringify(envVars),
       }),
     ],
     devServer: {

@@ -138,7 +138,8 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
 
       let result_list = [];
       let match_percentage_list = [];
-      const StagingColumns: IStagingAreaColumns = {} as any;
+      const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+      const StagingColumns: IStagingAreaColumns = columnsResponse?.data;
 
       let argments: any = CommonMethods.rawSOVRangeIntoObjectValues(JSON.parse(raw_sov_data));
       
@@ -334,32 +335,8 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       sheet.activate();
       await context.sync();
 
-      const bv2 = stagingTable.columns
-        .getItem(StagingColumns.BUILDING_VALUE_2.displayName)
-        .getDataBodyRange()
-        .load(ExcelLoadEnumerator.address);
-      const locPerils = stagingTable.columns
-        .getItem(StagingColumns.LOCPERILS.displayName)
-        .getDataBodyRange()
-        .load(ExcelLoadEnumerator.address);
-      const tov = stagingTable.columns
-        .getItem(StagingColumns.TOTAL_OTHER_VALUE.displayName)
-        .getDataBodyRange()
-        .load(ExcelLoadEnumerator.address);
-      const cv5 = stagingTable.columns
-        .getItem(StagingColumns.CONTENTS_VALUE_5.displayName)
-        .getDataBodyRange()
-        .load(ExcelLoadEnumerator.address);
-      await context.sync();
-
-      function sliceAdd(add: string): string {
-        return add.split("!")[1].slice(0, 2);
-      }
-
-      sheet.getRanges(
-        `C4:${sliceAdd(bv2.address)}4, ${sliceAdd(tov.address)}4:${sliceAdd(cv5.address)}4, AK4:AL4, ${sliceAdd(
-          locPerils.address
-        )}4:${lastCellAddress}4`
+      sheet.getRange(
+        `C4:${lastCellAddress}4`
       ).dataValidation.rule = {
         list: {
           inCellDropDown: true,
@@ -383,14 +360,6 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       };
 
       await adjustColorGradients(undefined);
-
-      const construction = stagingTable.columns
-        .getItem(StagingColumns.CONSTRUCTION_CODE.displayName)
-        .getDataBodyRange();
-      const occupancy = stagingTable.columns.getItem(StagingColumns.OCCUPANCY_CODE.displayName).getDataBodyRange();
-      construction.load(ExcelLoadEnumerator.values);
-      occupancy.load(ExcelLoadEnumerator.values);
-      await context.sync();
 
       sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false));
       stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e));

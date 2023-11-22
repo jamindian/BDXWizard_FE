@@ -1,4 +1,4 @@
-import { IStrings, IAppColor } from "@taskpaneutilities/Interface";
+import { IStrings, IAppColor, IStagingAreaColumns } from "@taskpaneutilities/Interface";
 
 export const API_SUCCESS: number = 200;
 export const TEMP_REQUIRED: number = 307;
@@ -33,4 +33,43 @@ export const AppColors: IAppColor = {
   primacy_chart_blue: '#0991cd',
   primacy_chart_yellow: '#f6d458',
   primacy_chart_fadedblue: '#4e81bc',
+};
+
+export const stagingAreaInitialColumns: IStagingAreaColumns = {
+  FLAG: { displayName: '', headerColor: '', bodyColor: '' },
+  ID: { displayName: '', headerColor: '', bodyColor: '' },
+  INSURER: { displayName: '', headerColor: '', bodyColor: '' },
+  REPORTING_MONTH: { displayName: '', headerColor: '', bodyColor: '' },	
+  UNDERWRITING_YEAR: { displayName: '', headerColor: '', bodyColor: '' },	
+  UMR: { displayName: '', headerColor: '', bodyColor: '' },	
+  MGA: { displayName: '', headerColor: '', bodyColor: '' },	
+  TPA: { displayName: '', headerColor: '', bodyColor: '' },
+  CLAIM_POLICY_NUMBER: { displayName: '', headerColor: '', bodyColor: '' },
+  UNIQUE_CLAIM_REFERENCE: { displayName: '', headerColor: '', bodyColor: '' },
+  LINE_OF_BUSINESS: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  CLASS_OF_BUSINESS: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  PRODUCT: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  RISK_INCEPTION_DATE: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  RISK_EXPIRY_DATE: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  INSURED_NAME: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  LOCATION_OF_LOSS_STATE_PROVINCE_TERRITORY_CANTON: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  CAT_CODE: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  CLAIM_STATUS: { displayName: '', headerColor: '', bodyColor: '' }, // Newly added
+  DATE_CLAIM_FIRST_ADVISED_CLAIMS_MADE_DATE: { displayName: '', headerColor: '', bodyColor: '' },
+  DATE_OF_LOSS: { displayName: '', headerColor: '', bodyColor: '' },
+  INCIDENT_TYPECAUSE_OF_LOSS: { displayName: '', headerColor: '', bodyColor: '' },
+  LOSS_DESCRIPTION: { displayName: '', headerColor: '', bodyColor: '' },
+  NOTIFICATION_DATE: { displayName: '', headerColor: '', bodyColor: '' },	
+  ORIGINAL_CURRENCY: { displayName: '', headerColor: '', bodyColor: '' },
+  RISK_COUNTRY: { displayName: '', headerColor: '', bodyColor: '' },
+  RISK_STATE_PROVINCE_TERRITORY_CANTON_ETC: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_INDEMNITY_PAID: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_PAID_INCLUDING_FEES: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_PAID_LESS_TOTAL_RECOVERIES: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_RECOVERY_RESERVES: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_RESERVES_INCLUDING_FEES: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_RESERVES_INDEMNITY: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_TPA_FEES_PAID: { displayName: '', headerColor: '', bodyColor: '' },
+  TOTAL_TPA_FEES_RESERVES: { displayName: '', headerColor: '', bodyColor: '' },
+  "Total Incurred Including Recoveries (excludes Reserve recoveries/salvage)": { displayName: '', headerColor: '', bodyColor: '' },
 };

@@ -4,6 +4,7 @@ import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enu
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
 import { IColumnIdentify, IStagingAreaColumns } from "@taskpaneutilities/Interface";
+import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 
 /** Default helper for invoking an action and handling errors. */
 export async function tryCatch(callback, setLoader: (f: boolean) => void) {
@@ -494,9 +495,10 @@ export async function adjustColorGradients(color: string): Promise<void> {
 }
 
 export async function setStagingAreaColorSchemes(): Promise<void> {
-  const StagingColumns: IStagingAreaColumns = {} as any;
-
   const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+  const StagingColumns: IStagingAreaColumns = columnsResponse?.data;
+
   await Excel.run(async (context: Excel.RequestContext) => {
     // Format the staging header
     let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetName);
@@ -505,12 +507,12 @@ export async function setStagingAreaColorSchemes(): Promise<void> {
     stagingTable.load(ExcelLoadEnumerator.columns);
     await context.sync();
 
-    const _coverageABody = stagingTable.columns.getItem(StagingColumns.BUILDING_VALUE_1.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-    const _tivBody = stagingTable.columns.getItem(StagingColumns.TOTAL_INSURED_VALUES.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+    const _coverageABody = stagingTable.columns.getItem(StagingColumns.TOTAL_PAID_INCLUDING_FEES.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+    const _tivBody = stagingTable.columns.getItem(StagingColumns.TOTAL_INDEMNITY_PAID.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
     await context.sync();
 
     const id = stagingTable.columns.getItem(StagingColumns.ID.displayName).getDataBodyRange();
-    const postalCode = stagingTable.columns.getItem(StagingColumns.POSTAL.displayName).getDataBodyRange();
+    const postalCode = stagingTable.columns.getItem(StagingColumns.PRODUCT.displayName).getDataBodyRange();
     const coverages = sheet.getRange(`${_coverageABody.address}:${_tivBody.address}`);
     await context.sync();
     id.numberFormat = [["#"]];
