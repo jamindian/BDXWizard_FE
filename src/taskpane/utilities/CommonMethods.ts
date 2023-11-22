@@ -96,7 +96,7 @@ class Methods {
     return name;
   }
 
-  public async getActiveWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; worksheetStagingArea: string; }> {
+  public async getActiveWorksheetName(): Promise<string> {
     const name: string = await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
       let activeWorkSheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
@@ -104,10 +104,17 @@ class Methods {
       return activeWorkSheet.name;
     });
 
-    global.worksheetName = name;
+    return name;
+  }
 
-    // return { worksheetName: name, worksheetStagingArea: name.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", worksheetTableName: `${name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable` };
-    return { worksheetName: name, worksheetStagingArea: "Staging Area", worksheetTableName: `StagingTable` };
+  public getActiveWorkSheetAndTableName = (sheetName: string): {activeWorksheetName: string; activeWorksheetStagingAreaTableName: string; activeWorksheetStagingArea: string; activeTempWorksheet: string; activeTempWorksheetTableName: string;} => {
+    return { 
+      activeWorksheetName: sheetName, 
+      activeWorksheetStagingArea: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", 
+      activeWorksheetStagingAreaTableName: `${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable`,
+      activeTempWorksheet: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Temp DataSheet",
+      activeTempWorksheetTableName: `${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}TempdataTable`
+    };
   }
 
   public nextChar = (str: string): string => {
@@ -119,11 +126,11 @@ class Methods {
     return address?.split("!")[1]?.slice(0, sliceIndex);
   };
 
-  public async stagingAreaPercentageFormatGet(): Promise<string[]> {
-    const { worksheetName } = await this.getActiveWorkSheetAndTableName();
+  public async stagingAreaPercentageFormatGet(sheetName: string): Promise<string[]> {
+    const { activeWorksheetStagingArea } = this.getActiveWorkSheetAndTableName(sheetName);
     const results: string[] = await Excel.run(async (context) => {
       const sheets = context.workbook.worksheets;
-      const stagingSheet = sheets.getItem(worksheetName);
+      const stagingSheet = sheets.getItem(activeWorksheetStagingArea);
       await context.sync();
 
       if (!JSON.parse(this.getLocalStorage("result_list"))){

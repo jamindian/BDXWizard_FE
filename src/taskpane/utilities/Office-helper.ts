@@ -7,9 +7,9 @@ import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constan
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 
-export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive: boolean): Promise<void> {
+export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive: boolean, sheetName: string): Promise<void> {
   setLoader(true);
-  const { worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
     workbook.load(ExcelLoadEnumerator.name);
@@ -31,7 +31,7 @@ export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive:
 
     // add new tab called TempData
     let sheet: Excel.Worksheet = workbook.worksheets.getItemOrNullObject(
-      "Temp DataSheet"
+      activeTempWorksheet
     );
     await context.sync();
 
@@ -40,10 +40,10 @@ export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive:
     if (!sheet.isNullObject) {
       sheet.delete();
     }
-    sheet = sheets.add("Temp DataSheet");
+    sheet = sheets.add(activeTempWorksheet);
 
     // activate newly added tab
-    sheet = context.workbook.worksheets.getItem("Temp DataSheet");
+    sheet = context.workbook.worksheets.getItem(activeTempWorksheet);
     sheet.activate();
     await context.sync();
 
@@ -90,38 +90,41 @@ export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive:
 
     // Convert the range to a table.
     let tempTable: Excel.Table = sheet.tables.add("A1:" + end_cell.address, true);
-    tempTable.name = "TempdataTable";
+    tempTable.name = activeTempWorksheetTableName;
     sheet.visibility = Excel.SheetVisibility.hidden;
     sheet.getUsedRange().format.autofitColumns();
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    await tryCatch(createStagingArea(setLoader, isClaimActive));
+    await tryCatch(createStagingArea(setLoader, isClaimActive, sheetName));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(setLoader, isClaimActive: boolean): Promise<void> {
-    const { worksheetName, worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();    await Excel.run(async (context: Excel.RequestContext) => {
+export async function createStagingArea(setLoader, isClaimActive: boolean, sheetName: string): Promise<void> {
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+    await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
 
+      console.log(activeWorksheetStagingArea);
+
       // get staging area sheet and sync the context
-      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(worksheetStagingArea);
+      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(activeWorksheetStagingArea);
       await context.sync();
 
       // if  there is already a old staging area sheet available, delete it
       if (!sheet.isNullObject) {
         sheet.delete();
       }
-      sheet = sheets.add(worksheetStagingArea);
+      sheet = sheets.add(activeWorksheetStagingArea);
       // activate newly added tab
-      sheet = sheets.getItem(worksheetStagingArea);
+      sheet = sheets.getItem(activeWorksheetStagingArea);
       sheet.activate();
       sheet.tabColor = "#0292CF";
       await context.sync();
 
       // get TempData sheet and sync the context
-      let temp_sheet: Excel.Worksheet = sheets.getItem("Temp DataSheet");
+      let temp_sheet: Excel.Worksheet = sheets.getItem(activeTempWorksheet);
       let last_header_cell = temp_sheet
         .getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")))
         .load(ExcelLoadEnumerator.address);
@@ -240,7 +243,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
 
       sheet.getRange("C5").values = [
         [
-          `=IF(LEN(IFERROR(VLOOKUP($B5,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!C$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B5,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!C$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))`,
+          `=IF(LEN(IFERROR(VLOOKUP($B5,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B5,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))`,
         ],
       ];
       sheet.getRange("C6:C9").copyFrom("C5");
@@ -273,7 +276,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
         `${AlphabetsEnumerator.A}15:${lastCellAddress}15`,
         false /*hasHeaders*/
       );
-      StagingTable.name = worksheetTableName;
+      StagingTable.name = activeWorksheetStagingAreaTableName;
       let StagingTableRange: Excel.Range = sheet.getRange(`${AlphabetsEnumerator.A}15:${lastCellAddress}15`);
       StagingTableRange.format.font.size = 14;
 
@@ -288,7 +291,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
 
       sheet.getRange("C16").values = [
         [
-          `=IF(C$13="",IF(LEN(IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!C$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!C$4,TempdataTable[#All],2,FALSE), ""),FALSE),"")),C$13)`,
+          `=IF(C$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),C$13)`,
         ],
       ];
 
@@ -314,7 +317,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
       const finalupdate = [...updatearray];
       const length: number = finalupdate.length;
       finalupdate.map((item, index) => (temp_sheet.getRange("PP" + (index + 2).toString()).values = [[item]]));
-      const stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName);
+      const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
       let visibleRange = stagingTable.getDataBodyRange().getVisibleView();
       await context.sync();
 
@@ -354,12 +357,12 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
         criterion: Excel.ConditionalFormatPresetCriterion.nonBlanks,
       };
 
-      await adjustColorGradients(undefined);
+      await adjustColorGradients(undefined, sheetName);
 
-      sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false));
-      stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e));
+      sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
+      stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
 
-      await setStagingAreaColorSchemes();
+      await setStagingAreaColorSchemes(isClaimActive);
 
       let tablerows: Excel.TableRowCollection = stagingTable.rows;
       tablerows.load(ExcelLoadEnumerator.items);
@@ -373,7 +376,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
         }
       }
 
-      await tryCatch(unmappedcolumn(false, undefined, undefined, false));
+      await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, ""));
       
       toast.success("Staging Area sheet has been successfully created.");
 
@@ -382,7 +385,7 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
         sheet.getUsedRange().format.autofitRows();
       }
 
-      await onConfirmData(false);
+      await onConfirmData(false, sheetName);
       setLoader(false);
     });
 }
@@ -390,12 +393,13 @@ export async function createStagingArea(setLoader, isClaimActive: boolean): Prom
 var debouncedRender = _.debounce(function (
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
+  sheetName: string
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   Excel.run(async (context: Excel.RequestContext) => {
     if (triggerSource) {
-      await formulaPasteUnPasteWhileChangeMappings(event);
+      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
     }
 
     if (triggerSource) {
@@ -412,7 +416,7 @@ var debouncedRender = _.debounce(function (
       }
     }
 
-    await reCalculate(event);
+    await reCalculate(event, sheetName);
 
     return context.sync();
   }).catch(function (error) {
@@ -423,27 +427,28 @@ var debouncedRender = _.debounce(function (
 
 async function stagingAreaSheetOnChanged(
   event: Excel.WorksheetChangedEventArgs,
-  unMappedViaAddRisk: boolean
+  unMappedViaAddRisk: boolean,
+  sheetName: string
 ): Promise<Excel.WorksheetChangedEventArgs> {
-  debouncedRender(event, unMappedViaAddRisk);
+  debouncedRender(event, unMappedViaAddRisk, sheetName);
   return event;
 }
 
-export async function stagingTableOnChange(e) {
+export async function stagingTableOnChange(e, sheetName: string) {
   await Excel.run(async () => {
     if (e.changeType === "RowDeleted" || e.changeType === "RowInserted") {
-      reCalculate(e);
+      reCalculate(e, sheetName);
     }
   });
 }
 
-export async function reCalculate(eventArgs) {
-  const { worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
+export async function reCalculate(eventArgs, sheetName: string) {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     let table: Excel.Table = sheet.tables
-      .getItem(worksheetTableName)
+      .getItem(activeWorksheetStagingAreaTableName)
       .load(ExcelLoadEnumerator.columns)
       .load(ExcelLoadEnumerator.columnCount)
       .load(ExcelLoadEnumerator.rows);
@@ -519,10 +524,12 @@ export async function reCalculate(eventArgs) {
 }
 
 export async function onTrainAI(
-  setloader: (f: boolean) => void
+  setloader: (f: boolean) => void,
+  sheetName: string
 ) {
   setloader(true);
 
+  const { activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table and sync the context
     let sheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
@@ -533,7 +540,7 @@ export async function onTrainAI(
     await context.sync();
 
     // get TempData sheet and sync the context
-    let temp_sheet: Excel.Worksheet = context.workbook.worksheets.getItem("Temp DataSheet");
+    let temp_sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeTempWorksheet);
     let last_header_cell = temp_sheet.getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")));
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();
@@ -580,6 +587,6 @@ export async function onTrainAI(
 
     await context.sync();
 
-    tryCatch(adjustColorGradients(AppColors.primacy_green));
+    tryCatch(adjustColorGradients(AppColors.primacy_green, sheetName));
   });
 }

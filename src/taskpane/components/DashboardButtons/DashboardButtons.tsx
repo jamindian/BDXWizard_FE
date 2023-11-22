@@ -7,6 +7,7 @@ import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AuthContext from "@context/AuthContext";
 import { onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
+import CommonMethods from "@taskpaneutilities/CommonMethods";
 
 const DashboardButtons: FC<{}> = () => {
   const { setLoader } = React.useContext(AuthContext);
@@ -34,6 +35,16 @@ const DashboardButtons: FC<{}> = () => {
     setActiveBtn(active);
   };
 
+  async function onCleanCurrentActiveSheet(isClaim: boolean): Promise<void> {
+    const sheetName: string = await CommonMethods.getActiveWorksheetName();
+    tryCatch(onCleanSOV(setLoader, isClaim, sheetName));
+  }
+
+  async function trainAIOnCurrentSheet(): Promise<void> {
+    const sheetName: string = await CommonMethods.getActiveWorksheetName();
+    tryCatch(onTrainAI(setLoader, sheetName));
+  }
+
   const buttons = [
     {
       id: 1,
@@ -42,7 +53,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Claim BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => tryCatch(onCleanSOV(setLoader, true)),
+      onClick: () => onCleanCurrentActiveSheet(true),
     },
     {
       id: 2,
@@ -69,7 +80,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Premium BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_premium_bdx",
-      onClick: () => tryCatch(onCleanSOV(setLoader, false)),
+      onClick: () => onCleanCurrentActiveSheet(false),
     },
     {
       id: 5,
@@ -96,7 +107,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Train AI",
       icon: <AutoGraphIcon />,
       hover: "train_AI",
-      onClick: () => tryCatch(onTrainAI(setLoader)),
+      onClick: () => trainAIOnCurrentSheet(),
     },
   ];
 

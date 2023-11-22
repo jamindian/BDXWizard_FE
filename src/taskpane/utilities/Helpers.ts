@@ -3,7 +3,7 @@ import { AppColors, Strings } from "@taskpaneutilities/Constants";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
-import { IColumnIdentify, IStagingAreaColumn } from "@taskpaneutilities/Interface";
+import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 
 /** Default helper for invoking an action and handling errors. */
@@ -17,12 +17,13 @@ export async function tryCatch(callback) {
 }
 
 export async function formulaPasteUnPasteWhileChangeMappings(
-  event: Excel.WorksheetChangedEventArgs
+  event: Excel.WorksheetChangedEventArgs,
+  sheetName: string
 ): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
-    const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
-    const sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
-    const table: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.rows);
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+    const sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
+    const table: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.rows);
     await context.sync();
 
     const totalTableRows: number = table.rows.count;
@@ -54,20 +55,20 @@ export async function formulaPasteUnPasteWhileChangeMappings(
       }
 
       // For set Source data sample column cells
-      const formula1: string = `=IF(LEN(IFERROR(VLOOKUP($B5,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B5,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))`;
+      const formula1: string = `=IF(LEN(IFERROR(VLOOKUP($B5,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B5,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))`;
       const basicMainAddress: string = `${actual[0]}${parseInt(actual[1]) + 1}`;
       sheet.getRange(basicMainAddress).values = [[formula1]];
       sheet.getRange(`${actual[0]}6:${actual[0]}9`).copyFrom(basicMainAddress);
 
       // For set Staging Table column cells
-      const formula2: string = `=IF(${actual[0]}$13="",IF(LEN(IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),"")),${actual[0]}$13)`;
+      const formula2: string = `=IF(${actual[0]}$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),${actual[0]}$13)`;
       sheet.getRange(`${actual[0]}16`).values = [[formula2]];
       if (totalTableRows > 1) {
         sheet.getRange(`${actual[0]}17:${actual[0]}${totalTableRows + 17 - 2}`).copyFrom(`${actual[0]}16`);
       }
       await context.sync();
 
-      onConfirmData(false);
+      onConfirmData(false, sheetName);
     } else if (parseInt(actual[1]) === 13) {
       if (!event?.details?.valueAfter) {
         // Check row 4 against this specific column
@@ -84,7 +85,7 @@ export async function formulaPasteUnPasteWhileChangeMappings(
           let startKey: string = actual[0];
           do {
             if (row4.values.flat(1)[k]) {
-              const formula2: string = `=IF(${startKey}$13="",IF(LEN(IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${startKey}$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${startKey}$4,TempdataTable[#All],2,FALSE), ""),FALSE),"")),${startKey}$13)`;
+              const formula2: string = `=IF(${startKey}$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${startKey}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${startKey}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),${startKey}$13)`;
               sheet.getRange(`${startKey}16`).values = [[formula2]];
               sheet.getRange(`${startKey}17:${startKey}${totalTableRows + 17 - 2}`).copyFrom(`${startKey}16`);
             } else {
@@ -95,12 +96,12 @@ export async function formulaPasteUnPasteWhileChangeMappings(
           } while (k < row4.values.flat(1).length);
           return;
         } else {
-          const formula2: string = `=IF(${actual[0]}$13="",IF(LEN(IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,TempdataTable[#All],IFERROR(HLOOKUP('Staging Area'!${actual[0]}$4,TempdataTable[#All],2,FALSE), ""),FALSE),"")),${actual[0]}$13)`;
+          const formula2: string = `=IF(${actual[0]}$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!${actual[0]}$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),${actual[0]}$13)`;
           sheet.getRange(`${actual[0]}16`).values = [[formula2]];
           sheet.getRange(`${actual[0]}17:${actual[0]}${totalTableRows + 17 - 2}`).copyFrom(`${actual[0]}16`);
           await context.sync();
 
-          onConfirmData(false);
+          onConfirmData(false, sheetName);
           return;
         }
       }
@@ -116,10 +117,10 @@ export async function formulaPasteUnPasteWhileChangeMappings(
 }
 
 // function which reads staging area table data and converts formulas and other formats into normal values.
-export async function onConfirmData(showToast: boolean): Promise<void> {
-  const { worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
+export async function onConfirmData(showToast: boolean, sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     await context.sync();
 
     const usedRange: Excel.Range = sheet.getUsedRange();
@@ -138,14 +139,15 @@ export async function unmappedcolumn(
   autoMappedRawColumns: string[] | undefined,
   autoMappedStagingColumns: string[] | undefined,
   hitPercentageFunction: boolean,
+  sheetName: string,
   changeAddress?: string
 ): Promise<void> {
-  const { worksheetStagingArea, worksheetTableName, worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const sheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
-    const stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName);
+    const sheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
     const stagingTableHeader = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
     await context.sync();
 
@@ -158,7 +160,7 @@ export async function unmappedcolumn(
     staging_last_cell.load(ExcelLoadEnumerator.address);
 
     // get tempdata sheet and get last header cell and sync the context
-    let temp_sheet = sheets.getItem("Temp DataSheet");
+    let temp_sheet = sheets.getItem(activeTempWorksheet);
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -221,8 +223,8 @@ export async function unmappedcolumn(
       ) {
         
         if (hitPercentageFunction) {
-          await deleteUnMappedColumnValues();
-          await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress);
+          await deleteUnMappedColumnValues(sheetName);
+          await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress, sheetName);
         }
       
       }
@@ -235,13 +237,13 @@ export async function unmappedcolumn(
   });
 }
 
-export async function deleteUnMappedColumnValues(): Promise<void> {
-  const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+export async function deleteUnMappedColumnValues(sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
-    const stagingTable: Excel.Table = stagingSheet.tables.getItem(worksheetTableName);
+    const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
     stagingTable.load(ExcelLoadEnumerator.rows);
     await context.sync();
 
@@ -282,16 +284,16 @@ export async function deleteUnMappedColumnValues(): Promise<void> {
   });
 }
 
-export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string): Promise<string[]> {
-  const { worksheetName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
+export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string, sheetName: string): Promise<string[]> {
+  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   const manualMappedColumns: string[] = await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const stagingSheet: Excel.Worksheet = sheets.getItem(worksheetStagingArea);
+    const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
     await context.sync();
 
     // get TempData sheet and sync the context
-    let temp_sheet = sheets.getItem("Temp DataSheet");
+    let temp_sheet = sheets.getItem(activeTempWorksheet);
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -380,7 +382,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     halfTIconsRange.values = [rangeRow4.values.flat(1).map((v) => (v ? Strings.halfT : ""))];
     await context.sync();
 
-    const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet();
+    const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet(sheetName);
 
     const values: any[] = percRange.values.flat(1);
     let initial: string = AlphabetsEnumerator.C;
@@ -438,12 +440,12 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
   return manualMappedColumns;
 }
 
-export async function adjustColorGradients(color: string): Promise<void> {
-  const { worksheetStagingArea, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
+export async function adjustColorGradients(color: string, sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetStagingArea);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     let stagingTable: Excel.Table = sheet.tables
-      .getItem(worksheetTableName)
+      .getItem(activeWorksheetStagingAreaTableName)
       .load(ExcelLoadEnumerator.columns)
       .load(ExcelLoadEnumerator.columnCount);
     await context.sync();
@@ -493,9 +495,8 @@ export async function adjustColorGradients(color: string): Promise<void> {
   });
 }
 
-export async function setStagingAreaColorSchemes(): Promise<void> {
-  const { worksheetStagingArea, worksheetTableName, worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
-  const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+export async function setStagingAreaColorSchemes(isClaimActive: boolean): Promise<void> {
+  const columnsResponse = isClaimActive ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
   const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
   // await Excel.run(async (context: Excel.RequestContext) => {
