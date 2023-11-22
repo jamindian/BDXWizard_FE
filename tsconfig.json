@@ -1,33 +1,53 @@
-{
+{  
   "compilerOptions": {
-    "allowUnusedLabels": false,
-    "emitDecoratorMetadata": true,
+    "target": "es5",
     "esModuleInterop": true,
-    "experimentalDecorators": true,
+    "module": "esnext",
     "jsx": "react",
-    "module": "CommonJS",
     "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "outDir": "dist",
+    "allowUnusedLabels": false,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
-    "outDir": "dist",
-    "removeComments": false,
-    "sourceMap": true,
-    "target": "es5",
+    "resolveJsonModule": true,
+    "noUnusedLocals": false,
     "lib": [
-      "es7",
-      "dom"
-    ],
+      "ES7",
+      "ES6",
+      "dom",
+      "ES2015",
+      "ES2016",
+      "ES2017",
+      "ES2019", "dom.iterable"
+    ],        
     "pretty": true,
     "typeRoots": [
       "node_modules/@types"
-    ]
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "baseUrl": ".",
+    "paths": {
+      "@main/*": ["*"],
+      "@services/*": ["./src/services/*"],
+      "@components/*": ["./src/taskpane/components/*"],
+      "@taskpaneutilities/*": ["./src/taskpane/utilities/*"],
+      "@taskpane/*": ["./src/taskpane/*"],
+    }
   },
+  "include": ["src"],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "**/*.spec.ts"
   ],
   "compileOnSave": false,
   "buildOnSave": false,
   "ts-node": { 
-    "files": true 
-  }
+    "files": true,
+    "require": ["tsconfig-paths/register"]
+  },
 }

@@ -1,5 +1,5 @@
 import moment from "moment";
-import { AlphabetsEnumerator, ExcelLoadEnumerator } from "../utilities/Enum";
+import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -94,6 +94,28 @@ class Methods {
 
     return name;
   }
+
+  public async getWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; }> {
+    const name: string = await Excel.run(async (context: Excel.RequestContext) => {
+      let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+      let activeWorkSheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+      await context.sync();
+      return activeWorkSheet.name;
+    });
+
+    global.worksheetName = name;
+
+    return { worksheetName: name, worksheetTableName: `${name.split(' ').join("")}Table` };
+  }
+
+  public nextChar = (str: string): string => {
+    let _c = str.slice(0, str.length - 1);
+    return _c + String.fromCharCode(str.charCodeAt(str.length - 1) + 1);
+  };
+
+  public columnAddressSlice = (address: string, sliceIndex: number): string => {
+    return address?.split("!")[1]?.slice(0, sliceIndex);
+  };
 }
 
 const CommonMethods = new Methods();

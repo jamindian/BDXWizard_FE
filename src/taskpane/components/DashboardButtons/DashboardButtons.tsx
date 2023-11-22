@@ -5,10 +5,10 @@ import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import AuthContext from "../../context/AuthContext";
+import { onCleanSOV, tryCatch } from "../../utilities/Office-helper";
 
 const DashboardButtons: FC<{}> = () => {
   const { setLoader } = React.useContext(AuthContext);
-  const toastId = React.useRef(null);
 
   const [activeBtn, setActiveBtn] = useState<
     | "clean_claim_bdx"
@@ -31,8 +31,6 @@ const DashboardButtons: FC<{}> = () => {
     setActiveBtn(active);
   };
 
-  async function cleanClaimBdx(): Promise<void> {}
-
   const buttons = [
     {
       id: 1,
@@ -41,7 +39,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Claim BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => cleanClaimBdx(),
+      onClick: () => tryCatch(onCleanSOV(), setLoader),
     },
     {
       id: 2,
@@ -50,7 +48,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Append Claim BDX",
       icon: <HealingIcon />,
       hover: "append_claim_bdx",
-      onClick: () => setLoader(true),
+      onClick: () => console.log(),
     },
     {
       id: 3,
@@ -68,7 +66,7 @@ const DashboardButtons: FC<{}> = () => {
       label: "Clean Premium BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_premium_bdx",
-      onClick: () => cleanClaimBdx(),
+      onClick: () => tryCatch(onCleanSOV(), setLoader),
     },
     {
       id: 5,
@@ -89,13 +87,13 @@ const DashboardButtons: FC<{}> = () => {
       onClick: () => console.log(),
     },
     {
-      id: 6,
+      id: 7,
       condition: true,
       disabled: false,
       label: "Train AI",
       icon: <AutoGraphIcon />,
       hover: "train_AI",
-      onClick: () => console.log()
+      onClick: () => console.log(),
     },
   ];
 

@@ -29,7 +29,14 @@ module.exports = async (env, options) => {
       clean: true,
     },
     resolve: {
-      extensions: [".ts", ".tsx", ".html", ".js"],
+      alias: {
+        "@main": path.resolve(__dirname, ''),
+        "@services": path.resolve(__dirname, 'src/services/'),
+        "@components": path.resolve(__dirname, 'src/taskpane/components/'),
+        "@taskpaneutilities": path.resolve(__dirname, 'src/taskpane/utilities/'),
+        "@taskpane": path.resolve(__dirname, 'src/taskpane/')
+      },
+      extensions: ['.ts', '.tsx', '.json', '.js', '.jsx', ".html"],
     },
     module: {
       rules: [

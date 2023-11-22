@@ -1,8 +1,29 @@
 {
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "plugins": [
     "office-addins"
   ],
   "extends": [
     "plugin:office-addins/react"
-  ]
+  ],
+  "rules": {
+    "@typescript-eslint/ban-ts-comment": [
+      "error",
+      {"ts-ignore": "allow-with-description"}
+    ],
+    "no-undef": "off",
+    "no-shadow": "off",
+    "valid-typeof": "off"
+  },
+  "settings": {
+    "import/resolver": {
+      "node": {          
+        "paths": ["src"],
+        "extensions": [".js", ".jsx", ".ts", ".tsx", "json"]
+      }
+    }
+  }
 }
