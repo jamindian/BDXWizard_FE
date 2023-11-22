@@ -4,11 +4,11 @@ import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enu
 import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, setStagingAreaColorSchemes, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
 import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
-import { IColumnIdentify, IStagingAreaColumns } from "@taskpaneutilities/Interface";
-import { isEqual, uniqWith } from "lodash";
+import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 
 export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void> {
+  setLoader(true);
   const { worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
@@ -31,7 +31,7 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
 
     // add new tab called TempData
     let sheet: Excel.Worksheet = workbook.worksheets.getItemOrNullObject(
-      worksheetName + " Temp DataSheet"
+      "Temp DataSheet"
     );
     await context.sync();
 
@@ -40,10 +40,10 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
     if (!sheet.isNullObject) {
       sheet.delete();
     }
-    sheet = sheets.add(worksheetName + " Temp DataSheet");
+    sheet = sheets.add("Temp DataSheet");
 
     // activate newly added tab
-    sheet = context.workbook.worksheets.getItem(worksheetName + " Temp DataSheet");
+    sheet = context.workbook.worksheets.getItem("Temp DataSheet");
     sheet.activate();
     await context.sync();
 
@@ -90,29 +90,24 @@ export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void>
 
     // Convert the range to a table.
     let tempTable: Excel.Table = sheet.tables.add("A1:" + end_cell.address, true);
-    tempTable.name = worksheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(" ").join("") + "TempTable";
+    tempTable.name = "TempdataTable";
     sheet.visibility = Excel.SheetVisibility.hidden;
     sheet.getUsedRange().format.autofitColumns();
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    createStagingArea(JSON.stringify(raw_sov_range.values), setLoader);
+    await tryCatch(createStagingArea(setLoader));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(raw_sov_data: string, setLoader: (f: boolean) => void) {
-  try {
-    const { worksheetName, worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();
-    console.log({ worksheetName, worksheetTableName, worksheetStagingArea });
-    await Excel.run(async (context: Excel.RequestContext) => {
+export async function createStagingArea(setLoader): Promise<void> {
+    const { worksheetName, worksheetTableName, worksheetStagingArea } = await CommonMethods.getActiveWorkSheetAndTableName();    await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
 
       // get staging area sheet and sync the context
       let sheet: Excel.Worksheet = sheets.getItemOrNullObject(worksheetStagingArea);
       await context.sync();
-
-      console.log("1");
 
       // if  there is already a old staging area sheet available, delete it
       if (!sheet.isNullObject) {
@@ -125,10 +120,8 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       sheet.tabColor = "#0292CF";
       await context.sync();
 
-      console.log("2");
-
       // get TempData sheet and sync the context
-      let temp_sheet: Excel.Worksheet = sheets.getItem(worksheetName + " Temp DataSheet");
+      let temp_sheet: Excel.Worksheet = sheets.getItem("Temp DataSheet");
       let last_header_cell = temp_sheet
         .getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")))
         .load(ExcelLoadEnumerator.address);
@@ -143,16 +136,16 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       let result_list = [];
       let match_percentage_list = [];
       const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
-      const StagingColumns: IStagingAreaColumns = columnsResponse?.data;
+      const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
-      let argments: any = CommonMethods.rawSOVRangeIntoObjectValues(JSON.parse(raw_sov_data));
+      let argments: any = {
+        source_columns: StagingColumns?.map(column => column.column_name), category: worksheetName.includes('CLAIMS') ? "Claims" : "Premium"
+      }
       
       // get map percentage list
       await NetworkCalls.OnMapColumns(argments)
         .then((response) => {
-          if (response.status === API_UNAUTHORISED) {
-            setLoader(false);
-          } else {
+          if (response.status === API_UNAUTHORISED) {} else {
             result_list = response.data.result_list;
             match_percentage_list = response.data.match_percentage_list;
             match_percentage_list = match_percentage_list.map((item: any) =>
@@ -201,15 +194,12 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).format.font.bold = true;
 
       //add 'ID' as the header name in cell B4 and enter the first 5 IDs as 1 to 5
-      sheet.getRange("B4").values = [["ID"]];
       sheet.getRange("B5").values = [["1"]];
       sheet.getRange("B6").values = [["=B5 + 1"]];
       sheet.getRange("B7").values = [["=B6 + 1"]];
       sheet.getRange("B8").values = [["=B7 + 1"]];
       sheet.getRange("B9").values = [["=B8 + 1"]];
 
-      // TODO: SOV (SOV-Texcan Ventures $110 per sq ft) received from Palomar creating an issue. Random date is writing in this column.
-      sheet.getRange("B4").numberFormat = [["#"]];
       sheet.getRange("B5").numberFormat = [["#"]];
       sheet.getRange("B6").numberFormat = [["#"]];
       sheet.getRange("B7").numberFormat = [["#"]];
@@ -218,11 +208,11 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
 
       // Percentages section
       let percRangeHalfTIcons: Excel.Range = sheet
-        .getRange(`B10:${lastCellAddress}10`)
+        .getRange(`C10:${lastCellAddress}10`)
         .load(ExcelLoadEnumerator.values);
-      let percRange: Excel.Range = sheet.getRange(`B11:${lastCellAddress}11`).load(ExcelLoadEnumerator.values);
+      let percRange: Excel.Range = sheet.getRange(`C11:${lastCellAddress}11`).load(ExcelLoadEnumerator.values);
       let percRangeArrowIcons: Excel.Range = sheet
-        .getRange(`B12:${lastCellAddress}12`)
+        .getRange(`C12:${lastCellAddress}12`)
         .load(ExcelLoadEnumerator.values);
       await context.sync();
 
@@ -241,11 +231,11 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       percRangeHalfTIcons.format.font.name = "Arial";
       percRangeHalfTIcons.format.rowHeight = 15;
 
-      percRangeHalfTIcons.values = [match_percentage_list.map((v) => (v ? Strings.halfT : ""))];
-      percRange.values = [match_percentage_list];
-      percRangeArrowIcons.values = [match_percentage_list.map((v) => (v ? Strings.arrowDown : ""))];
+      percRangeHalfTIcons.values = [match_percentage_list.slice(1).map((v) => (v ? Strings.halfT : ""))];
+      percRange.values = [match_percentage_list.slice(1)];
+      percRangeArrowIcons.values = [match_percentage_list.slice(1).map((v) => (v ? Strings.arrowDown : ""))];
 
-      sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).values = [result_list];
+      sheet.getRange(`${AlphabetsEnumerator.C}4:${lastCellAddress}4`).values = [result_list.slice(1)];
       //paste formulas in all other cells
 
       sheet.getRange("C5").values = [
@@ -288,8 +278,9 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
       StagingTableRange.format.font.size = 14;
 
       // add column headers for the Staging table
+      const tableColumns = ['Flag'].concat(StagingColumns?.map(column => column.display_name || column.column_name));
       StagingTable.getHeaderRowRange().values = [
-        [...Object.values(StagingColumns).map((v: IColumnIdentify) => v.displayName)],
+        [...tableColumns],
       ];
       let raw_sov_row_count = CommonMethods.getLocalStorage("row_count");
       let rawdel = CommonMethods.getLocalStorage("lengthdele");
@@ -382,7 +373,7 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
         }
       }
 
-      await unmappedcolumn(false, undefined, undefined, false);
+      await tryCatch(unmappedcolumn(false, undefined, undefined, false));
       
       toast.success("Staging Area sheet has been successfully created.");
 
@@ -391,11 +382,9 @@ export async function createStagingArea(raw_sov_data: string, setLoader: (f: boo
         sheet.getUsedRange().format.autofitRows();
       }
 
-      onConfirmData(false);
+      await onConfirmData(false);
+      setLoader(false);
     });
-  } catch (error) {
-    setLoader(false);
-  }
 }
 
 var debouncedRender = _.debounce(function (
@@ -517,18 +506,13 @@ export async function reCalculate(eventArgs) {
         }
       });
 
-      let row11: Excel.Range = sheet.getRange(`${prevPercent[0]}11`).load(ExcelLoadEnumerator.values);
-      await context.sync();
-
       // move related match percentage details above newly mapped column
-      if (JSON.stringify(newValues) !== JSON.stringify(mappedValues[0])) {
+      if (JSON.stringify(newValues) !== JSON.stringify(mappedValues[0]) && prevPercent) {
         mapped_columns_range.values = [newValues];
         sheet.getRange(`${prevPercent[0]}5:${prevPercent[0]}9`).values = [[""], [""], [""], [""], [""]];
-        if (row11.values[0][0] !== "AI") {
-          sheet.getRange(`${prevPercent[0]}16:${prevPercent[0]}${totalTableRows + 16 - 1}`).values = countArray.map(
-            () => [""]
-          );
-        }
+        sheet.getRange(`${prevPercent[0]}16:${prevPercent[0]}${totalTableRows + 16 - 1}`).values = countArray.map(
+          () => [""]
+        );
       }
     }
   });

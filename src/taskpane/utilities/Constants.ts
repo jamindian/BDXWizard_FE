@@ -1,4 +1,4 @@
-import { IStrings, IAppColor, IStagingAreaColumns } from "@taskpaneutilities/Interface";
+import { IStrings, IAppColor } from "@taskpaneutilities/Interface";
 
 export const API_SUCCESS: number = 200;
 export const TEMP_REQUIRED: number = 307;
@@ -35,8 +35,7 @@ export const AppColors: IAppColor = {
   primacy_chart_fadedblue: '#4e81bc',
 };
 
-export const stagingAreaInitialColumns: IStagingAreaColumns = {
-  FLAG: { displayName: '', headerColor: '', bodyColor: '' },
+export const stagingAreaInitialColumns = {
   ID: { displayName: '', headerColor: '', bodyColor: '' },
   INSURER: { displayName: '', headerColor: '', bodyColor: '' },
   REPORTING_MONTH: { displayName: '', headerColor: '', bodyColor: '' },	

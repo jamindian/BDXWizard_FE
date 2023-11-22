@@ -1,7 +1,6 @@
 import moment from "moment";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import { AppColors } from "@taskpaneutilities/Constants";
-import { IStagingAreaColumns } from "@taskpaneutilities/Interface";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -107,7 +106,8 @@ class Methods {
 
     global.worksheetName = name;
 
-    return { worksheetName: name, worksheetStagingArea: name.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", worksheetTableName: `${name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable` };
+    // return { worksheetName: name, worksheetStagingArea: name.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", worksheetTableName: `${name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable` };
+    return { worksheetName: name, worksheetStagingArea: "Staging Area", worksheetTableName: `StagingTable` };
   }
 
   public nextChar = (str: string): string => {
@@ -209,16 +209,6 @@ class Methods {
     }
 
     return obj;
-  };
-
-  public modifyStagingColumns = (columns: { [key: string]: { header_colour_code: string; body_colour_code: string; display_name: string; } }): IStagingAreaColumns => {
-    const obj = { FLAG: { displayName: 'Flag', headerColor: '#D14747', bodyColor: '' } };
-
-    for(const [key, value] of Object.entries(columns) as [string, { header_colour_code: string; body_colour_code: string; display_name: string; }][]) {
-      obj[key.split('(ft)').join('').split('/').join('').split(',').join('').split(' ').join('_').toUpperCase()] = { displayName: value.display_name || key, headerColor: value.header_colour_code, bodyColor: value.body_colour_code };
-    }
-
-    return obj as IStagingAreaColumns;
   };
 }
 

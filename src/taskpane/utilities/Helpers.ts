@@ -3,19 +3,16 @@ import { AppColors, Strings } from "@taskpaneutilities/Constants";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
-import { IColumnIdentify, IStagingAreaColumns } from "@taskpaneutilities/Interface";
+import { IColumnIdentify, IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 
 /** Default helper for invoking an action and handling errors. */
-export async function tryCatch(callback, setLoader: (f: boolean) => void) {
+export async function tryCatch(callback) {
   try {
-    setLoader(true);
     await callback;
-    setLoader(false);
   } catch (error) {
     // Note: In a production add-in, you'd want to notify the user through your add-in's UI.
     console.error(error);
-    setLoader(false);
   }
 }
 
@@ -161,7 +158,7 @@ export async function unmappedcolumn(
     staging_last_cell.load(ExcelLoadEnumerator.address);
 
     // get tempdata sheet and get last header cell and sync the context
-    let temp_sheet = sheets.getItem(worksheetName + " Temp DataSheet");
+    let temp_sheet = sheets.getItem("Temp DataSheet");
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -202,7 +199,6 @@ export async function unmappedcolumn(
         isEqual
       );
 
-      // For Data Mapped/Quality/Completeness score when no onChange is called
       if (
         (!autoMappedRawColumns || !autoMappedRawColumns?.length) &&
         !onChange
@@ -295,7 +291,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     await context.sync();
 
     // get TempData sheet and sync the context
-    let temp_sheet = sheets.getItem(worksheetName + " Temp DataSheet");
+    let temp_sheet = sheets.getItem("Temp DataSheet");
     let last_header_cell = temp_sheet.getCell(
       0,
       parseInt(CommonMethods.getLocalStorage("column_count"))
@@ -317,7 +313,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
 
     const rangeRow4: Excel.Range = stagingSheet
       .getRange(
-        `B4:${CommonMethods.columnAddressSlice(
+        `C4:${CommonMethods.columnAddressSlice(
           staging_last_cell.address,
           2
         )}4`
@@ -325,7 +321,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       .load(ExcelLoadEnumerator.values);
     const halfTIconsRange: Excel.Range = stagingSheet
       .getRange(
-        `B10:${CommonMethods.columnAddressSlice(
+        `C10:${CommonMethods.columnAddressSlice(
           staging_last_cell.address,
           2
         )}10`
@@ -333,7 +329,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       .load(ExcelLoadEnumerator.values);
     let percRange: Excel.Range = stagingSheet
       .getRange(
-        `B11:${CommonMethods.columnAddressSlice(
+        `C11:${CommonMethods.columnAddressSlice(
           staging_last_cell.address,
           2
         )}11`
@@ -341,7 +337,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       .load(ExcelLoadEnumerator.values);
     const arrowIconsRange: Excel.Range = stagingSheet
       .getRange(
-        `B12:${CommonMethods.columnAddressSlice(
+        `C12:${CommonMethods.columnAddressSlice(
           staging_last_cell.address,
           2
         )}12`
@@ -351,7 +347,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       
     const arr: string[] = []; // Array of manually managed columns
 
-    let initial1: string = AlphabetsEnumerator.B;
+    let initial1: string = AlphabetsEnumerator.C;
     const rangeElevenValues: any[] = percRange.values.flat(1);
     const match_percentage_list: (string | number)[] = rangeRow4.values
       .flat(1)
@@ -387,16 +383,18 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet();
 
     const values: any[] = percRange.values.flat(1);
-    let initial: string = AlphabetsEnumerator.B;
+    let initial: string = AlphabetsEnumerator.C;
 
-    values.forEach((val, ind: number) => {
+    let ind: number = 0;
+    for (const val of values) {
       let rangeHalfT: Excel.Range = stagingSheet.getRange(`${initial}10`);
-      let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`);
+      let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`).load(ExcelLoadEnumerator.values);
       let rangeArrow: Excel.Range = stagingSheet.getRange(`${initial}12`);
       const condition: boolean = formats[ind] !== AppColors.primacy_green;
+      await context.sync();
 
       if (val !== "" && typeof val === "string") {
-        if (condition) {
+        if (rangePercentage.values.flat(1)[0] === Strings.manuallyMapped) {
           rangePercentage.format.font.size = 14;
           rangePercentage.format.fill.color = AppColors.primacy_white;
           rangePercentage.format.font.color = AppColors.primacy_red;
@@ -424,7 +422,8 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       }
 
       initial = CommonMethods.getNextKey(initial);
-    });
+      ind++;
+    }
 
     await context.sync();
 
@@ -497,52 +496,52 @@ export async function adjustColorGradients(color: string): Promise<void> {
 export async function setStagingAreaColorSchemes(): Promise<void> {
   const { worksheetStagingArea, worksheetTableName, worksheetName } = await CommonMethods.getActiveWorkSheetAndTableName();
   const columnsResponse = worksheetName.includes('CLAIMS') ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
-  const StagingColumns: IStagingAreaColumns = columnsResponse?.data;
+  const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
-  await Excel.run(async (context: Excel.RequestContext) => {
-    // Format the staging header
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetStagingArea);
-    await context.sync();
-    let stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.values);
-    stagingTable.load(ExcelLoadEnumerator.columns);
-    await context.sync();
+  // await Excel.run(async (context: Excel.RequestContext) => {
+  //   // Format the staging header
+  //   let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetStagingArea);
+  //   await context.sync();
+  //   let stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.values);
+  //   stagingTable.load(ExcelLoadEnumerator.columns);
+  //   await context.sync();
 
-    const _coverageABody = stagingTable.columns.getItem(StagingColumns.TOTAL_PAID_INCLUDING_FEES.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-    const _tivBody = stagingTable.columns.getItem(StagingColumns.TOTAL_INDEMNITY_PAID.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-    await context.sync();
+  //   const _coverageABody = stagingTable.columns.getItem(StagingColumns.TOTAL_PAID_INCLUDING_FEES.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+  //   const _tivBody = stagingTable.columns.getItem(StagingColumns.TOTAL_INDEMNITY_PAID.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+  //   await context.sync();
 
-    const id = stagingTable.columns.getItem(StagingColumns.ID.displayName).getDataBodyRange();
-    const postalCode = stagingTable.columns.getItem(StagingColumns.PRODUCT.displayName).getDataBodyRange();
-    const coverages = sheet.getRange(`${_coverageABody.address}:${_tivBody.address}`);
-    await context.sync();
-    id.numberFormat = [["#"]];
-    postalCode.numberFormat = [["#00000"]];
-    coverages.numberFormat = [["#,###,##0"]];
+  //   const id = stagingTable.columns.getItem(StagingColumns.ID.displayName).getDataBodyRange();
+  //   const postalCode = stagingTable.columns.getItem(StagingColumns.PRODUCT.displayName).getDataBodyRange();
+  //   const coverages = sheet.getRange(`${_coverageABody.address}:${_tivBody.address}`);
+  //   await context.sync();
+  //   id.numberFormat = [["#"]];
+  //   postalCode.numberFormat = [["#00000"]];
+  //   coverages.numberFormat = [["#,###,##0"]];
 
-    for(const [key, value] of Object.entries(StagingColumns) as [string, IColumnIdentify][]) {
-      const headerRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getHeaderRowRange().load(ExcelLoadEnumerator.address);
-      const bodyRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-      await context.sync();
+  //   for(const [key, value] of Object.entries(StagingColumns) as [string, IColumnIdentify][]) {
+  //     const headerRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getHeaderRowRange().load(ExcelLoadEnumerator.address);
+  //     const bodyRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+  //     await context.sync();
 
-      if (value.headerColor) {
-        headerRange.format.fill.color = value.headerColor;
-        headerRange.format.font.bold = true;
-        headerRange.format.font.color = AppColors.primacy_black;
-        headerRange.format.rowHeight = 30;
-        if (![StagingColumns.ID.displayName, StagingColumns.FLAG.displayName].includes(value.displayName)) {
-          headerRange.format.columnWidth = 200;
-        }
-        headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
-        headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
-        CommonMethods.setRangeBorders(headerRange, AppColors.primary_blue, true);
+  //     if (value.headerColor) {
+  //       headerRange.format.fill.color = value.headerColor;
+  //       headerRange.format.font.bold = true;
+  //       headerRange.format.font.color = AppColors.primacy_black;
+  //       headerRange.format.rowHeight = 30;
+  //       if (![StagingColumns.ID.displayName].includes(value.displayName)) {
+  //         headerRange.format.columnWidth = 200;
+  //       }
+  //       headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
+  //       headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
+  //       CommonMethods.setRangeBorders(headerRange, AppColors.primary_blue, true);
   
-        if (value.bodyColor) {
-          bodyRange.format.fill.color = value.bodyColor;
-        }
-        CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
-      }
-    }
+  //       if (value.bodyColor) {
+  //         bodyRange.format.fill.color = value.bodyColor;
+  //       }
+  //       CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
+  //     }
+  //   }
 
-    await context.sync();
-  });
+  //   await context.sync();
+  // });
 }
