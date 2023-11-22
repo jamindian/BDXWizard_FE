@@ -17,6 +17,26 @@ export interface IColumnIdentify {
   bodyColor: string; 
 }
 
+export interface IAppColor {
+  primacy_red: string;
+  primacy_yellow: string;
+  primacy_green: string;
+  primacy_dark: string;
+  primacy_white: string;
+  primacy_black: string;
+  primacy_scrollbar_color: string;
+  primacy_light_grey: string;
+  primacy_whitesmoke: string;
+  primary_blue: string;
+  primary_light_blue: string;
+  primacy_orange: string;
+  primacy_brown: string;
+  primacy_chart_orange: string;
+  primacy_chart_blue: string;
+  primacy_chart_yellow: string;
+  primacy_chart_fadedblue: string;
+}
+
 export interface IStagingAreaColumns {
   FLAG: IColumnIdentify;
   ID: IColumnIdentify;

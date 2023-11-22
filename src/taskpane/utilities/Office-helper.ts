@@ -1,10 +1,14 @@
 import { toast } from "react-toastify";
-import CommonMethods from "./CommonMethods";
-import { AlphabetsEnumerator, ExcelLoadEnumerator } from "./Enum";
-import { formulaPasteUnPasteWhileChangeMappings, unmappedcolumn } from "./Helpers";
+import CommonMethods from "@taskpaneutilities/CommonMethods";
+import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
+import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, setStagingAreaColorSchemes, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
+import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
+import { IColumnIdentify, IStagingAreaColumns } from "@taskpaneutilities/Interface";
+import { isEqual, uniqWith } from "lodash";
+import NetworkCalls from "../services/ApiNetworkCalls";
 
-export async function onCleanSOV(): Promise<void> {
+export async function onCleanSOV(setLoader: (f: boolean) => void): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
     workbook.load(ExcelLoadEnumerator.name);
@@ -94,32 +98,33 @@ export async function onCleanSOV(): Promise<void> {
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    // tryCatch(createStagingArea(JSON.stringify(raw_sov_range.values)));
+    createStagingArea(JSON.stringify(raw_sov_range.values), setLoader);
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(raw_sov_data: string, sheetName: string) {
+export async function createStagingArea(raw_sov_data: string, setLoader: (f: boolean) => void) {
   try {
+    const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
     await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
 
       // get staging area sheet and sync the context
-      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(sheetName);
+      let sheet: Excel.Worksheet = sheets.getItemOrNullObject(worksheetName);
       await context.sync();
 
       // if  there is already a old staging area sheet available, delete it
       if (!sheet.isNullObject) {
         sheet.delete();
       }
-      sheet = sheets.add(sheetName);
+      sheet = sheets.add(worksheetName);
       // activate newly added tab
-      sheet = sheets.getItem(sheetName);
+      sheet = sheets.getItem(worksheetName);
       sheet.activate();
       sheet.tabColor = "#0292CF";
 
       // get TempData sheet and sync the context
-      let temp_sheet: Excel.Worksheet = sheets.getItem(sheetName + "Temp DataSheet");
+      let temp_sheet: Excel.Worksheet = sheets.getItem(worksheetName + "Temp DataSheet");
       let last_header_cell = temp_sheet
         .getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")))
         .load(ExcelLoadEnumerator.address);
@@ -133,26 +138,15 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
 
       let result_list = [];
       let match_percentage_list = [];
-      const _store: any = store.getState();
-      const StagingColumns: IStagingAreaColumns = _store.metadata.columns;
+      const StagingColumns: IStagingAreaColumns = {} as any;
 
       let argments: any = CommonMethods.rawSOVRangeIntoObjectValues(JSON.parse(raw_sov_data));
-      if (!withML) {
-        argments = {
-          source_columns: JSON.stringify(raw_sov_columns_range.values),
-          staging_columns: JSON.stringify(
-            Object.values(StagingColumns)
-              .map((v: IColumnIdentify) => v.displayName)
-              .slice(1)
-          ),
-        };
-      }
-
+      
       // get map percentage list
-      await OnMapColumns(argments, withML)
+      await NetworkCalls.OnMapColumns(argments)
         .then((response) => {
           if (response.status === API_UNAUTHORISED) {
-            store.dispatch(logout());
+            setLoader(false);
           } else {
             result_list = response.data.result_list;
             match_percentage_list = response.data.match_percentage_list;
@@ -160,7 +154,6 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
               item && typeof item !== "string" ? `${item / 100}` : item
             );
             CommonMethods.setLocalStorage("result_list", JSON.stringify(result_list));
-            store.dispatch(setUserHitLoadData(Math.random()));
           }
         })
         .catch((err) => {
@@ -285,7 +278,7 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
         `${AlphabetsEnumerator.A}15:${lastCellAddress}15`,
         false /*hasHeaders*/
       );
-      StagingTable.name = STAGING_TABLE;
+      StagingTable.name = worksheetTableName;
       let StagingTableRange: Excel.Range = sheet.getRange(`${AlphabetsEnumerator.A}15:${lastCellAddress}15`);
       StagingTableRange.format.font.size = 14;
 
@@ -322,11 +315,10 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
       }
 
       const updatearray = raw_sov_columns_range.values[0];
-      store.dispatch(setSovColumns(raw_sov_columns_range.values));
       const finalupdate = [...updatearray];
       const length: number = finalupdate.length;
       finalupdate.map((item, index) => (temp_sheet.getRange("PP" + (index + 2).toString()).values = [[item]]));
-      const stagingTable: Excel.Table = sheet.tables.getItem(STAGING_TABLE);
+      const stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName);
       let visibleRange = stagingTable.getDataBodyRange().getVisibleView();
       await context.sync();
 
@@ -390,7 +382,7 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
         criterion: Excel.ConditionalFormatPresetCriterion.nonBlanks,
       };
 
-      await tryCatch(adjustColorGradients(undefined));
+      await adjustColorGradients(undefined);
 
       const construction = stagingTable.columns
         .getItem(StagingColumns.CONSTRUCTION_CODE.displayName)
@@ -403,15 +395,7 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
       sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false));
       stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e));
 
-      const _const = construction.values.map((val) => [`${val[0]}`.trim()]);
-      const _occu = occupancy.values.map((val) => [`${val[0]}`.trim()]);
-      const uniqueconstrunction = uniqWith(_const, isEqual);
-      const uniqueoccupancyy = uniqWith(_occu, isEqual);
-
-      store.dispatch(setNumOfConstructionType(uniqueconstrunction.flat(1).length));
-      store.dispatch(setNumOfOccupancyType(uniqueoccupancyy.flat(1).length));
-
-      await tryCatch(setStagingAreaColorSchemes());
+      await setStagingAreaColorSchemes();
 
       let tablerows: Excel.TableRowCollection = stagingTable.rows;
       tablerows.load(ExcelLoadEnumerator.items);
@@ -425,83 +409,31 @@ export async function createStagingArea(raw_sov_data: string, sheetName: string)
         }
       }
 
-      await tryCatch(additionalCoveragesCopies(true));
-      await tryCatch(updateLocationCounts(false));
-      await tryCatch(getTotalCoverages());
-      await tryCatch(getConstructionsAndOccupancies());
-      await tryCatch(unmappedcolumn(false, undefined, undefined, false));
-
-      if (autoGeoCode && geoCodesPreference?.length) {
-        await tryCatch(clickGetCoordinates(geoCodesPreference, true, false));
-      }
-
-      if (!autoGeoCode) {
-        await tryCatch(onLoadMap(false, false));
-      }
-
-      const tiv = stagingTable.columns
-        .getItem(StagingColumns.TOTAL_INSURED_VALUES.displayName)
-        .getDataBodyRange()
-        .load(ExcelLoadEnumerator.values);
-      tablerows = stagingTable.rows.load(ExcelLoadEnumerator.items);
-      await context.sync();
-
-      let unique_construction_count = _store.metadata.numOfConstructionType;
-      let unique_occupancy_count = _store.metadata.numOfOccupancyType;
-      const meta = _store.utility.summaryMeta;
-      const reqObj = {
-        workbook_name: meta.workbook_name,
-        name_insured: global.workbookName,
-        all_work_sheets: meta.all_work_sheets,
-        active_worksheet: meta.active_worksheet,
-        selected_range: meta.selected_range,
-        column_count: meta.total_columns,
-        row_count: meta.total_rows,
-        selected_column_count: meta.selected_columns,
-        selected_row_count: meta.selected_rows,
-        location_count: tablerows.count,
-        hazardhub_location_count: meta.hazardhub_locations,
-        mapped_column_count: meta.no_of_columns_mapped,
-        tiv: CommonMethods.arrayValuesSum(tiv.values.flat(1)),
-        construction_count: unique_construction_count,
-        occupancy_count: unique_occupancy_count,
-        raw_sov_data: raw_sov_data,
-      };
-
-      await processWorkbook(reqObj).then((response) => {
-        if (response.status === API_UNAUTHORISED) {
-          store.dispatch(logout());
-        } else {
-          store.dispatch(setProcessId(response.data.id));
-        }
-      });
-
-      toast.success(AlertsMsgs.stagingAreaSheetCreation);
+      await unmappedcolumn(false, undefined, undefined, false);
+      
+      toast.success("Staging Area sheet has been successfully created.");
 
       if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
         sheet.getUsedRange().format.autofitColumns();
         sheet.getUsedRange().format.autofitRows();
       }
 
-      tryCatch(onConfirmData(false));
+      onConfirmData(false);
     });
   } catch (error) {
-    store.dispatch(setShowMap(false));
-    store.dispatch(setloader(false));
+    setLoader(false);
   }
 }
 
 var debouncedRender = _.debounce(function (
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
-  sheetName: string,
-  tableName: string
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   Excel.run(async (context: Excel.RequestContext) => {
     if (triggerSource) {
-      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
+      await formulaPasteUnPasteWhileChangeMappings(event);
     }
 
     if (triggerSource) {
@@ -513,13 +445,12 @@ var debouncedRender = _.debounce(function (
           JSON.parse(CommonMethods.getLocalStorage("autoMappedRawColumns")),
           JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
           parseInt(actual[1]) === 4,
-          sheetName,
           containsM ? event.address : ""
         );
       }
     }
 
-    await reCalculate(event, sheetName, tableName);
+    await reCalculate(event);
 
     return context.sync();
   }).catch(function (error) {
@@ -536,20 +467,21 @@ async function stagingAreaSheetOnChanged(
   return event;
 }
 
-export async function stagingTableOnChange(e, sheetName: string, tableName: string) {
+export async function stagingTableOnChange(e) {
   await Excel.run(async () => {
     if (e.changeType === "RowDeleted" || e.changeType === "RowInserted") {
-      reCalculate(e, sheetName, tableName);
+      reCalculate(e);
     }
   });
 }
 
-export async function reCalculate(eventArgs, sheetName: string, tableName: string) {
+export async function reCalculate(eventArgs) {
+  const { worksheetName, worksheetTableName } = await CommonMethods.getActiveWorkSheetAndTableName();
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(sheetName);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(worksheetName);
     let table: Excel.Table = sheet.tables
-      .getItem(tableName)
+      .getItem(worksheetTableName)
       .load(ExcelLoadEnumerator.columns)
       .load(ExcelLoadEnumerator.columnCount)
       .load(ExcelLoadEnumerator.rows);

@@ -1,5 +1,6 @@
 import moment from "moment";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
+import { AppColors } from "@taskpaneutilities/Constants";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -95,7 +96,7 @@ class Methods {
     return name;
   }
 
-  public async getWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; }> {
+  public async getActiveWorkSheetAndTableName(): Promise<{ worksheetName: string; worksheetTableName: string; }> {
     const name: string = await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
       let activeWorkSheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
@@ -105,7 +106,7 @@ class Methods {
 
     global.worksheetName = name;
 
-    return { worksheetName: name, worksheetTableName: `${name.split(' ').join("")}Table` };
+    return { worksheetName: name, worksheetTableName: `${name.split(' ').join("")}StagingTable` };
   }
 
   public nextChar = (str: string): string => {
@@ -116,6 +117,98 @@ class Methods {
   public columnAddressSlice = (address: string, sliceIndex: number): string => {
     return address?.split("!")[1]?.slice(0, sliceIndex);
   };
+
+  public async stagingAreaPercentageFormatGet(): Promise<string[]> {
+    const { worksheetName } = await this.getActiveWorkSheetAndTableName();
+    const results: string[] = await Excel.run(async (context) => {
+      const sheets = context.workbook.worksheets;
+      const stagingSheet = sheets.getItem(worksheetName);
+      await context.sync();
+
+      if (!JSON.parse(this.getLocalStorage("result_list"))){
+        return [];
+      }
+
+      let staging_last_cell = stagingSheet.getCell(
+        1,
+        JSON.parse(this.getLocalStorage("result_list")).length
+      );
+      staging_last_cell.load(ExcelLoadEnumerator.address);
+      await context.sync();
+
+      let percRange = stagingSheet
+        .getRange(
+          `B11:${CommonMethods.columnAddressSlice(
+            staging_last_cell.address,
+            2
+          )}11`
+        )
+        .load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      const arr: string[] = [];
+      const values: any[] = percRange.values.flat(1);
+      let initial: string = AlphabetsEnumerator.B;
+
+      for (let k = 0; k < values.length; k++) {
+        let rangePercentage = stagingSheet
+          .getRange(`${initial}11`)
+          .load("format/fill/color");
+        await context.sync();
+
+        arr.push(rangePercentage.format.fill.color);
+        initial = CommonMethods.getNextKey(initial);
+      }
+
+      return arr;
+    });
+
+    return results;
+  }
+
+  public getRangeColor = (percentage: number): string => {
+    let color = AppColors.primacy_green;
+    if (percentage > 0 && percentage < 21) {
+      color = AppColors.primacy_red;
+    } else if (percentage > 20 && percentage < 41) {
+      color = AppColors.primacy_orange;
+    } else if (percentage > 40 && percentage < 61) {
+      color = "#FED8B1";
+    } else if (percentage > 60 && percentage < 81) {
+      color = AppColors.primacy_yellow;
+    } else if (percentage > 80 && percentage < 91) {
+      color = "#B4C836";
+    } else {
+      color = AppColors.primacy_green;
+    }
+
+    return color;
+  };
+
+  public setRangeBorders(range: Excel.Range | Excel.PresetCriteriaConditionalFormat | any, color: string, exChange?: boolean): void {
+    if (exChange) {
+      range.format.borders.getItem("InsideHorizontal").color = color;
+      range.format.borders.getItem("InsideVertical").color = color;
+      range.format.borders.getItem("EdgeBottom").color = color;
+      range.format.borders.getItem("EdgeLeft").color = color;
+      range.format.borders.getItem("EdgeRight").color = color;
+    } else {
+      range.format.borders.getItem("EdgeTop").color = color;
+      range.format.borders.getItem("EdgeBottom").color = color;
+      range.format.borders.getItem("EdgeLeft").color = color;
+      range.format.borders.getItem("EdgeRight").color = color;
+    }
+  }
+
+  public rawSOVRangeIntoObjectValues = (values: any[][]): { [key: string]: any[] } => {
+    const keys: string[] = values[0];
+    const obj = {};
+    for (let i = 0; i < keys.length; i++) {
+      obj[keys[i]] = values.slice(1).map(value => value[i]);
+    }
+
+    return obj;
+  }
 }
 
 const CommonMethods = new Methods();
