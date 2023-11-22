@@ -46,7 +46,7 @@ const DashboardButtons: FC<{}> = () => {
     },
     {
       id: 2,
-      condition: true,
+      condition: false,
       disabled: false,
       label: "Append Claim BDX",
       icon: <HealingIcon />,
@@ -55,7 +55,7 @@ const DashboardButtons: FC<{}> = () => {
     },
     {
       id: 3,
-      condition: true,
+      condition: false,
       disabled: false,
       label: "Merge Claim BDX",
       icon: <MergeIcon />,
@@ -73,7 +73,7 @@ const DashboardButtons: FC<{}> = () => {
     },
     {
       id: 5,
-      condition: true,
+      condition: false,
       disabled: false,
       label: "Append Premium BDX",
       icon: <HealingIcon />,
@@ -82,7 +82,7 @@ const DashboardButtons: FC<{}> = () => {
     },
     {
       id: 6,
-      condition: true,
+      condition: false,
       disabled: false,
       label: "Merge Premium BDX",
       icon: <MergeIcon />,
@@ -106,9 +106,8 @@ const DashboardButtons: FC<{}> = () => {
         .filter((btn) => btn.condition)
         .map(({ disabled, hover, icon, id, label, onClick }) => (
           <button
-            className={`custom-btn ${hover} ${activeBtn === hover ? "active" : ""}`}
-            onClick={() => onClick()}
-            key={id}
+            className={`custom-btn active ${hover}`}
+            onClick={() => onClick()} key={id}
             onMouseOver={() => onSetActiveBtn(activeBtn === hover ? "" : (hover as any))}
             disabled={disabled}
           >
