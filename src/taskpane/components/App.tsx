@@ -3,6 +3,8 @@ import * as React from "react";
 import { makeStyles } from "@fluentui/react-components";
 import AppLoader from "./AppLoader";
 import DashboardButtons from "./DashboardButtons/DashboardButtons";
+import { useSelector } from "react-redux";
+import { isLoaderSelector } from "@redux/Actions/Auth";
 
 const useStyles = makeStyles({
   root: {
@@ -12,7 +14,7 @@ const useStyles = makeStyles({
 
 const App = () => {
   const styles = useStyles();
-  const [loader, setLoader] = React.useState<boolean>(false);
+  const loader: boolean = useSelector(isLoaderSelector);
 
   return (
     <div className={styles.root}>
