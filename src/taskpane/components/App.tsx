@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import { makeStyles } from "@fluentui/react-components";
-import AuthContext from "../context/AuthContext";
 import AppLoader from "./AppLoader";
 import DashboardButtons from "./DashboardButtons/DashboardButtons";
 
@@ -16,12 +15,10 @@ const App = () => {
   const [loader, setLoader] = React.useState<boolean>(false);
 
   return (
-    <AuthContext.Provider value={{ setLoader }}>
-      <div className={styles.root}>
-        {loader ? <AppLoader /> : null}
-        <DashboardButtons />
-      </div>
-    </AuthContext.Provider>
+    <div className={styles.root}>
+      {loader ? <AppLoader /> : null}
+      <DashboardButtons />
+    </div>
   );
 };
 

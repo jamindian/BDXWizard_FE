@@ -7,8 +7,7 @@ import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constan
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 
-export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive: boolean, sheetName: string): Promise<void> {
-  setLoader(true);
+export async function onCleanSOV(isClaimActive: boolean, sheetName: string): Promise<void> {
   const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
@@ -96,12 +95,12 @@ export async function onCleanSOV(setLoader: (f: boolean) => void, isClaimActive:
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    await tryCatch(createStagingArea(setLoader, isClaimActive, sheetName));
+    await tryCatch(createStagingArea(isClaimActive, sheetName));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(setLoader, isClaimActive: boolean, sheetName: string): Promise<void> {
+export async function createStagingArea(isClaimActive: boolean, sheetName: string): Promise<void> {
     const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
     await Excel.run(async (context: Excel.RequestContext) => {
       let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -386,7 +385,6 @@ export async function createStagingArea(setLoader, isClaimActive: boolean, sheet
       }
 
       await onConfirmData(false, sheetName);
-      setLoader(false);
     });
 }
 
@@ -524,10 +522,8 @@ export async function reCalculate(eventArgs, sheetName: string) {
 }
 
 export async function onTrainAI(
-  setloader: (f: boolean) => void,
   sheetName: string
 ) {
-  setloader(true);
 
   const { activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
@@ -575,14 +571,12 @@ export async function onTrainAI(
     })
     .then((response) => {
       if (response.status === API_UNAUTHORISED) {
-        setloader(false);
       } else {
         toast.success("Mappings learned.");
-        setloader(false);
       }
     })
     .catch(() => {
-      setloader(false);
+
     });
 
     await context.sync();

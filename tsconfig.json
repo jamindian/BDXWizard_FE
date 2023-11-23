@@ -35,7 +35,7 @@
       "@main/*": ["*"],
       "@services/*": ["./src/services/*"],
       "@components/*": ["./src/taskpane/components/*"],
-      "@context/*": ["./src/taskpane/context/*"],
+      "@redux/*": ["./src/taskpane/redux/*"],
       "@taskpaneutilities/*": ["./src/taskpane/utilities/*"],
       "@taskpane/*": ["./src/taskpane/*"],
     }

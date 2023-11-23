@@ -4,14 +4,11 @@ import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
-import AuthContext from "@context/AuthContext";
 import { onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 
 const DashboardButtons: FC<{}> = () => {
-  const { setLoader } = React.useContext(AuthContext);
-
   const [activeBtn, setActiveBtn] = useState<
     | "clean_claim_bdx"
     | "append_claim_bdx"
@@ -37,12 +34,12 @@ const DashboardButtons: FC<{}> = () => {
 
   async function onCleanCurrentActiveSheet(isClaim: boolean): Promise<void> {
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
-    tryCatch(onCleanSOV(setLoader, isClaim, sheetName));
+    tryCatch(onCleanSOV(isClaim, sheetName));
   }
 
   async function trainAIOnCurrentSheet(): Promise<void> {
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
-    tryCatch(onTrainAI(setLoader, sheetName));
+    tryCatch(onTrainAI(sheetName));
   }
 
   const buttons = [
