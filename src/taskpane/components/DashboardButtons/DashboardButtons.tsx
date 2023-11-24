@@ -13,7 +13,7 @@ import TextField from '@mui/material/TextField';
 
 const DashboardButtons: FC<{}> = () => {
   const dispatch = useDispatch();
-  const [patchSize, setPatchSize] = React.useState<number>(0);
+  const [batchSize, setBatchSize] = React.useState<number>(0);
 
   const [activeBtn, setActiveBtn] = useState<
     | "clean_claim_bdx"
@@ -42,7 +42,7 @@ const DashboardButtons: FC<{}> = () => {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(isClaim, sheetName, patchSize > 0 ? patchSize : 1000));
+    tryCatch(onCleanSOV(isClaim, sheetName, batchSize > 0 ? batchSize : 1000));
   }
 
   async function trainAIOnCurrentSheet(): Promise<void> {
@@ -134,10 +134,10 @@ const DashboardButtons: FC<{}> = () => {
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <TextField
-          id="patch-size" label="Patch Size" size="small"
-          value={patchSize} type="number" style={{ margin: '0px auto' }}
+          id="batch-size" label="Batch Size" size="small"
+          value={batchSize} type="number" style={{ margin: '0px auto' }}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setPatchSize(parseInt(event.target.value));
+            setBatchSize(parseInt(event.target.value));
           }}
         />
       </div>

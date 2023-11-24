@@ -9,7 +9,7 @@ import NetworkCalls from "../services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 
-export async function onCleanSOV(isClaimActive: boolean, sheetName: string, patchSize: number): Promise<void> {
+export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batchSize: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
@@ -103,14 +103,14 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, patc
     await context.sync();
 
     const slice: { start: number; end: number }[] = [];
-    const loopTermision: number = raw_sov_range.rowCount > (patchSize+1) ? Math.ceil(raw_sov_range.rowCount / patchSize) : raw_sov_range.rowCount;
+    const loopTermision: number = raw_sov_range.rowCount > (batchSize+1) ? Math.ceil(raw_sov_range.rowCount / batchSize) : raw_sov_range.rowCount;
     for (let i = 0; i < loopTermision; i++) {
       if (i === 0) {
-        slice.push({ start: i + 1, end: patchSize });
+        slice.push({ start: i + 1, end: batchSize });
       } else {
         slice.push({
           start: slice[i - 1].end + 1,
-          end: (slice[i - 1].end + patchSize) < raw_sov_range.rowCount ? (slice[i - 1].end + patchSize) : raw_sov_range.rowCount,
+          end: (slice[i - 1].end + batchSize) < raw_sov_range.rowCount ? (slice[i - 1].end + batchSize) : raw_sov_range.rowCount,
         });
       }
     }
