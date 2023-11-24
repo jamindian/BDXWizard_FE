@@ -9,7 +9,7 @@ import NetworkCalls from "../services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 
-export async function onCleanSOV(isClaimActive: boolean, sheetName: string): Promise<void> {
+export async function onCleanSOV(isClaimActive: boolean, sheetName: string, patchSize: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
@@ -103,14 +103,14 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string): Pro
     await context.sync();
 
     const slice: { start: number; end: number }[] = [];
-    const loopTermision: number = raw_sov_range.rowCount > 1001 ? Math.ceil(raw_sov_range.rowCount / 1000) : raw_sov_range.rowCount;
+    const loopTermision: number = raw_sov_range.rowCount > (patchSize+1) ? Math.ceil(raw_sov_range.rowCount / patchSize) : raw_sov_range.rowCount;
     for (let i = 0; i < loopTermision; i++) {
       if (i === 0) {
-        slice.push({ start: i + 1, end: 1000 });
+        slice.push({ start: i + 1, end: patchSize });
       } else {
         slice.push({
           start: slice[i - 1].end + 1,
-          end: (slice[i - 1].end + 1000) < raw_sov_range.rowCount ? (slice[i - 1].end + 1000) : raw_sov_range.rowCount,
+          end: (slice[i - 1].end + patchSize) < raw_sov_range.rowCount ? (slice[i - 1].end + patchSize) : raw_sov_range.rowCount,
         });
       }
     }
@@ -160,7 +160,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
         
         // get map percentage list
-        await NetworkCalls.OnMapColumns({ source_columns: selectedRawColumns, category: isClaimActive ? "Claims" : "Premium" })
+        await NetworkCalls.OnMapColumns({ source_columns: selectedRawColumns.map((c) => c.toString()), category: isClaimActive ? "Claims" : "Premium" })
           .then((response) => {
             if (response.status === API_UNAUTHORISED) {} else {
               result_list = response.data.result_list;

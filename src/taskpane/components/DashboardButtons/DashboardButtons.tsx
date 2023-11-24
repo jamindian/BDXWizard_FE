@@ -9,9 +9,11 @@ import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { useDispatch } from "react-redux";
 import { setStopwatch } from "@redux/Actions/Auth";
+import TextField from '@mui/material/TextField';
 
 const DashboardButtons: FC<{}> = () => {
   const dispatch = useDispatch();
+  const [patchSize, setPatchSize] = React.useState<number>(0);
 
   const [activeBtn, setActiveBtn] = useState<
     | "clean_claim_bdx"
@@ -40,7 +42,7 @@ const DashboardButtons: FC<{}> = () => {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(isClaim, sheetName));
+    tryCatch(onCleanSOV(isClaim, sheetName, patchSize > 0 ? patchSize : 1000));
   }
 
   async function trainAIOnCurrentSheet(): Promise<void> {
@@ -114,21 +116,32 @@ const DashboardButtons: FC<{}> = () => {
   ];
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: 20 }}>
-      {buttons
-        .filter((btn) => btn.condition)
-        .map(({ disabled, hover, icon, id, label, onClick }) => (
-          <button
-            className={`custom-btn active ${hover}`}
-            onClick={() => onClick()} key={id}
-            onMouseOver={() => onSetActiveBtn(activeBtn === hover ? "" : (hover as any))}
-            disabled={disabled}
-          >
-            <span className="btn-icon">{icon}</span>
-            <span className="btn-text">{label}</span>
-          </button>
-        ))}
-    </div>
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: 20 }}>
+        {buttons
+          .filter((btn) => btn.condition)
+          .map(({ disabled, hover, icon, id, label, onClick }) => (
+            <button
+              className={`custom-btn active ${hover}`}
+              onClick={() => onClick()} key={id}
+              onMouseOver={() => onSetActiveBtn(activeBtn === hover ? "" : (hover as any))}
+              disabled={disabled}
+            >
+              <span className="btn-icon">{icon}</span>
+              <span className="btn-text">{label}</span>
+            </button>
+          ))}        
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <TextField
+          id="patch-size" label="Patch Size" size="small"
+          value={patchSize} type="number" style={{ margin: '0px auto' }}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setPatchSize(parseInt(event.target.value));
+          }}
+        />
+      </div>
+    </>
   );
 };
 
