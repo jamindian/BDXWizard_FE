@@ -102,6 +102,19 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string): Pro
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
+    const slice: { start: number; end: number }[] = [];
+    const loopTermision: number = raw_sov_range.rowCount > 1001 ? Math.ceil(raw_sov_range.rowCount / 1000) : raw_sov_range.rowCount;
+    for (let i = 0; i < loopTermision; i++) {
+      if (i === 0) {
+        slice.push({ start: i + 1, end: 1000 });
+      } else {
+        slice.push({
+          start: slice[i - 1].end + 1,
+          end: (slice[i - 1].end + 1000) < raw_sov_range.rowCount ? (slice[i - 1].end + 1000) : raw_sov_range.rowCount,
+        });
+      }
+    }
+
     await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0]));
   });
 }
