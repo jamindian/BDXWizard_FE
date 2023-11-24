@@ -12,13 +12,13 @@ const authSlice = createSlice({
   },
   reducers: {
     setUserHitLoadData: (state, action) => {
-        state.isLoadData = action.payload;
+      state.isLoadData = action.payload;
     },
     setManualMapped: (state, action) => {
-        state.isSetManualMapped = action.payload;
+      state.isSetManualMapped = action.payload;
     },
     setLoader: (state, action) => {
-        state.loader = action.payload;
+      state.loader = action.payload;
     },
   },
 });
@@ -34,9 +34,9 @@ export const isManualMappedSelector = createDraftSafeSelector(
   (state) => state.isSetManualMapped
 );
 export const isLoaderSelector = createDraftSafeSelector(
-    selfSelect,
-    (state) => state.loader
-  );
+  selfSelect,
+  (state) => state.loader
+);
 
 export const {
   setUserHitLoadData,

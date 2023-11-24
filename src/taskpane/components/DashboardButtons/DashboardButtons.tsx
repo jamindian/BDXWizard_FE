@@ -34,12 +34,12 @@ const DashboardButtons: FC<{}> = () => {
 
   async function onCleanCurrentActiveSheet(isClaim: boolean): Promise<void> {
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
+    global.selectedSheet = sheetName;
     tryCatch(onCleanSOV(isClaim, sheetName));
   }
 
   async function trainAIOnCurrentSheet(): Promise<void> {
-    const sheetName: string = await CommonMethods.getActiveWorksheetName();
-    tryCatch(onTrainAI(sheetName));
+    tryCatch(onTrainAI(global.selectedSheet));
   }
 
   const buttons = [

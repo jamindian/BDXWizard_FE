@@ -5,6 +5,7 @@ import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
+import { store } from "@redux/Store";
 
 /** Default helper for invoking an action and handling errors. */
 export async function tryCatch(callback) {
@@ -292,6 +293,8 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
     await context.sync();
 
+    const _state: any = store.getState();
+
     // get TempData sheet and sync the context
     let temp_sheet = sheets.getItem(activeTempWorksheet);
     let last_header_cell = temp_sheet.getCell(
@@ -392,11 +395,11 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
       let rangeHalfT: Excel.Range = stagingSheet.getRange(`${initial}10`);
       let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`).load(ExcelLoadEnumerator.values);
       let rangeArrow: Excel.Range = stagingSheet.getRange(`${initial}12`);
-      const condition: boolean = formats[ind] !== AppColors.primacy_green;
+      const condition: boolean = !_state.auth.isSetManualMapped || (_state.auth.isSetManualMapped && formats[ind] !== AppColors.primacy_green);
       await context.sync();
 
       if (val !== "" && typeof val === "string") {
-        if (rangePercentage.values.flat(1)[0] === Strings.manuallyMapped) {
+        if (condition) {
           rangePercentage.format.font.size = 14;
           rangePercentage.format.fill.color = AppColors.primacy_white;
           rangePercentage.format.font.color = AppColors.primacy_red;
