@@ -376,7 +376,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
           }
         }
 
-        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, ""));
+        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
@@ -402,29 +402,25 @@ var debouncedRender = _.debounce(function (
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   Excel.run(async (context: Excel.RequestContext) => {
-    if (triggerSource) {
+    if (triggerSource && !unMappedViaAddRisk) {
       await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
+      const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
+      const containsM: boolean = parseInt(actual[1]) === 4 && event.details?.valueBefore !== event.details.valueAfter;      
+      await unmappedcolumn(
+        true,
+        JSON.parse(CommonMethods.getLocalStorage("autoMappedRawColumns")),
+        JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
+        parseInt(actual[1]) === 4,
+        sheetName,
+        containsM ? event.address : ""
+      );
     }
 
-    if (triggerSource) {
-      if (!unMappedViaAddRisk) {
-        const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
-        const containsM: boolean = parseInt(actual[1]) === 4 && event.details?.valueBefore !== event.details.valueAfter;
-        unmappedcolumn(
-          true,
-          JSON.parse(CommonMethods.getLocalStorage("autoMappedRawColumns")),
-          JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
-          parseInt(actual[1]) === 4,
-          containsM ? event.address : ""
-        );
-      }
-    }
-
-    await reCalculate(event, sheetName);
+    // await reCalculate(event, sheetName);
 
     return context.sync();
-  }).catch(function (error) {
-    console.log(error);
+  }).catch(function () {
+    store.dispatch(setLoader(false));
   });
 },
 750); // Adjust the debounce delay as needed

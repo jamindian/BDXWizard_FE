@@ -152,6 +152,7 @@ export async function unmappedcolumn(
     const stagingTableHeader = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
     await context.sync();
 
+
     const headerStaging: string[][] = stagingTableHeader.values;
 
     const result_list = CommonMethods.getLocalStorage("result_list");
@@ -169,11 +170,11 @@ export async function unmappedcolumn(
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();
 
-      // get tempdata header range and load values
-      let raw_sov_columns_range = temp_sheet.getRange(
-        "B1:" + last_header_cell.address
-      );
-      raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    // get tempdata header range and load values
+    let raw_sov_columns_range = temp_sheet.getRange(
+      "B1:" + last_header_cell.address
+    );
+    raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
 
       // get source data header rage in staging area sheet and load values
       const range: Excel.Range = sheet
@@ -195,12 +196,6 @@ export async function unmappedcolumn(
           raw_with_emty[0][ind] ? col : undefined
         )
         .filter((column) => column);
-      // find unmapped columns by checking mapped columns in raw SOV columns list
-      const unmappedRawSovColumns: string[] = differenceWith(
-        raw_sov_columns_range.values[0],
-        raw_with_emty[0],
-        isEqual
-      );
 
       if (
         (!autoMappedRawColumns || !autoMappedRawColumns?.length) &&
@@ -222,7 +217,7 @@ export async function unmappedcolumn(
         autoMappedStagingColumns?.length &&
         onChange
       ) {
-        
+
         if (hitPercentageFunction) {
           await deleteUnMappedColumnValues(sheetName);
           await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress, sheetName);
@@ -390,13 +385,11 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     const values: any[] = percRange.values.flat(1);
     let initial: string = AlphabetsEnumerator.C;
 
-    let ind: number = 0;
-    for (const val of values) {
+    values.forEach((val, ind: number) => {
       let rangeHalfT: Excel.Range = stagingSheet.getRange(`${initial}10`);
-      let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`).load(ExcelLoadEnumerator.values);
+      let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`);
       let rangeArrow: Excel.Range = stagingSheet.getRange(`${initial}12`);
       const condition: boolean = !_state.auth.isSetManualMapped || (_state.auth.isSetManualMapped && formats[ind] !== AppColors.primacy_green);
-      await context.sync();
 
       if (val !== "" && typeof val === "string") {
         if (condition) {
@@ -428,7 +421,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
 
       initial = CommonMethods.getNextKey(initial);
       ind++;
-    }
+    });
 
     await context.sync();
 

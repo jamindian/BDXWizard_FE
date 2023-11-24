@@ -4,10 +4,8 @@ import { StoreDef } from "../Store";
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    userActions: [],
     loader: false,
     isLoadData: 0,
-    rawSovExist: false,
     isSetManualMapped: false,
   },
   reducers: {

@@ -70,17 +70,17 @@ class Methods {
   };
 
   public getLocalStorage = (key: string): any => {
-    const name: string = global.workbookName;
+    const name: string = global.selectedSheet;
     return localStorage.getItem(`${key}_${name?.slice(0, 10)}`);
   };
 
   public setLocalStorage = (key: string, value: string): void => {
-    const name: string = global.workbookName;
+    const name: string = global.selectedSheet;
     localStorage.setItem(`${key}_${name?.slice(0, 10)}`, value);
   };
 
   public removeLocalStorage = (key: string): void => {
-    const name: string = global.workbookName;
+    const name: string = global.selectedSheet;
     localStorage.removeItem(`${key}_${name?.slice(0, 10)}`);
   };
 
