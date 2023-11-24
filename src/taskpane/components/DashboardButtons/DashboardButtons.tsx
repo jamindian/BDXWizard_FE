@@ -7,8 +7,12 @@ import AutoGraphIcon from "@mui/icons-material/AutoGraph";
 import { onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
+import { useDispatch } from "react-redux";
+import { setStopwatch } from "@redux/Actions/Auth";
 
 const DashboardButtons: FC<{}> = () => {
+  const dispatch = useDispatch();
+
   const [activeBtn, setActiveBtn] = useState<
     | "clean_claim_bdx"
     | "append_claim_bdx"
@@ -33,6 +37,7 @@ const DashboardButtons: FC<{}> = () => {
   };
 
   async function onCleanCurrentActiveSheet(isClaim: boolean): Promise<void> {
+    dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
     tryCatch(onCleanSOV(isClaim, sheetName));

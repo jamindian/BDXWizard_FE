@@ -7,10 +7,11 @@ import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constan
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 import { store } from "@redux/Store";
-import { setLoader, setManualMapped } from "@redux/Actions/Auth";
+import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 
 export async function onCleanSOV(isClaimActive: boolean, sheetName: string): Promise<void> {
   store.dispatch(setLoader(true));
+  store.dispatch(setStopwatch("start"));
 
   const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
@@ -387,10 +388,12 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         }
 
         await onConfirmData(false, sheetName);
+        store.dispatch(setStopwatch("stop"));
       });
     }
     catch (error) {
       store.dispatch(setLoader(false));
+      store.dispatch(setStopwatch("stop"));
     }
 }
 

@@ -7,6 +7,7 @@ const authSlice = createSlice({
     loader: false,
     isLoadData: 0,
     isSetManualMapped: false,
+    stopwatchState: ""
   },
   reducers: {
     setUserHitLoadData: (state, action) => {
@@ -17,6 +18,9 @@ const authSlice = createSlice({
     },
     setLoader: (state, action) => {
       state.loader = action.payload;
+    },
+    setStopwatch: (state, action) => {
+      state.stopwatchState = action.payload;
     },
   },
 });
@@ -35,11 +39,16 @@ export const isLoaderSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.loader
 );
+export const isStopwatchSelector = createDraftSafeSelector(
+  selfSelect,
+  (state) => state.stopwatchState
+);
 
 export const {
   setUserHitLoadData,
   setManualMapped,
-  setLoader
+  setLoader,
+  setStopwatch
 } = authSlice.actions;
 
 export default authSlice.reducer;
