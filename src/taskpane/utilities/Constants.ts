@@ -35,6 +35,11 @@ export const AppColors: IAppColor = {
   primacy_chart_fadedblue: '#4e81bc',
 };
 
+export const appMainTabs: { id: number; label: string }[] = [
+  { id: 0, label: "Claim" },
+  { id: 1, label: "Premium" },
+];
+
 export const stagingAreaInitialColumns = {
   ID: { displayName: '', headerColor: '', bodyColor: '' },
   INSURER: { displayName: '', headerColor: '', bodyColor: '' },

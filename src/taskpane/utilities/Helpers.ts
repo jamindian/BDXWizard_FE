@@ -6,6 +6,7 @@ import { differenceWith, isEqual } from "lodash";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
+import { setUnMappedColumns } from "@redux/Actions/Process";
 
 /** Default helper for invoking an action and handling errors. */
 export async function tryCatch(callback) {
@@ -196,6 +197,13 @@ export async function unmappedcolumn(
           raw_with_emty[0][ind] ? col : undefined
         )
         .filter((column) => column);
+      
+        // find unmapped columns by checking mapped columns in raw SOV columns list
+      const unmappedRawSovColumns: string[] = differenceWith(
+        raw_sov_columns_range.values[0],
+        raw_with_emty[0],
+        isEqual
+      );
 
       if (
         (!autoMappedRawColumns || !autoMappedRawColumns?.length) &&
@@ -224,12 +232,14 @@ export async function unmappedcolumn(
         }
       
       }
-
+      
       await context.sync();
       if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
         sheet.getUsedRange().format.autofitColumns();
         sheet.getUsedRange().format.autofitRows();
       }    
+
+      store.dispatch(setUnMappedColumns(unmappedRawSovColumns));
   });
 }
 

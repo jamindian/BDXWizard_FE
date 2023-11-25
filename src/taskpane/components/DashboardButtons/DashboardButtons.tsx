@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { setStopwatch } from "@redux/Actions/Auth";
 import TextField from '@mui/material/TextField';
 
-const DashboardButtons: FC<{}> = () => {
+const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
   const dispatch = useDispatch();
   const [batches, setBatches] = React.useState<number>(0);
 
@@ -52,12 +52,12 @@ const DashboardButtons: FC<{}> = () => {
   const buttons = [
     {
       id: 1,
-      condition: true,
+      condition: isClaim,
       disabled: false,
       label: "Clean Claim BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => onCleanCurrentActiveSheet(true),
+      onClick: () => onCleanCurrentActiveSheet(isClaim),
     },
     {
       id: 2,
@@ -79,12 +79,12 @@ const DashboardButtons: FC<{}> = () => {
     },
     {
       id: 4,
-      condition: true,
+      condition: !isClaim,
       disabled: false,
       label: "Clean Premium BDX",
       icon: <PaletteOutlinedIcon />,
       hover: "clean_premium_bdx",
-      onClick: () => onCleanCurrentActiveSheet(false),
+      onClick: () => onCleanCurrentActiveSheet(isClaim),
     },
     {
       id: 5,
@@ -117,7 +117,7 @@ const DashboardButtons: FC<{}> = () => {
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", padding: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", flexWrap: "wrap", padding: 20 }}>
         {buttons
           .filter((btn) => btn.condition)
           .map(({ disabled, hover, icon, id, label, onClick }) => (

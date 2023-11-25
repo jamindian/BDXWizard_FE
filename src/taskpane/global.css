@@ -39,6 +39,21 @@
     }
 }
 
+.addin-body {
+    /* position: fixed; */
+    width: 100%;
+    overflow-y: auto;
+    /* height: calc(100vh - 199px); */
+    margin: 0 !important;
+    flex-grow: 1;
+    background-color: var(--primacy-white);
+}
+
+.addin-body .tabpanel {
+    margin-bottom: 30px !important;
+    padding: 5px 15px !important;
+}
+
 
 /* custom button css  */
 .custom-btn {
@@ -161,6 +176,15 @@
     margin-bottom: 0;
     font-size: 24px;
     color: var(--primacy-black);
+}
+
+.tabpanel {
+    background-color: var(--primacy-white);
+}
+
+.addin-body .tabpanel {
+    margin-bottom: 30px !important;
+    padding: 5px 15px !important;
 }
 
 .card-root>.tabpanel {

@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { makeStyles } from "@fluentui/react-components";
+import { AppBar, Tab, Tabs } from "@mui/material";
 
 import AppLoader from "./AppLoader";
 import DashboardButtons from "./DashboardButtons/DashboardButtons";
@@ -12,6 +13,16 @@ import { store } from "@redux/Store";
 import { Assets } from "@taskpane/utilities/Assets";
 import Header from "./Header";
 import InfoCards from "./InfoCards/InfoCards";
+import { appMainTabs } from "@taskpaneutilities/Constants";
+import TabPanel from "./TabPanel/TabPanel";
+
+
+const a11yProps = (index: any) => {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+};
 
 const useStyles = makeStyles({
   root: {
@@ -23,10 +34,16 @@ const App = () => {
   const styles = useStyles();
   const loader: boolean = useSelector(isLoaderSelector);
 
+  const [tabValue, setTabValue] = React.useState<number>(0);
+
   React.useEffect(() => {
     store.dispatch(setLoader(false));
     store.dispatch(setStopwatch("reset"));
   }, []);
+
+  const handleChange = (_event, newValue: number): void => {
+    setTabValue(newValue);
+  };
 
   return (
     <div className={styles.root}>
@@ -44,8 +61,34 @@ const App = () => {
           </div>
         </div>
       </div>
-      <DashboardButtons />
-      <Timer />
+      <div className={`addin-body`}>
+        <AppBar position="sticky">
+          <Tabs
+            value={tabValue}
+            onChange={handleChange}
+            aria-label="app main tabs"
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            {[...appMainTabs].map((tab, index) => (
+              <Tab
+                label={tab.label}
+                {...a11yProps(tab.id)}
+                key={index}
+                disabled={tab.id === 6}
+                style={{ minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 130 }}
+              />
+            ))}
+          </Tabs>
+        </AppBar>
+        <TabPanel value={tabValue} index={0}>
+          <DashboardButtons isClaim={true} />
+        </TabPanel>
+        <TabPanel value={tabValue} index={1}>
+          <DashboardButtons isClaim={false} />
+        </TabPanel>
+        <Timer />
+      </div>
     </div>
   );
 };
