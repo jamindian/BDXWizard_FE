@@ -9,6 +9,9 @@ import Timer from "./Timer/Timer";
 import { useSelector } from "react-redux";
 import { isLoaderSelector, setLoader, setStopwatch } from "@redux/Actions/Auth";
 import { store } from "@redux/Store";
+import { Assets } from "@taskpane/utilities/Assets";
+import Header from "./Header";
+import InfoCards from "./InfoCards/InfoCards";
 
 const useStyles = makeStyles({
   root: {
@@ -28,6 +31,19 @@ const App = () => {
   return (
     <div className={styles.root}>
       {loader ? <AppLoader /> : null}
+      <div className="sticky-area">
+        <div className="ms-welcome__main">
+          <div className="logo-container cursor-pointer">
+            <Header
+              logo={Assets.logoFilled}
+              title={"BDX Wizard"}
+            />
+          </div>
+          <div className={`cards-container`}>
+            <InfoCards />
+          </div>
+        </div>
+      </div>
       <DashboardButtons />
       <Timer />
     </div>

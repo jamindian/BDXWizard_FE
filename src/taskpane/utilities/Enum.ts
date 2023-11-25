@@ -17,6 +17,13 @@ export enum ExcelLoadEnumerator {
   numberFormat = "numberFormat",
 }
 
+export enum ModalTypesEnumerator {
+  POLICIES = "POLICIES",
+  UNMAPPED_COLUMNS = "UNMAPPED_COLUMNS",
+  GROSS_EARNED_PREMIUM = "GROSS_EARNED_PREMIUM",
+  GROSS_WRITTEN_PREMIUM = "GROSS_WRITTEN_PREMIUM"
+}
+
 export enum AlphabetsEnumerator {
   A = "A",
   B = "B",

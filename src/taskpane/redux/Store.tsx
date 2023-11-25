@@ -3,9 +3,11 @@ import storage from "redux-persist/lib/storage";
 import { persistReducer } from "redux-persist";
 
 import LoginReducer from "./Actions/Auth";
+import ProcessReducer from "./Actions/Process";
 
 const rootReducer = combineReducers({
   auth: LoginReducer,
+  process: ProcessReducer
 });
 
 const persistConfig = {

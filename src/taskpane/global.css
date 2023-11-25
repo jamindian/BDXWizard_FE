@@ -125,3 +125,90 @@
     text-align: left;
     margin-bottom: 20px;
 }
+
+
+.ms-welcome__header {
+    padding: 20px;
+    padding-bottom: 30px;
+    padding-top: 100px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-container {
+    width: 85px;
+}
+
+.cards-container {
+    width: calc(100% - 85px);
+    min-width: 332px;
+}
+
+.card-root {
+    min-width: 170px;
+    margin: 5px 6px;
+}
+
+.MuiTypography-root.card-root-title {
+    font-size: 14px;
+    margin: 0;
+}
+
+.MuiTypography-root.card-pos {
+    margin-bottom: 0;
+    font-size: 24px;
+    color: var(--primacy-black);
+}
+
+.card-root>.tabpanel {
+    padding: 12px !important;
+}
+
+.d-flex-column-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.d-flex-row-center {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.ms-welcome__main {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-flex: 1 0 0;
+    flex: 1 0 0;
+    padding: 2px 12px;
+    justify-content: center;
+}
+
+.ms-welcome__main {
+    position: sticky;
+    top: 90px;
+    z-index: 1000;
+    background-color: var(--primacy-white);
+}
+
+.ms-welcome__main>h2 {
+    width: 100%;
+    text-align: center;
+}
+
+.ms-welcome__main .MuiCardContent-root {
+    padding: 1px;
+}
+
+.ms-welcome__main .MuiCardContent-root:last-child {
+    padding-bottom: 1px;
+}
