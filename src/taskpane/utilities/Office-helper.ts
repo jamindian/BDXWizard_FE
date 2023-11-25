@@ -9,7 +9,7 @@ import NetworkCalls from "../services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 
-export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batchSize: number): Promise<void> {
+export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
@@ -102,25 +102,32 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    const slice: { start: number; end: number }[] = [];
-    const loopTermision: number = raw_sov_range.rowCount > (batchSize+1) ? Math.ceil(raw_sov_range.rowCount / batchSize) : raw_sov_range.rowCount;
+    const totalRows = raw_sov_range.rowCount - 1;
+    const rows_per_batch = totalRows / batches;
+        
+    const chunks = [];
+    const loopTermision = totalRows > (rows_per_batch+1) ? Math.ceil(totalRows / rows_per_batch) : totalRows;
     for (let i = 0; i < loopTermision; i++) {
+      if (i + 17 > Math.round(rows_per_batch) + 16) {
+        break;
+      }
+
       if (i === 0) {
-        slice.push({ start: i + 1, end: batchSize });
+        chunks.push({ start: i + 17, end: Math.round(rows_per_batch) + 16 });
       } else {
-        slice.push({
-          start: slice[i - 1].end + 1,
-          end: (slice[i - 1].end + batchSize) < raw_sov_range.rowCount ? (slice[i - 1].end + batchSize) : raw_sov_range.rowCount,
+        chunks.push({
+          start: chunks[i - 1].end + 1,
+          end: (chunks[i - 1].end + rows_per_batch) < totalRows ? Math.round((chunks[i - 1].end + rows_per_batch)) : totalRows + 16,
         });
       }
     }
 
-    await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0]));
+    await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0], chunks));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(isClaimActive: boolean, sheetName: string, selectedRawColumns: string[]): Promise<void> {
+export async function createStagingArea(isClaimActive: boolean, sheetName: string, selectedRawColumns: string[], chunks): Promise<void> {
     const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
     try {
       await Excel.run(async (context: Excel.RequestContext) => {
@@ -308,18 +315,27 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
             `=IF(C$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),C$13)`,
           ],
         ];
+        sheet.getRange(`D16:${staging_last_cell.address.split("!")[1].slice(0, 2)}16`).copyFrom("C16");
 
-        for (let i = 1; i < parseInt(finalrows); i++) {
-          sheet.getRange("B" + (i + 15).toString()).values = [[i]];
-          sheet.getRange("B" + (i + 15).toString()).numberFormat = [["#"]];
+        // Formula paste logic divided into chunks
+        for (const rowsChunk of chunks) {
+          const getRowsBelow = StagingTable.getDataBodyRange().getRowsBelow(rowsChunk.end).load(ExcelLoadEnumerator.address);
+          await context.sync();          
+
+          for (let i = rowsChunk.start - 16; i <= rowsChunk.end - 16; i++) {
+            sheet.getRange("B" + (i + 15).toString()).values = [[i]];
+            sheet.getRange("B" + (i + 15).toString()).numberFormat = [["#"]];
+          }
+
+          const sliceAddress: string = getRowsBelow.address.split('!')[1];
+          const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
+          const dynamicRange: string = `C${rowsChunk.start}:${actual[2]}${rowsChunk.end - 1}`;
+
+          sheet.getRange(dynamicRange).copyFrom("C16");
+          sheet.getRange(dynamicRange).copyFrom(sheet.getRange(dynamicRange), Excel.RangeCopyType.values);
         }
+        // Formula paste logic divided into chunks END
 
-        sheet.getRange(`C17:C${(parseInt(raw_sov_row_count) + 14).toString()}`).copyFrom("C16");
-        sheet
-          .getRange(
-            `D16:${staging_last_cell.address.split("!")[1].slice(0, 2)}` + (parseInt(raw_sov_row_count) + 14).toString()
-          )
-          .copyFrom("C16");
         await context.sync();
 
         if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
@@ -327,32 +343,14 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
           sheet.getUsedRange().format.autofitRows();
         }
 
-        const updatearray = raw_sov_columns_range.values[0];
-        const finalupdate = [...updatearray];
-        const length: number = finalupdate.length;
-        finalupdate.map((item, index) => (temp_sheet.getRange("PP" + (index + 2).toString()).values = [[item]]));
         const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
-        let visibleRange = stagingTable.getDataBodyRange().getVisibleView();
-        await context.sync();
-
-        const raw_with_emty: Excel.Range = temp_sheet.getRange("PP1:PP" + (length + 1).toString());
-
-        sheet.load(ExcelLoadEnumerator.rows);
-        sheet.load(ExcelLoadEnumerator.rowCount);
-        visibleRange.load(ExcelLoadEnumerator.values);
-        visibleRange.load(ExcelLoadEnumerator.address);
-        visibleRange.load(ExcelLoadEnumerator.rowCount);
-        visibleRange.load(ExcelLoadEnumerator.columnCount);
-        visibleRange.load(ExcelLoadEnumerator.columns);
-        sheet.activate();
-        await context.sync();
 
         sheet.getRange(
           `C4:${lastCellAddress}4`
         ).dataValidation.rule = {
           list: {
             inCellDropDown: true,
-            source: raw_with_emty,
+            source: selectedRawColumns.map((c) => c.toString()).toString(),
           },
         };
 
@@ -377,31 +375,13 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
 
         await setStagingAreaColorSchemes(isClaimActive);
-
-        let tablerows: Excel.TableRowCollection = stagingTable.rows;
-        tablerows.load(ExcelLoadEnumerator.items);
-        await context.sync();
-
-        for (let i = 0; i < tablerows.items.length; i++) {
-          const find: any[] = tablerows.items[i].values[0];
-          if (!find.length || !find[1]) {
-            const row = tablerows.getItemAt(i);
-            row.delete();
-          }
-        }
-
         await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
-
-        if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
-          sheet.getUsedRange().format.autofitColumns();
-          sheet.getUsedRange().format.autofitRows();
-        }
-
-        await onConfirmData(false, sheetName);
         store.dispatch(setStopwatch("stop"));
+
+        tryCatch(onConfirmData(false, sheetName));
       });
     }
     catch (error) {
