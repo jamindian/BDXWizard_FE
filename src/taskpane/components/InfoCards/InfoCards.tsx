@@ -23,7 +23,6 @@ const InfoCards: React.FC<IInfoCards> = () => {
   }, [sheetChanged]);
 
   async function getExcelColumnsResults(): Promise<void> {
-    console.log("hit");
     const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
     const results = await Excel.run(async (context: Excel.RequestContext) => {
       // get staging area sheet and sync the context

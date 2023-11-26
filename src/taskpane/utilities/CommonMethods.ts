@@ -30,6 +30,31 @@ class Methods {
     return d;
   };
 
+  public stagingAreaRowsDivideIntoChunks = (totalRows: number, no_of_batches: number): { start: number; end: number; }[] => {
+    const rows_per_batch = Math.ceil(totalRows / no_of_batches); // Use Math.ceil to ensure all rows are covered
+    const chunks = [];
+    const loopTermination = Math.ceil(totalRows / rows_per_batch); // Use Math.ceil to handle cases where totalRows is not a multiple of rows_per_batch
+
+    for (let i = 0; i < loopTermination; i++) {
+      const start = i * rows_per_batch + 1; // Adjust the start index calculation
+      const end = (i + 1) * rows_per_batch; // Adjust the end index calculation
+
+      chunks.push({
+        start: start,
+        end: end < totalRows ? end : totalRows,
+      });
+    }
+
+    if (totalRows < 500) {
+      return [{ start: 17, end: totalRows < 17 ? totalRows + 16 : totalRows }];
+    }
+
+    return chunks.map((d, i) => {
+      const e = d.end < totalRows ? d.end : d.end > totalRows ? totalRows - 16 : totalRows;
+      return { start: i === 0 ? d.start + 16 : d.start, end: e }
+    });
+  };
+
   public numberFormatter = (num: number) => {
     const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
     let item = lookupNumberFormats

@@ -103,26 +103,9 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    const totalRows = raw_sov_range.rowCount - 1;
-    const rows_per_batch = totalRows / batches;
-        
-    const chunks = [];
-    const loopTermision = totalRows > (rows_per_batch+1) ? Math.ceil(totalRows / rows_per_batch) : totalRows;
-    for (let i = 0; i < loopTermision; i++) {
-      if (i + 17 > Math.round(rows_per_batch) + 16) {
-        break;
-      }
-
-      if (i === 0) {
-        chunks.push({ start: i + 17, end: Math.round(rows_per_batch) + 16 });
-      } else {
-        chunks.push({
-          start: chunks[i - 1].end + 1,
-          end: (chunks[i - 1].end + rows_per_batch) < totalRows ? Math.round((chunks[i - 1].end + rows_per_batch)) : totalRows + 16,
-        });
-      }
-    }
-
+    const totalRows = raw_sov_range.rowCount - 1;        
+    const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
+    
     await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0], chunks));
   });
 }
@@ -320,17 +303,14 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
 
         // Formula paste logic divided into chunks
         for (const rowsChunk of chunks) {
-          const getRowsBelow = StagingTable.getDataBodyRange().getRowsBelow(rowsChunk.end).load(ExcelLoadEnumerator.address);
-          await context.sync();          
-
           for (let i = rowsChunk.start - 16; i <= rowsChunk.end - 16; i++) {
             sheet.getRange("B" + (i + 15).toString()).values = [[i]];
             sheet.getRange("B" + (i + 15).toString()).numberFormat = [["#"]];
           }
 
-          const sliceAddress: string = getRowsBelow.address.split('!')[1];
+          const sliceAddress: string = staging_last_cell.address.split('!')[1];
           const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
-          const dynamicRange: string = `C${rowsChunk.start}:${actual[2]}${rowsChunk.end - 1}`;
+          const dynamicRange: string = `C${rowsChunk.start}:${actual[0]}${rowsChunk.end}`;
 
           sheet.getRange(dynamicRange).copyFrom("C16");
           sheet.getRange(dynamicRange).copyFrom(sheet.getRange(dynamicRange), Excel.RangeCopyType.values);
