@@ -35,6 +35,15 @@ export const AppColors: IAppColor = {
   primacy_chart_fadedblue: '#4e81bc',
 };
 
+export const lookupNumberFormats: { value: number; symbol: string; }[] = [
+  { value: 1e3, symbol: "K" },
+  { value: 1e6, symbol: "M" },
+  { value: 1e9, symbol: "B" },
+  { value: 1e12, symbol: "T" },
+  { value: 1e15, symbol: "P" },
+  { value: 1e18, symbol: "E" },
+];
+
 export const appMainTabs: { id: number; label: string }[] = [
   { id: 0, label: "Claim" },
   { id: 1, label: "Premium" },

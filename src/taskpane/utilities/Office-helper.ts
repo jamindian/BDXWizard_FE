@@ -8,6 +8,7 @@ import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "../services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
+import { setSheetChanged } from "@redux/Actions/Process";
 
 export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
@@ -382,6 +383,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         store.dispatch(setStopwatch("stop"));
 
         tryCatch(onConfirmData(false, sheetName));
+        store.dispatch(setSheetChanged());
       });
     }
     catch (error) {
@@ -412,7 +414,7 @@ var debouncedRender = _.debounce(function (
       );
     }
 
-    // await reCalculate(event, sheetName);
+    await reCalculate(event, sheetName);
 
     return context.sync();
   }).catch(function () {
@@ -439,6 +441,7 @@ export async function stagingTableOnChange(e, sheetName: string) {
 }
 
 export async function reCalculate(eventArgs, sheetName: string) {
+  store.dispatch(setSheetChanged());
   const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context

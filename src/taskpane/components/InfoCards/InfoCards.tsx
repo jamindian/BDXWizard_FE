@@ -2,17 +2,48 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 
 import { Card, CardContent, Typography } from "@mui/material";
-import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
+import { ExcelLoadEnumerator, ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import DialogContainer from "./DialogContainer";
-import { isSheetPoliciesSelector, isUnMappedColumnsSelector } from "@redux/Actions/Process";
+import { isSheetChangedSelector, isUnMappedColumnsSelector } from "@redux/Actions/Process";
+import CommonMethods from "@taskpaneutilities/CommonMethods";
 
 interface IInfoCards {}
 
 const InfoCards: React.FC<IInfoCards> = () => {
   const [activeModal, setActiveModal] = useState<string>("");
+  const [data, setData] = React.useState<{ policies: number; GWP: number; GEP: number; }>({ policies: 0, GEP: 0, GWP: 0 });
 
-  const totalPolicies: number = useSelector(isSheetPoliciesSelector);
+  const sheetChanged: number = useSelector(isSheetChangedSelector);
   const unMappedColumns: string[] = useSelector(isUnMappedColumnsSelector);
+
+  React.useEffect(() => {
+    if (sheetChanged !== 0) {
+      getExcelColumnsResults();
+    }
+  }, [sheetChanged]);
+
+  async function getExcelColumnsResults(): Promise<void> {
+    console.log("hit");
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
+    const results = await Excel.run(async (context: Excel.RequestContext) => {
+      // get staging area sheet and sync the context
+      const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+      const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+      await context.sync();
+
+      const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
+      await context.sync();
+
+      const id = stagingTable.columns.getItem("ID").getDataBodyRange().load(ExcelLoadEnumerator.values);
+      const gwp = stagingTable.columns.getItem("Gross Written Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
+      const gep = stagingTable.columns.getItem("Gross Earned Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      return { policies: id.values.flat(1).length, GWP: CommonMethods.arrayValuesSum(gwp.values.flat(1)), GEP: CommonMethods.arrayValuesSum(gep.values.flat(1)) };
+    });
+
+    setData(results);
+  }
 
   const toggleModal = (name: string): void => {
     setActiveModal(name);
@@ -28,7 +59,7 @@ const InfoCards: React.FC<IInfoCards> = () => {
           >
             <CardContent className="d-flex-column-center">
               <Typography className="card-pos" color="textSecondary" component='div'>
-                {totalPolicies ? totalPolicies : 0}
+                { data.policies > 1000 ? CommonMethods.numberFormatter(data.policies) : data.policies }
               </Typography>
               <Typography
                 className="card-root-title"
@@ -45,10 +76,11 @@ const InfoCards: React.FC<IInfoCards> = () => {
           <Card
             className="card-root"
             onClick={() => toggleModal(ModalTypesEnumerator.GROSS_WRITTEN_PREMIUM)}
+            title={`${data.GWP ? data.GWP + "$" : "0"}`}
           >
             <CardContent className="d-flex-column-center">
               <Typography className="card-pos" color="textSecondary" component='div'>
-                {unMappedColumns.length}
+                { CommonMethods.numberFormatter(data.GWP) }
               </Typography>
               <Typography
                 className="card-root-title"
@@ -65,10 +97,11 @@ const InfoCards: React.FC<IInfoCards> = () => {
           <Card
             className="card-root"
             onClick={() => toggleModal(ModalTypesEnumerator.GROSS_EARNED_PREMIUM)}
+            title={`${data.GEP ? data.GEP + "$" : "0"}`}
           >
             <CardContent className="d-flex-column-center">
               <Typography className="card-pos" color="textSecondary" component='div'>
-                {unMappedColumns.length}
+                { CommonMethods.numberFormatter(data.GEP) }
               </Typography>
               <Typography
                 className="card-root-title"
@@ -105,14 +138,13 @@ const InfoCards: React.FC<IInfoCards> = () => {
         <DialogContainer
           activeModal={activeModal}
           toggleModal={toggleModal}
-          totalPolicies={totalPolicies}
-          unMappedColumns={unMappedColumns}
+          data={{ ...data, unMappedColumns }}
         />
       </div>
     );
   }, [
     activeModal,
-    totalPolicies,
+    data,
     unMappedColumns,
   ]);
 };

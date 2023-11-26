@@ -62,21 +62,24 @@ const App = () => {
         </div>
       </div>
       <div className={`addin-body`}>
-        <AppBar position="sticky">
+        <AppBar position="sticky" color="primary">
           <Tabs
             value={tabValue}
             onChange={handleChange}
             aria-label="app main tabs"
             variant="scrollable"
             scrollButtons="auto"
+            TabIndicatorProps={{
+              sx: { background: "#fff" }
+            }}
           >
             {[...appMainTabs].map((tab, index) => (
               <Tab
                 label={tab.label}
                 {...a11yProps(tab.id)}
                 key={index}
-                disabled={tab.id === 6}
-                style={{ minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 130 }}
+                disabled={tab.id === 6} 
+                style={{ color: "#fff", minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 130 }}
               />
             ))}
           </Tabs>

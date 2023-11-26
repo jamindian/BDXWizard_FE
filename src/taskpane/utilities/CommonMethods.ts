@@ -1,6 +1,6 @@
 import moment from "moment";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
-import { AppColors } from "@taskpaneutilities/Constants";
+import { AppColors, lookupNumberFormats } from "@taskpaneutilities/Constants";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -28,6 +28,17 @@ class Methods {
   public convertIntoDateFormat = (_air: boolean, date: string): string => {
     var d = moment(date).format("MM/DD/YYYY");
     return d;
+  };
+
+  public numberFormatter = (num: number) => {
+    const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+    let item = lookupNumberFormats
+      .slice()
+      .reverse()
+      .find((item) => num >= item.value);
+    return item
+      ? (num / item.value).toFixed(2).replace(rx, "$1") + item.symbol
+      : "0";
   };
 
   public arrayValuesSum = (array): number => {

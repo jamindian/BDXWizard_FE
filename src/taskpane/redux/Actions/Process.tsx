@@ -4,12 +4,12 @@ import { StoreDef } from "../Store";
 const processSlice = createSlice({
   name: "process",
   initialState: {
-    policies: 0,
+    sheetChanged: 0,
     unMappedColumns: [],
   },
   reducers: {
-    setSheetPolices: (state, action) => {
-      state.policies = action.payload;
+    setSheetChanged: (state) => {
+      state.sheetChanged = state.sheetChanged + 1; // action.payload;
     },
     setUnMappedColumns: (state, action) => {
       state.unMappedColumns = action.payload;
@@ -23,13 +23,13 @@ export const isUnMappedColumnsSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.unMappedColumns
 );
-export const isSheetPoliciesSelector = createDraftSafeSelector(
+export const isSheetChangedSelector = createDraftSafeSelector(
   selfSelect,
-  (state) => state.policies
+  (state) => state.sheetChanged
 );
 
 export const {
-    setSheetPolices,
+    setSheetChanged,
     setUnMappedColumns
 } = processSlice.actions;
 

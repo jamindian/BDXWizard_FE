@@ -15,8 +15,7 @@ import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 interface IDialogContainer {
   activeModal: string;
   toggleModal: (name: string) => void;
-  unMappedColumns: string[];
-  totalPolicies: number;
+  data: { unMappedColumns: string[]; policies: number; GWP: number; GEP: number; };
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
@@ -45,9 +44,9 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
         >
           <DialogTitle>Unmapped Columns</DialogTitle>
           <DialogContent>
-            {props.unMappedColumns.length === 0 && <span>No columns found.</span>}
+            {props.data.unMappedColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {props.unMappedColumns.map((item, index) => (
+              {props.data.unMappedColumns.map((item, index) => (
                 <ListItem key={index}>
                   {" "}
                   <ListItemText primary={item}></ListItemText>{" "}
