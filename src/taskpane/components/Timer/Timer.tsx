@@ -57,19 +57,15 @@ const Timer = () => {
 			<h2>Sheet Load Time</h2>
 			<div className="timer">
                 <span className="digits">
-                    <span className="timer-heading">HH</span>
                     {("0" + Math.floor((time / 3600000) % 24)).slice(-2)}:
                 </span>
                 <span className="digits">
-                <span className="timer-heading">MM</span>
                     {("0" + Math.floor((time / 60000) % 60)).slice(-2)}:
                 </span>
                 <span className="digits">
-                    <span className="timer-heading">SS</span>
                     {("0" + Math.floor((time / 1000) % 60)).slice(-2)}:
                 </span>
                 <span className="digits mili-sec">
-                    <span className="timer-heading">MS</span>
                     {("0" + ((time / 10) % 100)).slice(-2)}
                 </span>
             </div>
