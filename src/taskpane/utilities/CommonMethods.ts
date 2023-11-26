@@ -49,9 +49,9 @@ class Methods {
       return [{ start: 17, end: totalRows < 17 ? totalRows + 16 : totalRows }];
     }
 
-    return chunks.map((d, i) => {
-      const e = d.end < totalRows ? d.end : d.end > totalRows ? totalRows - 16 : totalRows;
-      return { start: i === 0 ? d.start + 16 : d.start, end: e }
+    return chunks.map((d) => {
+      // const e = d.end < totalRows ? d.end : d.end > totalRows ? totalRows - 16 : totalRows;
+      return { start: d.start + 16 , end: d.end + 16 }
     });
   };
 

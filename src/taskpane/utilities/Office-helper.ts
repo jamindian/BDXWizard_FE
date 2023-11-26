@@ -303,7 +303,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
 
         // Formula paste logic divided into chunks
         for (const rowsChunk of chunks) {
-          for (let i = rowsChunk.start - 16; i <= rowsChunk.end - 16; i++) {
+          for (let i = rowsChunk.start - 16; i <= rowsChunk.end - 15; i++) {
             sheet.getRange("B" + (i + 15).toString()).values = [[i]];
             sheet.getRange("B" + (i + 15).toString()).numberFormat = [["#"]];
           }
@@ -354,6 +354,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
 
         sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
         stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
+        stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
         await setStagingAreaColorSchemes(isClaimActive);
         await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
