@@ -74,22 +74,15 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
 
     first_row.values = [sheet_header.values[0]];
 
-    for (let i = 3; i < raw_sov_range.rowCount + 2; i++) {
-      sheet.getRange(AlphabetsEnumerator.A + i.toString()).values = [[i - 2]];
-      sheet.getRange(AlphabetsEnumerator.A + i.toString()).numberFormat = [["#"]];
-    }
+    const startRow = 3;
+    const endRow = raw_sov_range.rowCount + 2;
+    sheet.getRange(`A${startRow}:A${endRow}`).values = Array.from({ length: endRow - startRow + 1 }, (_, i) => [i + 1]);
 
-    var list = [];
-    for (var i = 2; i <= raw_sov_range.columnCount + 1; i++) {
-      list.push(i);
-    }
+    const list = Array.from({ length: (raw_sov_range.columnCount + 1) - 2 + 1 }, (_, i) => i + 2);
 
     sheet.getRange("B2:" + last_cell.address).clear();
     sheet.getRange("B2:" + last_cell.address).values = [list];
     sheet.getRange("B2:" + last_cell.address).numberFormat = [["#"]];
-    sheet.getRange("B2:" + last_cell.address).load(ExcelLoadEnumerator.values);
-    sheet.getRange("B2:" + last_cell.address).load(ExcelLoadEnumerator.address);
-    sheet.getRange("B2:" + last_cell.address).load(ExcelLoadEnumerator.rowCount);
 
     // Convert the range to a table.
     let tempTable: Excel.Table = sheet.tables.add("A1:" + end_cell.address, true);
@@ -101,7 +94,7 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
 
     const totalRows = raw_sov_range.rowCount - 1;         
     const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
-    
+
     await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0], chunks));
   });
 }
