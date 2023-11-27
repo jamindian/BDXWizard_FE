@@ -22,23 +22,21 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
 
     let sheets: Excel.WorksheetCollection = workbook.worksheets;
     sheets.load(ExcelLoadEnumerator.items_name);
-    await context.sync();
-
-    if (workbook.protection.protected) {
-      workbook.protection.unprotect("");
-    }
 
     const raw_sov_range: Excel.Range = workbook.getSelectedRange().load(ExcelLoadEnumerator.values);
     raw_sov_range.load(ExcelLoadEnumerator.address);
     raw_sov_range.load(ExcelLoadEnumerator.columnCount);
     raw_sov_range.load(ExcelLoadEnumerator.rowCount);
-    await context.sync();
 
-    // add new tab called TempData
     let sheet: Excel.Worksheet = workbook.worksheets.getItemOrNullObject(
       activeTempWorksheet
     );
+
     await context.sync();
+
+    if (workbook.protection.protected) {
+      workbook.protection.unprotect("");
+    }
 
     global.workbookName = workbook.name?.split(".")[0];
 
@@ -48,7 +46,6 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     sheet = sheets.add(activeTempWorksheet);
 
     // activate newly added tab
-    sheet = context.workbook.worksheets.getItem(activeTempWorksheet);
     sheet.activate();
     await context.sync();
 
@@ -57,7 +54,6 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     CommonMethods.removeLocalStorage("lengthdele");
     CommonMethods.setLocalStorage("column_count", raw_sov_range.columnCount.toString());
     CommonMethods.setLocalStorage("row_count", raw_sov_range.rowCount.toString());
-    await context.sync();
 
     sheet.getRange("B2").copyFrom(raw_sov_range, Excel.RangeCopyType.values);
     sheet.getRange("A2").values = [["ID"]];
@@ -69,13 +65,13 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     sheet_header.load(ExcelLoadEnumerator.address);
     sheet_header.load(ExcelLoadEnumerator.rowCount);
     sheet_header.load(ExcelLoadEnumerator.columnCount);
-    await context.sync();
 
     const first_row: Excel.Range = sheet
       .getRange(`A1:${last_cell.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0]}1`)
       .load(ExcelLoadEnumerator.values)
       .load(ExcelLoadEnumerator.address);
     await context.sync();
+
     first_row.values = [sheet_header.values[0]];
 
     for (let i = 3; i < raw_sov_range.rowCount + 2; i++) {
@@ -103,7 +99,7 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     sheet.getUsedRange().format.autofitRows();
     await context.sync();
 
-    const totalRows = raw_sov_range.rowCount - 1;        
+    const totalRows = raw_sov_range.rowCount - 1;         
     const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
     
     await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0], chunks));
@@ -119,6 +115,10 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
 
         // get staging area sheet and sync the context
         let sheet: Excel.Worksheet = sheets.getItemOrNullObject(activeWorksheetStagingArea);
+
+        // get TempData sheet and sync the context
+        let temp_sheet: Excel.Worksheet = sheets.getItem(activeTempWorksheet);
+        let last_header_cell = temp_sheet.getCell(0, parseInt(CommonMethods.getLocalStorage("column_count"))).load(ExcelLoadEnumerator.address);
         await context.sync();
 
         // if  there is already a old staging area sheet available, delete it
@@ -130,13 +130,6 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         sheet = sheets.getItem(activeWorksheetStagingArea);
         sheet.activate();
         sheet.tabColor = "#0292CF";
-        await context.sync();
-
-        // get TempData sheet and sync the context
-        let temp_sheet: Excel.Worksheet = sheets.getItem(activeTempWorksheet);
-        let last_header_cell = temp_sheet
-          .getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")))
-          .load(ExcelLoadEnumerator.address);
         await context.sync();
 
         let raw_sov_columns_range: Excel.Range = temp_sheet
@@ -222,6 +215,8 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         let percRangeArrowIcons: Excel.Range = sheet
           .getRange(`C12:${lastCellAddress}12`)
           .load(ExcelLoadEnumerator.values);
+        const temprange: Excel.Range = sheet.getRange(`C11:${lastCellAddress}11`);
+        temprange.format.font.bold = true;
         await context.sync();
 
         percRange.format.font.size = 14;
@@ -290,10 +285,6 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         StagingTable.getHeaderRowRange().values = [
           [...tableColumns],
         ];
-        let raw_sov_row_count = CommonMethods.getLocalStorage("row_count");
-        let rawdel = CommonMethods.getLocalStorage("lengthdele");
-        let finalrows = rawdel ? rawdel : raw_sov_row_count;
-
         sheet.getRange("C16").values = [
           [
             `=IF(C$13="",IF(LEN(IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),""))=0,"",IFERROR(VLOOKUP($B16,${activeTempWorksheetTableName}[#All],IFERROR(HLOOKUP('${activeWorksheetStagingArea}'!C$4,${activeTempWorksheetTableName}[#All],2,FALSE), ""),FALSE),"")),C$13)`,
@@ -302,16 +293,14 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         sheet.getRange(`D16:${staging_last_cell.address.split("!")[1].slice(0, 2)}16`).copyFrom("C16");
 
         // Formula paste logic divided into chunks
+        const sliceAddress: string = staging_last_cell.address.split('!')[1];
+        const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
         for (const rowsChunk of chunks) {
-          for (let i = rowsChunk.start - 16; i <= rowsChunk.end - 15; i++) {
-            sheet.getRange("B" + (i + 15).toString()).values = [[i]];
-            sheet.getRange("B" + (i + 15).toString()).numberFormat = [["#"]];
-          }
-
-          const sliceAddress: string = staging_last_cell.address.split('!')[1];
-          const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
           const dynamicRange: string = `C${rowsChunk.start}:${actual[0]}${rowsChunk.end}`;
+          const startRow: number = rowsChunk.start - 16;
+          const endRow: number = rowsChunk.end - 15;
 
+          sheet.getRange(`B${startRow + 15}:B${endRow + 15}`).values = Array.from({ length: endRow - startRow + 1 }, (_, i) => [i + startRow]);
           sheet.getRange(dynamicRange).copyFrom("C16");
           sheet.getRange(dynamicRange).copyFrom(sheet.getRange(dynamicRange), Excel.RangeCopyType.values);
         }
@@ -334,11 +323,6 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
             source: selectedRawColumns.map((c) => c.toString()).toString(),
           },
         };
-
-        // fetch row 11 range
-        const temprange: Excel.Range = sheet.getRange(`C11:${lastCellAddress}11`);
-        await context.sync();
-        temprange.format.font.bold = true;
 
         const conditionalFormatBorders: Excel.ConditionalFormat = temprange.conditionalFormats.add(
           Excel.ConditionalFormatType.presetCriteria
