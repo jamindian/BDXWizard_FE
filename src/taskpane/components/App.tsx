@@ -85,13 +85,13 @@ const App = () => {
           </Tabs>
         </AppBar>
         <TabPanel value={tabValue} index={0}>
-          <DashboardButtons buttonName="Claim" />
+          <DashboardButtons buttonName="POC" />
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
-          <DashboardButtons buttonName="Premium" />
+          <DashboardButtons buttonName="Claim" />
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
-          <DashboardButtons buttonName="POC" />
+          <DashboardButtons buttonName="Premium" />
         </TabPanel>
         <Timer />
       </div>

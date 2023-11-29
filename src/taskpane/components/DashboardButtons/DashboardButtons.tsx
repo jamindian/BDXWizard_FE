@@ -19,29 +19,6 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   const dispatch = useDispatch();
   const [batches, setBatches] = React.useState<number>(0);
 
-  const [activeBtn, setActiveBtn] = useState<
-    | "clean_claim_bdx"
-    | "append_claim_bdx"
-    | "merge_claim_bdx"
-    | "clean_premium_bdx"
-    | "append_premium_bdx"
-    | "merge_premium_bdx"
-    | "train_AI"
-  >("clean_claim_bdx");
-
-  const onSetActiveBtn = (
-    active:
-      | "clean_claim_bdx"
-      | "append_claim_bdx"
-      | "merge_claim_bdx"
-      | "clean_premium_bdx"
-      | "append_premium_bdx"
-      | "merge_premium_bdx"
-      | "train_AI"
-  ): void => {
-    setActiveBtn(active);
-  };
-
   async function onCleanCurrentActiveSheet(buttonName: string): Promise<void> {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
@@ -58,25 +35,25 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
       id: 1,
       condition: true,
       disabled: false,
-      label: `Clean ${buttonName} BDX`,
+      label: "Clean BDX",
       icon: <PaletteOutlinedIcon />,
-      hover: "clean_claim_bdx",
+      hover: `clean_${buttonName}_bdx`,
       onClick: () => onCleanCurrentActiveSheet(buttonName),
     },
     {
       id: 2,
       condition: false,
       disabled: false,
-      label: "Append Claim BDX",
+      label: "Append BDX",
       icon: <HealingIcon />,
-      hover: "append_claim_bdx",
+      hover: `append_${buttonName}_bdx`,
       onClick: () => console.log(),
     },
     {
       id: 3,
       condition: false,
       disabled: false,
-      label: "Merge Claim BDX",
+      label: "Merge BDX",
       icon: <MergeIcon />,
       hover: "merge_claim_bdx",
       onClick: () => console.log(),
@@ -101,23 +78,25 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
             <button
               className={`custom-btn active ${hover}`}
               onClick={() => onClick()} key={id}
-              onMouseOver={() => onSetActiveBtn(activeBtn === hover ? "" : (hover as any))}
+              onMouseOver={() => console.log()}
               disabled={disabled}
             >
               <span className="btn-icon">{icon}</span>
               <span className="btn-text">{label}</span>
             </button>
-          ))}        
+          ))}
       </div>
-      <div className="d-flex-row-center">
-        <TextField
-          id="batch-size" label="Number of Batches" size="small"
-          value={batches} type="number" style={{ margin: '0px auto' }}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setBatches(parseInt(event.target.value));
-          }}
-        />
-      </div>
+      { buttonName !== "POC" && (      
+        <div className="d-flex-row-center">
+          <TextField
+            id="batch-size" label="Number of Batches" size="small"
+            value={batches} type="number" style={{ margin: '0px auto' }}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setBatches(parseInt(event.target.value));
+            }}
+          />
+        </div>
+      )}
     </>
   );
 };

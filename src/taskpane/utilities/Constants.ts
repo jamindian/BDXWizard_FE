@@ -45,9 +45,9 @@ export const lookupNumberFormats: { value: number; symbol: string; }[] = [
 ];
 
 export const appMainTabs: { id: number; label: string }[] = [
-  { id: 0, label: "Claims" },
-  { id: 1, label: "Premium" },
-  { id: 2, label: "POC" },
+  { id: 0, label: "POC" },
+  { id: 1, label: "Claims" },
+  { id: 2, label: "Premium" },
 ];
 
 export const stagingAreaInitialColumns = {
