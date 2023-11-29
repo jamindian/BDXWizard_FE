@@ -501,8 +501,8 @@ export async function adjustColorGradients(color: string, sheetName: string): Pr
   });
 }
 
-export async function setStagingAreaColorSchemes(isClaimActive: boolean): Promise<void> {
-  const columnsResponse = isClaimActive ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+export async function setStagingAreaColorSchemes(buttonName: string): Promise<void> {
+  const columnsResponse = buttonName === "Claim" ? await NetworkCalls.getStagingAreaColumnsForClaims() : buttonName === "Premium" ? await NetworkCalls.getStagingAreaColumnsForPremium() : await NetworkCalls.getStagingAreaColumnsForPOC();
   const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
   // await Excel.run(async (context: Excel.RequestContext) => {

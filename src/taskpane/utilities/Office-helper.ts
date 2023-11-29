@@ -10,7 +10,7 @@ import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 import { setSheetChanged } from "@redux/Actions/Process";
 
-export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batches: number): Promise<void> {
+export async function onCleanSOV(buttonName: string, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
@@ -95,12 +95,12 @@ export async function onCleanSOV(isClaimActive: boolean, sheetName: string, batc
     const totalRows = raw_sov_range.rowCount - 1;         
     const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
 
-    await tryCatch(createStagingArea(isClaimActive, sheetName, raw_sov_range.values[0], chunks));
+    await tryCatch(createStagingArea(buttonName, sheetName, raw_sov_range.values[0], chunks));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(isClaimActive: boolean, sheetName: string, selectedRawColumns: string[], chunks): Promise<void> {
+export async function createStagingArea(buttonName: string, sheetName: string, selectedRawColumns: string[], chunks): Promise<void> {
     const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
     try {
       await Excel.run(async (context: Excel.RequestContext) => {
@@ -133,11 +133,11 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
 
         let result_list = [];
         let match_percentage_list = [];
-        const columnsResponse = isClaimActive ? await NetworkCalls.getStagingAreaColumnsForClaims() : await NetworkCalls.getStagingAreaColumnsForPremium();
+        const columnsResponse = buttonName === "Claim" ? await NetworkCalls.getStagingAreaColumnsForClaims() : buttonName === "Premium" ? await NetworkCalls.getStagingAreaColumnsForPremium() : await NetworkCalls.getStagingAreaColumnsForPOC();
         const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
         
         // get map percentage list
-        await NetworkCalls.OnMapColumns({ source_columns: selectedRawColumns.map((c) => c.toString()), category: isClaimActive ? "Claims" : "Premium" })
+        await NetworkCalls.OnMapColumns({ source_columns: selectedRawColumns.map((c) => c.toString()), template_type: buttonName === "Claim" ? buttonName+"s" : buttonName })
           .then((response) => {
             if (response.status === API_UNAUTHORISED) {} else {
               result_list = response.data.result_list;
@@ -333,7 +333,7 @@ export async function createStagingArea(isClaimActive: boolean, sheetName: strin
         stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
         stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
-        await setStagingAreaColorSchemes(isClaimActive);
+        await setStagingAreaColorSchemes(buttonName);
         await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
         
         toast.success("Staging Area sheet has been successfully created.");
@@ -481,7 +481,8 @@ export async function reCalculate(eventArgs, sheetName: string) {
 }
 
 export async function onTrainAI(
-  sheetName: string
+  sheetName: string,
+  template_type: string,
 ) {
 
   store.dispatch(setLoader(true));
@@ -530,6 +531,7 @@ export async function onTrainAI(
         mapped_columns: JSON.stringify(mapped_columns_range.values),
         staging_columns: JSON.stringify(staging_columns_range.values),
         all_source_column_range: JSON.stringify(raw_sov_columns_range.values),
+        template_type
       })
       .then((response) => {
         if (response.status === API_UNAUTHORISED) {

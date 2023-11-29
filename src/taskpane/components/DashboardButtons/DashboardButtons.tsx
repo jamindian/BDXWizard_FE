@@ -11,7 +11,11 @@ import { useDispatch } from "react-redux";
 import { setStopwatch } from "@redux/Actions/Auth";
 import TextField from '@mui/material/TextField';
 
-const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
+interface IProps {
+  buttonName: string;
+}
+
+const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   const dispatch = useDispatch();
   const [batches, setBatches] = React.useState<number>(0);
 
@@ -38,26 +42,26 @@ const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
     setActiveBtn(active);
   };
 
-  async function onCleanCurrentActiveSheet(isClaim: boolean): Promise<void> {
+  async function onCleanCurrentActiveSheet(buttonName: string): Promise<void> {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(isClaim, sheetName, batches > 0 ? batches : 5));
+    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5));
   }
 
-  async function trainAIOnCurrentSheet(): Promise<void> {
-    tryCatch(onTrainAI(global.selectedSheet));
+  async function trainAIOnCurrentSheet(template_type: string): Promise<void> {
+    tryCatch(onTrainAI(global.selectedSheet, template_type));
   }
 
   const buttons = [
     {
       id: 1,
-      condition: isClaim,
+      condition: true,
       disabled: false,
-      label: "Clean Claim BDX",
+      label: `Clean ${buttonName} BDX`,
       icon: <PaletteOutlinedIcon />,
       hover: "clean_claim_bdx",
-      onClick: () => onCleanCurrentActiveSheet(isClaim),
+      onClick: () => onCleanCurrentActiveSheet(buttonName),
     },
     {
       id: 2,
@@ -76,34 +80,7 @@ const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
       icon: <MergeIcon />,
       hover: "merge_claim_bdx",
       onClick: () => console.log(),
-    },
-    {
-      id: 4,
-      condition: !isClaim,
-      disabled: false,
-      label: "Clean Premium BDX",
-      icon: <PaletteOutlinedIcon />,
-      hover: "clean_premium_bdx",
-      onClick: () => onCleanCurrentActiveSheet(isClaim),
-    },
-    {
-      id: 5,
-      condition: false,
-      disabled: false,
-      label: "Append Premium BDX",
-      icon: <HealingIcon />,
-      hover: "append_premium_bdx",
-      onClick: () => console.log(),
-    },
-    {
-      id: 6,
-      condition: false,
-      disabled: false,
-      label: "Merge Premium BDX",
-      icon: <MergeIcon />,
-      hover: "merge_premium_bdx",
-      onClick: () => console.log(),
-    },
+    },    
     {
       id: 7,
       condition: true,
@@ -111,7 +88,7 @@ const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
       label: "Train AI",
       icon: <AutoGraphIcon />,
       hover: "train_AI",
-      onClick: () => trainAIOnCurrentSheet(),
+      onClick: () => trainAIOnCurrentSheet(buttonName === "Claim" ? buttonName+"s" : buttonName),
     },
   ];
 
@@ -132,7 +109,7 @@ const DashboardButtons: FC<{ isClaim: boolean }> = ({ isClaim }) => {
             </button>
           ))}        
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="d-flex-row-center">
         <TextField
           id="batch-size" label="Number of Batches" size="small"
           value={batches} type="number" style={{ margin: '0px auto' }}

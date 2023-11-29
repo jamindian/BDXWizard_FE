@@ -17,6 +17,13 @@ class ApiNetworkCalls {
       });
     }
 
+    public async getStagingAreaColumnsForPOC(): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.get(`${ApiUrls.getStagingAreaColumnsForPOC}`, {
+        headers: {},
+      });
+    }
+
     public async OnMapColumns(data: any): Promise<any> {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.post(
