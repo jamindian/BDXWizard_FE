@@ -32,8 +32,8 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   }
 
   async function onAppendStagingAreaSheet(): Promise<void> {
-    appendStagingAreas(sheetNumber);
-    sheetNumber++;
+    // appendStagingAreas(sheetNumber);
+    // sheetNumber++;
   }
 
   const buttons = [

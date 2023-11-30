@@ -505,50 +505,39 @@ export async function setStagingAreaColorSchemes(buttonName: string): Promise<vo
   const columnsResponse = buttonName === "Claim" ? await NetworkCalls.getStagingAreaColumnsForClaims() : buttonName === "Premium" ? await NetworkCalls.getStagingAreaColumnsForPremium() : await NetworkCalls.getStagingAreaColumnsForPOC();
   const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
 
-  // await Excel.run(async (context: Excel.RequestContext) => {
-  //   // Format the staging header
-  //   let sheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(worksheetStagingArea);
-  //   await context.sync();
-  //   let stagingTable: Excel.Table = sheet.tables.getItem(worksheetTableName).load(ExcelLoadEnumerator.values);
-  //   stagingTable.load(ExcelLoadEnumerator.columns);
-  //   await context.sync();
+  await Excel.run(async (context: Excel.RequestContext) => {
+    // Format the staging header
+    let stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
+    let stagingTable: Excel.Table = stagingSheet.tables.getItemAt(0).load(ExcelLoadEnumerator.values);
+    stagingTable.load(ExcelLoadEnumerator.columns);
+    await context.sync();
 
-  //   const _coverageABody = stagingTable.columns.getItem(StagingColumns.TOTAL_PAID_INCLUDING_FEES.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-  //   const _tivBody = stagingTable.columns.getItem(StagingColumns.TOTAL_INDEMNITY_PAID.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-  //   await context.sync();
+    for(const column of StagingColumns) {
+      const headerRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getHeaderRowRange().load(ExcelLoadEnumerator.address);
+      const bodyRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getDataBodyRange().load(ExcelLoadEnumerator.address);
+      await context.sync();
 
-  //   const id = stagingTable.columns.getItem(StagingColumns.ID.displayName).getDataBodyRange();
-  //   const postalCode = stagingTable.columns.getItem(StagingColumns.PRODUCT.displayName).getDataBodyRange();
-  //   const coverages = sheet.getRange(`${_coverageABody.address}:${_tivBody.address}`);
-  //   await context.sync();
-  //   id.numberFormat = [["#"]];
-  //   postalCode.numberFormat = [["#00000"]];
-  //   coverages.numberFormat = [["#,###,##0"]];
+      if (column.header_colour_code) {
+        headerRange.format.fill.color = column.header_colour_code;
+        headerRange.format.font.bold = true;
+        headerRange.format.font.color = AppColors.primacy_black;
+        headerRange.format.rowHeight = 22;
+        headerRange.format.columnWidth = 200;
 
-  //   for(const [key, value] of Object.entries(StagingColumns) as [string, IColumnIdentify][]) {
-  //     const headerRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getHeaderRowRange().load(ExcelLoadEnumerator.address);
-  //     const bodyRange: Excel.Range = stagingTable.columns.getItem(value.displayName).getDataBodyRange().load(ExcelLoadEnumerator.address);
-  //     await context.sync();
-
-  //     if (value.headerColor) {
-  //       headerRange.format.fill.color = value.headerColor;
-  //       headerRange.format.font.bold = true;
-  //       headerRange.format.font.color = AppColors.primacy_black;
-  //       headerRange.format.rowHeight = 30;
-  //       if (![StagingColumns.ID.displayName].includes(value.displayName)) {
-  //         headerRange.format.columnWidth = 200;
-  //       }
-  //       headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
-  //       headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
-  //       CommonMethods.setRangeBorders(headerRange, AppColors.primary_blue, true);
+        headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
+        headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
+        CommonMethods.setRangeBorders(headerRange, AppColors.primary_blue, true);
   
-  //       if (value.bodyColor) {
-  //         bodyRange.format.fill.color = value.bodyColor;
-  //       }
-  //       CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
-  //     }
-  //   }
+        if (column.body_colour_code) {
+          bodyRange.format.fill.color = column.body_colour_code;
+        }
+        CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
 
-  //   await context.sync();
-  // });
+        headerRange.format.autofitColumns();
+        headerRange.format.autofitRows();
+      }
+    }
+
+    await context.sync();
+  });
 }
