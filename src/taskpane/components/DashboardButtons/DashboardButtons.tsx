@@ -1,10 +1,10 @@
-import React, { useState, FC } from "react";
+import React, { FC } from "react";
 
 import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
-import { onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
+import { appendStagingAreas, mergeStagingAreas, onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { useDispatch } from "react-redux";
@@ -15,6 +15,7 @@ interface IProps {
   buttonName: string;
 }
 
+let sheetNumber: number = 1;
 const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   const dispatch = useDispatch();
   const [batches, setBatches] = React.useState<number>(0);
@@ -30,6 +31,11 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     tryCatch(onTrainAI(global.selectedSheet, template_type));
   }
 
+  async function onAppendStagingAreaSheet(): Promise<void> {
+    appendStagingAreas(sheetNumber);
+    sheetNumber++;
+  }
+
   const buttons = [
     {
       id: 1,
@@ -42,21 +48,21 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     },
     {
       id: 2,
-      condition: false,
+      condition: buttonName === "POC",
       disabled: false,
       label: "Append BDX",
       icon: <HealingIcon />,
       hover: `append_${buttonName}_bdx`,
-      onClick: () => console.log(),
+      onClick: () => onAppendStagingAreaSheet(),
     },
     {
       id: 3,
-      condition: false,
+      condition: buttonName === "POC",
       disabled: false,
       label: "Merge BDX",
       icon: <MergeIcon />,
-      hover: "merge_claim_bdx",
-      onClick: () => console.log(),
+      hover: `merge_${buttonName}_bdx`,
+      onClick: () => mergeStagingAreas(),
     },    
     {
       id: 7,

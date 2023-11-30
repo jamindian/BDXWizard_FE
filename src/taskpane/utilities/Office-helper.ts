@@ -558,3 +558,113 @@ export async function onTrainAI(
     store.dispatch(setManualMapped(false));
   }
 }
+
+export async function appendStagingAreas(sheetIdentifyNumber: number): Promise<void> {
+  store.dispatch(setLoader(true));
+  try {
+    await Excel.run(async (context: Excel.RequestContext) => {
+      // get staging area sheet and staging table and sync the context
+      let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+      let sheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+      await context.sync();
+
+      const stagingSheetName = `Staging Area ${sheetIdentifyNumber}`;
+      const usedRange = sheet.getUsedRange().load(ExcelLoadEnumerator.address);
+      let stagingSheet: Excel.Worksheet = sheets.getItemOrNullObject(stagingSheetName);
+      await context.sync();
+
+      if (!stagingSheet.isNullObject) {
+        stagingSheet.delete();
+      }
+      stagingSheet = sheets.add(stagingSheetName);
+      stagingSheet.activate();
+      await context.sync();
+
+      const destination = stagingSheet.getRange(usedRange.address.split('!')[1]);
+      await context.sync();
+
+      destination.copyFrom(usedRange, Excel.RangeCopyType.all);
+      destination.format.autofitColumns();
+      destination.format.autofitRows();
+      await context.sync();
+
+      store.dispatch(setLoader(false));
+    });
+  }
+  catch (err) {
+    store.dispatch(setLoader(false));
+  }
+}
+
+export async function mergeStagingAreas(): Promise<void> {
+  store.dispatch(setLoader(true));
+  try {
+    await Excel.run(async (context: Excel.RequestContext) => {
+      // get staging area sheet and staging table and sync the context
+      let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+      sheets.load(ExcelLoadEnumerator.items_name);
+      await context.sync();
+
+      const finalStagingSheetName: string = "Final Staging Area";
+      const stagingSheetsNames: string[] = sheets.items.map(sheet => sheet.name).filter(f => f.includes("Staging Area"));
+
+      const firstStagingAreaSheet = sheets.getItem(stagingSheetsNames[0]);
+      let finalStagingSheet: Excel.Worksheet = sheets.getItemOrNullObject(finalStagingSheetName);
+      await context.sync();
+
+      const usedRangeFirstStagingAreaSheet: Excel.Range = firstStagingAreaSheet.getUsedRange().load(ExcelLoadEnumerator.address);
+
+      if (!finalStagingSheet.isNullObject) {
+        finalStagingSheet.delete();
+      }
+      finalStagingSheet = sheets.add(finalStagingSheetName);
+      finalStagingSheet.activate();
+      await context.sync();
+
+      const destination = finalStagingSheet.getRange(usedRangeFirstStagingAreaSheet.address.split('!')[1]);
+      await context.sync();
+
+      destination.copyFrom(usedRangeFirstStagingAreaSheet, Excel.RangeCopyType.all);
+      destination.format.autofitColumns();
+      destination.format.autofitRows();
+      await context.sync();
+
+      let lastRowAddress: string = "";
+      for (const name of stagingSheetsNames.slice(1).filter(f => f !== finalStagingSheetName)) {
+        const loopSheet: Excel.Worksheet = sheets.getItem(name);
+        const lastRowOfLoopSheet = loopSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
+        await context.sync();
+
+        const loopSheetUsedRange: Excel.Range = loopSheet.getRange(`A16:${lastRowOfLoopSheet.address.split(':')[1]}`)
+        .load(ExcelLoadEnumerator.rowCount).load(ExcelLoadEnumerator.columnCount)
+        .load(ExcelLoadEnumerator.address).load(ExcelLoadEnumerator.values);
+        await context.sync();
+
+        const targetRange = finalStagingSheet.getUsedRange().getRowsBelow(loopSheetUsedRange.rowCount).load(ExcelLoadEnumerator.address);
+        targetRange.load(ExcelLoadEnumerator.values);
+        await context.sync();
+
+        targetRange.values = loopSheetUsedRange.values;
+        lastRowAddress = targetRange.address;
+        await context.sync();
+      }
+
+      const sliceAddress: string = lastRowAddress.split('!')[1];
+      const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
+      const getIdRange: Excel.Range = finalStagingSheet.getRange(`B16:B${actual[3]}`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      getIdRange.values = getIdRange.values.flat(1).map((_, i) => [i + 1]);
+      destination.format.autofitColumns();
+      destination.format.autofitRows();
+
+      await context.sync();
+
+      toast.success("Staging Area sheets merged successfully!");
+      store.dispatch(setLoader(false));
+    });
+  }
+  catch (err) {
+    store.dispatch(setLoader(false));
+  }
+}
