@@ -517,6 +517,10 @@ export async function setStagingAreaColorSchemes(buttonName: string): Promise<vo
       const bodyRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getDataBodyRange().load(ExcelLoadEnumerator.address);
       await context.sync();
 
+      if (column.display_name.includes("Date") || column.display_name.includes("Reporting Month")) {
+        bodyRange.numberFormat = [["[$-409]mm/dd/yyyy"]];
+      }
+
       if (column.header_colour_code) {
         headerRange.format.fill.color = column.header_colour_code;
         headerRange.format.font.bold = true;
@@ -531,6 +535,7 @@ export async function setStagingAreaColorSchemes(buttonName: string): Promise<vo
         if (column.body_colour_code) {
           bodyRange.format.fill.color = column.body_colour_code;
         }
+      
         CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
 
         headerRange.format.autofitColumns();
