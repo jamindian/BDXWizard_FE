@@ -119,8 +119,7 @@ export async function formulaPasteUnPasteWhileChangeMappings(
 }
 
 // function which reads staging area table data and converts formulas and other formats into normal values.
-export async function onConfirmData(showToast: boolean, sheetName: string): Promise<void> {
-  const { activeWorksheetStagingArea } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function onConfirmData(showToast: boolean, activeWorksheetStagingArea: string): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
     let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     await context.sync();
@@ -501,18 +500,16 @@ export async function adjustColorGradients(color: string, sheetName: string): Pr
   });
 }
 
-export async function setStagingAreaColorSchemes(buttonName: string): Promise<void> {
-  const columnsResponse = buttonName === "Claim" ? await NetworkCalls.getStagingAreaColumnsForClaims() : buttonName === "Premium" ? await NetworkCalls.getStagingAreaColumnsForPremium() : await NetworkCalls.getStagingAreaColumnsForPOC();
-  const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
-
+export async function setStagingAreaColorSchemes(stagingColumns: IStagingAreaColumn[], sheetName: string, tableName: string): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
     // Format the staging header
-    let stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
-    let stagingTable: Excel.Table = stagingSheet.tables.getItemAt(0).load(ExcelLoadEnumerator.values);
-    stagingTable.load(ExcelLoadEnumerator.columns);
+    let stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(sheetName);
     await context.sync();
 
-    for(const column of StagingColumns) {
+    let stagingTable: Excel.Table = stagingSheet.tables.getItem(tableName).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    for(const column of stagingColumns) {
       const headerRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getHeaderRowRange().load(ExcelLoadEnumerator.address);
       const bodyRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getDataBodyRange().load(ExcelLoadEnumerator.address);
       await context.sync();

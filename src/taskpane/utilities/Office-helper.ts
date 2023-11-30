@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
-import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, setStagingAreaColorSchemes, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
+import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
 import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
@@ -298,7 +298,6 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           sheet.getRange(dynamicRange).copyFrom(sheet.getRange(dynamicRange), Excel.RangeCopyType.values);
         }
         // Formula paste logic divided into chunks END
-
         await context.sync();
 
         if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
@@ -306,7 +305,7 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           sheet.getUsedRange().format.autofitRows();
         }
 
-        const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
+        const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);        
 
         sheet.getRange(
           `C4:${lastCellAddress}4`
@@ -329,18 +328,49 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
 
         await adjustColorGradients(undefined, sheetName);
 
+        // Staging Table color scheme / date format added
+        for(const column of StagingColumns) {
+          const headerRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getHeaderRowRange().load(ExcelLoadEnumerator.address);
+          const bodyRange: Excel.Range = stagingTable.columns.getItem(column.display_name).getDataBodyRange().load(ExcelLoadEnumerator.address);
+          await context.sync();
+    
+          if (column.display_name.includes("Date") || column.display_name.includes("Reporting Month")) {
+            bodyRange.numberFormat = [["[$-409]mm/dd/yyyy"]];
+          }
+    
+          if (column.header_colour_code) {
+            headerRange.format.fill.color = column.header_colour_code;
+            headerRange.format.font.bold = true;
+            headerRange.format.font.color = AppColors.primacy_black;
+            headerRange.format.rowHeight = 22;
+            headerRange.format.columnWidth = 200;
+    
+            headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
+            headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
+            CommonMethods.setRangeBorders(headerRange, AppColors.primary_blue, true);
+      
+            if (column.body_colour_code) {
+              bodyRange.format.fill.color = column.body_colour_code;
+            }
+          
+            CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
+    
+            headerRange.format.autofitColumns();
+            headerRange.format.autofitRows();
+          }
+        }
+
         sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
         stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
         stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
-        await setStagingAreaColorSchemes(buttonName);
         await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
         store.dispatch(setStopwatch("stop"));
 
-        tryCatch(onConfirmData(false, sheetName));
+        tryCatch(onConfirmData(false, activeWorksheetStagingArea));
         store.dispatch(setSheetChanged());
       });
     }
