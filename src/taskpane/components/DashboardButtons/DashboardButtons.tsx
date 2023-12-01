@@ -4,7 +4,7 @@ import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
-import { appendStagingAreas, mergeStagingAreas, onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
+import { mergeStagingAreas, onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { useDispatch } from "react-redux";
@@ -24,15 +24,19 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5));
+    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5, null));
   }
 
   async function trainAIOnCurrentSheet(template_type: string): Promise<void> {
-    tryCatch(onTrainAI(global.selectedSheet, template_type));
+    tryCatch(onTrainAI(global.selectedSheet, template_type, sheetNumber));
   }
 
-  async function onAppendStagingAreaSheet(): Promise<void> {
-    appendStagingAreas(sheetNumber);
+  async function onAppendStagingAreaSheet(buttonName: string): Promise<void> {
+    dispatch(setStopwatch("reset"));
+    const sheetName: string = await CommonMethods.getActiveWorksheetName();
+    global.selectedSheet = sheetName;
+    global.sheetNumber = sheetNumber;
+    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5, sheetNumber));
     sheetNumber++;
   }
 
@@ -53,7 +57,7 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
       label: "Append BDX",
       icon: <HealingIcon />,
       hover: `append_${buttonName}_bdx`,
-      onClick: () => onAppendStagingAreaSheet(),
+      onClick: () => onAppendStagingAreaSheet(buttonName),
     },
     {
       id: 3,

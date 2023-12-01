@@ -10,11 +10,12 @@ import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 import { setSheetChanged } from "@redux/Actions/Process";
 
-export async function onCleanSOV(buttonName: string, sheetName: string, batches: number): Promise<void> {
+export async function onCleanSOV(buttonName: string, sheetName: string, batches: number, sheetNumber?: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
-  const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
     workbook.load(ExcelLoadEnumerator.name);
@@ -28,22 +29,23 @@ export async function onCleanSOV(buttonName: string, sheetName: string, batches:
     raw_sov_range.load(ExcelLoadEnumerator.columnCount);
     raw_sov_range.load(ExcelLoadEnumerator.rowCount);
 
-    let sheet: Excel.Worksheet = workbook.worksheets.getItemOrNullObject(
-      activeTempWorksheet
-    );
-
+    let sheet: Excel.Worksheet = sheets.getItemOrNullObject(activeTempWorksheet);
     await context.sync();
 
     if (workbook.protection.protected) {
       workbook.protection.unprotect("");
+      await context.sync();
     }
 
     global.workbookName = workbook.name?.split(".")[0];
 
     if (!sheet.isNullObject) {
       sheet.delete();
+      await context.sync();
     }
+
     sheet = sheets.add(activeTempWorksheet);
+    await context.sync();
 
     // activate newly added tab
     sheet.activate();
@@ -95,13 +97,13 @@ export async function onCleanSOV(buttonName: string, sheetName: string, batches:
     const totalRows = raw_sov_range.rowCount - 1;         
     const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
 
-    await tryCatch(createStagingArea(buttonName, sheetName, raw_sov_range.values[0], chunks));
+    await tryCatch(createStagingArea(buttonName, sheetName, raw_sov_range.values[0], chunks, sheetNumber));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(buttonName: string, sheetName: string, selectedRawColumns: string[], chunks): Promise<void> {
-    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function createStagingArea(buttonName: string, sheetName: string, selectedRawColumns: string[], chunks, sheetNumber?: number): Promise<void> {
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
     try {
       await Excel.run(async (context: Excel.RequestContext) => {
         let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -326,13 +328,13 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           criterion: Excel.ConditionalFormatPresetCriterion.nonBlanks,
         };
 
-        await adjustColorGradients(undefined, sheetName);        
+        await adjustColorGradients(undefined, sheetName, sheetNumber);        
 
-        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
-        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
+        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName, sheetNumber));
+        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName, sheetNumber));
         stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
-        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
+        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, "", sheetNumber));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
@@ -383,13 +385,14 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
 var debouncedRender = _.debounce(function (
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
-  sheetName: string
+  sheetName: string,
+  sheetNumber?: number,
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   Excel.run(async (context: Excel.RequestContext) => {
     if (triggerSource && !unMappedViaAddRisk) {
-      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
+      await formulaPasteUnPasteWhileChangeMappings(event, sheetName, sheetNumber);
       const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
       const containsM: boolean = parseInt(actual[1]) === 4 && event.details?.valueBefore !== event.details.valueAfter;      
       await unmappedcolumn(
@@ -398,11 +401,12 @@ var debouncedRender = _.debounce(function (
         JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
         parseInt(actual[1]) === 4,
         sheetName,
-        containsM ? event.address : ""
+        containsM ? event.address : "",
+        sheetNumber
       );
     }
 
-    await reCalculate(event, sheetName);
+    await reCalculate(event, sheetName, sheetNumber);
 
     return context.sync();
   }).catch(function () {
@@ -414,23 +418,24 @@ var debouncedRender = _.debounce(function (
 async function stagingAreaSheetOnChanged(
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
-  sheetName: string
+  sheetName: string,
+  sheetNumber?: number,
 ): Promise<Excel.WorksheetChangedEventArgs> {
-  debouncedRender(event, unMappedViaAddRisk, sheetName);
+  debouncedRender(event, unMappedViaAddRisk, sheetName, sheetNumber);
   return event;
 }
 
-export async function stagingTableOnChange(e, sheetName: string) {
+export async function stagingTableOnChange(e, sheetName: string, sheetNumber?: number) {
   await Excel.run(async () => {
     if (e.changeType === "RowDeleted" || e.changeType === "RowInserted") {
-      reCalculate(e, sheetName);
+      reCalculate(e, sheetName, sheetNumber);
     }
   });
 }
 
-export async function reCalculate(eventArgs, sheetName: string) {
+export async function reCalculate(eventArgs, sheetName: string, sheetNumber?: number): Promise<void> {
   store.dispatch(setSheetChanged());
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context
     let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
@@ -513,11 +518,12 @@ export async function reCalculate(eventArgs, sheetName: string) {
 export async function onTrainAI(
   sheetName: string,
   template_type: string,
+  sheetNumber?: number
 ) {
 
   store.dispatch(setLoader(true));
   
-  const { activeTempWorksheet, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const { activeTempWorksheet, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
   try {
     await Excel.run(async (context: Excel.RequestContext) => {
       // get staging area sheet and staging table and sync the context
@@ -589,43 +595,6 @@ export async function onTrainAI(
   }
 }
 
-export async function appendStagingAreas(sheetIdentifyNumber: number): Promise<void> {
-  store.dispatch(setLoader(true));
-  try {
-    await Excel.run(async (context: Excel.RequestContext) => {
-      // get staging area sheet and staging table and sync the context
-      let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-      let sheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
-      await context.sync();
-
-      const stagingSheetName = `Staging Area ${sheetIdentifyNumber}`;
-      const usedRange = sheet.getUsedRange().load(ExcelLoadEnumerator.address);
-      let stagingSheet: Excel.Worksheet = sheets.getItemOrNullObject(stagingSheetName);
-      await context.sync();
-
-      if (!stagingSheet.isNullObject) {
-        stagingSheet.delete();
-      }
-      stagingSheet = sheets.add(stagingSheetName);
-      stagingSheet.activate();
-      await context.sync();
-
-      const destination = stagingSheet.getRange(usedRange.address.split('!')[1]);
-      await context.sync();
-
-      destination.copyFrom(usedRange, Excel.RangeCopyType.all);
-      destination.format.autofitColumns();
-      destination.format.autofitRows();
-      await context.sync();
-
-      store.dispatch(setLoader(false));
-    });
-  }
-  catch (err) {
-    store.dispatch(setLoader(false));
-  }
-}
-
 export async function mergeStagingAreas(): Promise<void> {
   store.dispatch(setLoader(true));
   try {
@@ -635,7 +604,7 @@ export async function mergeStagingAreas(): Promise<void> {
       sheets.load(ExcelLoadEnumerator.items_name);
       await context.sync();
 
-      const finalStagingSheetName: string = "Final Staging Area";
+      const finalStagingSheetName: string = global.selectedSheet + " Final Staging Area";
       const stagingSheetsNames: string[] = sheets.items.map(sheet => sheet.name).filter(f => f.includes("Staging Area"));
 
       const firstStagingAreaSheet = sheets.getItem(stagingSheetsNames[0]);

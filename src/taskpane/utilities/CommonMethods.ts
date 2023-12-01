@@ -106,18 +106,27 @@ class Methods {
   };
 
   public getLocalStorage = (key: string): any => {
-    const name: string = global.selectedSheet;
-    return localStorage.getItem(`${key}_${name?.slice(0, 10)}`);
+    let name: string = global.selectedSheet;
+    if (global.sheetNumber) {
+      name = `${name} ${global.sheetNumber}`;
+    }
+    return localStorage.getItem(`${key}_${name}`);
   };
 
   public setLocalStorage = (key: string, value: string): void => {
-    const name: string = global.selectedSheet;
-    localStorage.setItem(`${key}_${name?.slice(0, 10)}`, value);
+    let name: string = global.selectedSheet;
+    if (global.sheetNumber) {
+      name = `${name} ${global.sheetNumber}`;
+    }
+    localStorage.setItem(`${key}_${name}`, value);
   };
 
   public removeLocalStorage = (key: string): void => {
-    const name: string = global.selectedSheet;
-    localStorage.removeItem(`${key}_${name?.slice(0, 10)}`);
+    let name: string = global.selectedSheet;
+    if (global.sheetNumber) {
+      name = `${name} ${global.sheetNumber}`;
+    }
+    localStorage.removeItem(`${key}_${name}`);
   };
 
   public async getWorkbookName(): Promise<string> {
@@ -143,13 +152,15 @@ class Methods {
     return name;
   }
 
-  public getActiveWorkSheetAndTableName = (sheetName: string): {activeWorksheetName: string; activeWorksheetStagingAreaTableName: string; activeWorksheetStagingArea: string; activeTempWorksheet: string; activeTempWorksheetTableName: string;} => {
+  public getActiveWorkSheetAndTableName = (sheetName: string, sheetNumber?: number): {activeWorksheetName: string; activeWorksheetStagingAreaTableName: string; activeWorksheetStagingArea: string; activeTempWorksheet: string; activeTempWorksheetTableName: string;} => {
+    let stagingSheetEndName: string = sheetNumber ? ` Staging Area ${sheetNumber}` : " Staging Area";
+    let tempSheetEndName: string = sheetNumber ? ` Temp DataSheet ${sheetNumber}` : " Temp DataSheet";
     return { 
       activeWorksheetName: sheetName, 
-      activeWorksheetStagingArea: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", 
-      activeWorksheetStagingAreaTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable`,
-      activeTempWorksheet: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Temp DataSheet",
-      activeTempWorksheetTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}TempdataTable`
+      activeWorksheetStagingArea: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + stagingSheetEndName, 
+      activeWorksheetStagingAreaTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable${sheetNumber ? sheetNumber : ""}`,
+      activeTempWorksheet: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + tempSheetEndName,
+      activeTempWorksheetTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}TempdataTable${sheetNumber ? sheetNumber : ""}`
     };
   }
 
@@ -162,8 +173,8 @@ class Methods {
     return address?.split("!")[1]?.slice(0, sliceIndex);
   };
 
-  public async stagingAreaPercentageFormatGet(sheetName: string): Promise<string[]> {
-    const { activeWorksheetStagingArea } = this.getActiveWorkSheetAndTableName(sheetName);
+  public async stagingAreaPercentageFormatGet(sheetName: string, sheetNumber?: number): Promise<string[]> {
+    const { activeWorksheetStagingArea } = this.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
     const results: string[] = await Excel.run(async (context) => {
       const sheets = context.workbook.worksheets;
       const stagingSheet = sheets.getItem(activeWorksheetStagingArea);
