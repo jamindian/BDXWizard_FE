@@ -20,11 +20,10 @@ export async function tryCatch(callback) {
 
 export async function formulaPasteUnPasteWhileChangeMappings(
   event: Excel.WorksheetChangedEventArgs,
-  sheetName: string,
-  sheetNumber?: number
+  sheetName: string
 ): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
-    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
     const sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     const table: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.rows);
     await context.sync();
@@ -142,10 +141,9 @@ export async function unmappedcolumn(
   autoMappedStagingColumns: string[] | undefined,
   hitPercentageFunction: boolean,
   sheetName: string,
-  changeAddress?: string,
-  sheetNumber?: number
+  changeAddress?: string
 ): Promise<void> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -229,7 +227,7 @@ export async function unmappedcolumn(
 
         if (hitPercentageFunction) {
           await deleteUnMappedColumnValues(sheetName);
-          await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress, sheetName, sheetNumber);
+          await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress, sheetName);
         }
       
       }
@@ -291,8 +289,8 @@ export async function deleteUnMappedColumnValues(sheetName: string): Promise<voi
   });
 }
 
-export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string, sheetName: string, sheetNumber?: number): Promise<string[]> {
-  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string, sheetName: string): Promise<string[]> {
+  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   const manualMappedColumns: string[] = await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -391,7 +389,7 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
     halfTIconsRange.values = [rangeRow4.values.flat(1).map((v) => (v ? Strings.halfT : ""))];
     await context.sync();
 
-    const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet(sheetName, sheetNumber);
+    const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet(sheetName);
 
     const values: any[] = percRange.values.flat(1);
     let initial: string = AlphabetsEnumerator.C;
@@ -447,8 +445,8 @@ export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], 
   return manualMappedColumns;
 }
 
-export async function adjustColorGradients(color: string, sheetName: string, sheetNumber?: number): Promise<void> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+export async function adjustColorGradients(color: string, sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
     let stagingTable: Excel.Table = sheet.tables

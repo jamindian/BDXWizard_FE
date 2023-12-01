@@ -15,7 +15,6 @@ interface IProps {
   buttonName: string;
 }
 
-let sheetNumber: number = 1;
 const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   const dispatch = useDispatch();
   const [batches, setBatches] = React.useState<number>(0);
@@ -24,20 +23,12 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5, null));
+    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5));
   }
 
   async function trainAIOnCurrentSheet(template_type: string): Promise<void> {
-    tryCatch(onTrainAI(global.selectedSheet, template_type, sheetNumber));
-  }
-
-  async function onAppendStagingAreaSheet(buttonName: string): Promise<void> {
-    dispatch(setStopwatch("reset"));
-    const sheetName: string = await CommonMethods.getActiveWorksheetName();
-    global.selectedSheet = sheetName;
-    global.sheetNumber = sheetNumber;
-    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5, sheetNumber));
-    sheetNumber++;
+    const activeSheetName: string = await CommonMethods.getActiveWorksheetName();
+    tryCatch(onTrainAI(activeSheetName.split(" Staging Area")[0], template_type));
   }
 
   const buttons = [
@@ -52,12 +43,12 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     },
     {
       id: 2,
-      condition: buttonName === "POC",
+      condition: false,
       disabled: false,
       label: "Append BDX",
       icon: <HealingIcon />,
       hover: `append_${buttonName}_bdx`,
-      onClick: () => onAppendStagingAreaSheet(buttonName),
+      onClick: () => console.log(),
     },
     {
       id: 3,

@@ -10,11 +10,11 @@ import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 import { setSheetChanged } from "@redux/Actions/Process";
 
-export async function onCleanSOV(buttonName: string, sheetName: string, batches: number, sheetNumber?: number): Promise<void> {
+export async function onCleanSOV(buttonName: string, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
-  const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+  const { activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
 
   await Excel.run(async (context: Excel.RequestContext) => {
     let workbook: Excel.Workbook = context.workbook;
@@ -97,13 +97,13 @@ export async function onCleanSOV(buttonName: string, sheetName: string, batches:
     const totalRows = raw_sov_range.rowCount - 1;         
     const chunks = CommonMethods.stagingAreaRowsDivideIntoChunks(totalRows, batches);
 
-    await tryCatch(createStagingArea(buttonName, sheetName, raw_sov_range.values[0], chunks, sheetNumber));
+    await tryCatch(createStagingArea(buttonName, sheetName, raw_sov_range.values[0], chunks));
   });
 }
 
 // function to create statging area sheet and table
-export async function createStagingArea(buttonName: string, sheetName: string, selectedRawColumns: string[], chunks, sheetNumber?: number): Promise<void> {
-    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+export async function createStagingArea(buttonName: string, sheetName: string, selectedRawColumns: string[], chunks): Promise<void> {
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet, activeTempWorksheetTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
     try {
       await Excel.run(async (context: Excel.RequestContext) => {
         let sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -328,13 +328,13 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           criterion: Excel.ConditionalFormatPresetCriterion.nonBlanks,
         };
 
-        await adjustColorGradients(undefined, sheetName, sheetNumber);        
+        await adjustColorGradients(undefined, sheetName);        
 
-        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName, sheetNumber));
-        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName, sheetNumber));
+        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
+        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
         stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
-        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, "", sheetNumber));
+        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, ""));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
@@ -350,7 +350,10 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           await context.sync();
     
           if (column.display_name.includes("Date") || column.display_name.includes("Reporting Month")) {
+            const sliceAddress: string = bodyRange.address.split('!')[1];
+            const actual: string[] = sliceAddress.match(/[a-zA-Z]+|[0-9]+/g);
             bodyRange.numberFormat = [["[$-409]mm/dd/yyyy"]];
+            sheet.getRange(`${actual[0]}5:${actual[0]}9`).numberFormat = [["[$-409]mm/dd/yyyy"]];
           }
     
           if (column.header_colour_code) {
@@ -386,13 +389,12 @@ var debouncedRender = _.debounce(function (
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
   sheetName: string,
-  sheetNumber?: number,
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   Excel.run(async (context: Excel.RequestContext) => {
     if (triggerSource && !unMappedViaAddRisk) {
-      await formulaPasteUnPasteWhileChangeMappings(event, sheetName, sheetNumber);
+      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
       const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
       const containsM: boolean = parseInt(actual[1]) === 4 && event.details?.valueBefore !== event.details.valueAfter;      
       await unmappedcolumn(
@@ -401,12 +403,11 @@ var debouncedRender = _.debounce(function (
         JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
         parseInt(actual[1]) === 4,
         sheetName,
-        containsM ? event.address : "",
-        sheetNumber
+        containsM ? event.address : ""
       );
     }
 
-    await reCalculate(event, sheetName, sheetNumber);
+    await reCalculate(event, sheetName);
 
     return context.sync();
   }).catch(function () {
@@ -419,23 +420,22 @@ async function stagingAreaSheetOnChanged(
   event: Excel.WorksheetChangedEventArgs,
   unMappedViaAddRisk: boolean,
   sheetName: string,
-  sheetNumber?: number,
 ): Promise<Excel.WorksheetChangedEventArgs> {
-  debouncedRender(event, unMappedViaAddRisk, sheetName, sheetNumber);
+  debouncedRender(event, unMappedViaAddRisk, sheetName);
   return event;
 }
 
-export async function stagingTableOnChange(e, sheetName: string, sheetNumber?: number) {
+export async function stagingTableOnChange(e, sheetName: string) {
   await Excel.run(async () => {
     if (e.changeType === "RowDeleted" || e.changeType === "RowInserted") {
-      reCalculate(e, sheetName, sheetNumber);
+      reCalculate(e, sheetName);
     }
   });
 }
 
-export async function reCalculate(eventArgs, sheetName: string, sheetNumber?: number): Promise<void> {
+export async function reCalculate(eventArgs, sheetName: string): Promise<void> {
   store.dispatch(setSheetChanged());
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and staging table, and sync context
     let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
@@ -518,16 +518,16 @@ export async function reCalculate(eventArgs, sheetName: string, sheetNumber?: nu
 export async function onTrainAI(
   sheetName: string,
   template_type: string,
-  sheetNumber?: number
 ) {
 
   store.dispatch(setLoader(true));
   
-  const { activeTempWorksheet, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName, sheetNumber);
+  const { activeTempWorksheet, activeWorksheetStagingAreaTableName, activeWorksheetStagingArea } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+
   try {
     await Excel.run(async (context: Excel.RequestContext) => {
       // get staging area sheet and staging table and sync the context
-      let sheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+      let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea).load(ExcelLoadEnumerator.name);
       let stagingTable: Excel.Table = sheet.tables
         .getItem(activeWorksheetStagingAreaTableName)
         .load(ExcelLoadEnumerator.columns)
