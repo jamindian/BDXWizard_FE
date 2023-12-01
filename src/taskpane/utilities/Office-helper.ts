@@ -326,7 +326,20 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           criterion: Excel.ConditionalFormatPresetCriterion.nonBlanks,
         };
 
-        await adjustColorGradients(undefined, sheetName);
+        await adjustColorGradients(undefined, sheetName);        
+
+        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
+        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
+        stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
+
+        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
+        
+        toast.success("Staging Area sheet has been successfully created.");
+        store.dispatch(setLoader(false));
+        store.dispatch(setStopwatch("stop"));
+
+        await tryCatch(onConfirmData(false));
+        store.dispatch(setSheetChanged());
 
         // Staging Table color scheme / date format added
         for(const column of StagingColumns) {
@@ -359,19 +372,6 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
             headerRange.format.autofitRows();
           }
         }
-
-        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
-        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
-        stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
-
-        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName));
-        
-        toast.success("Staging Area sheet has been successfully created.");
-        store.dispatch(setLoader(false));
-        store.dispatch(setStopwatch("stop"));
-
-        tryCatch(onConfirmData(false, activeWorksheetStagingArea));
-        store.dispatch(setSheetChanged());
       });
     }
     catch (error) {

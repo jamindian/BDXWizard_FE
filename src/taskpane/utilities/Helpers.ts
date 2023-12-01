@@ -70,7 +70,7 @@ export async function formulaPasteUnPasteWhileChangeMappings(
       }
       await context.sync();
 
-      onConfirmData(false, sheetName);
+      onConfirmData(false);
     } else if (parseInt(actual[1]) === 13) {
       if (!event?.details?.valueAfter) {
         // Check row 4 against this specific column
@@ -103,7 +103,7 @@ export async function formulaPasteUnPasteWhileChangeMappings(
           sheet.getRange(`${actual[0]}17:${actual[0]}${totalTableRows + 17 - 2}`).copyFrom(`${actual[0]}16`);
           await context.sync();
 
-          onConfirmData(false, sheetName);
+          onConfirmData(false);
           return;
         }
       }
@@ -119,9 +119,9 @@ export async function formulaPasteUnPasteWhileChangeMappings(
 }
 
 // function which reads staging area table data and converts formulas and other formats into normal values.
-export async function onConfirmData(showToast: boolean, activeWorksheetStagingArea: string): Promise<void> {
+export async function onConfirmData(showToast: boolean): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
-    let sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeWorksheetStagingArea);
+    let sheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
 
     const usedRange: Excel.Range = sheet.getUsedRange();
