@@ -536,12 +536,7 @@ export async function onTrainAI(
 
       // get TempData sheet and sync the context
       let temp_sheet: Excel.Worksheet = context.workbook.worksheets.getItem(activeTempWorksheet);
-      let last_header_cell = temp_sheet.getCell(0, parseInt(CommonMethods.getLocalStorage("column_count")));
-      last_header_cell.load(ExcelLoadEnumerator.address);
-      await context.sync();
-
-      let raw_sov_columns_range: Excel.Range = temp_sheet.getRange("B1:" + last_header_cell.address);
-      raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+      let raw_sov_columns_range: Excel.Range = temp_sheet.getUsedRange().load(ExcelLoadEnumerator.values);
       await context.sync();
 
       // get the staging table coumn count to get last cell address
@@ -549,24 +544,23 @@ export async function onTrainAI(
       let staging_last_cell = sheet.getCell(1, colLength);
       staging_last_cell.load(ExcelLoadEnumerator.address);
       await context.sync();
+      
       // get mapped coloumns from sourcedata and staging table columns
       let mapped_columns_range: Excel.Range = sheet.getRange(
         `C4:${CommonMethods.columnAddressSlice(staging_last_cell.address, 2)}4`
       );
+      mapped_columns_range.load(ExcelLoadEnumerator.values);
       let staging_columns_range: Excel.Range = sheet.getRange(
         `C15:${CommonMethods.columnAddressSlice(staging_last_cell.address, 2)}15`
       );
-      await context.sync();
-
-      mapped_columns_range.load(ExcelLoadEnumerator.values);
       staging_columns_range.load(ExcelLoadEnumerator.values);
       await context.sync();
 
       // store user's manuall mappings in the database by sending these mapped columns to the server
       await NetworkCalls.onTrainAI({
-        mapped_columns: JSON.stringify(mapped_columns_range.values),
-        staging_columns: JSON.stringify(staging_columns_range.values),
-        all_source_column_range: JSON.stringify(raw_sov_columns_range.values),
+        mapped_columns: mapped_columns_range.values.flat(1),
+        staging_columns: staging_columns_range.values.flat(1),
+        all_source_column_range: raw_sov_columns_range.values[0].slice(1),
         template_type
       })
       .then((response) => {
