@@ -393,7 +393,7 @@ var debouncedRender = _.debounce(async function (
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
   if (triggerSource) {
-    await formulaPasteUnPasteWhileChangeMappings(event, sheetName);      
+    await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
     await unmappedcolumn(
       true,
       true,
@@ -488,6 +488,8 @@ export async function reCalculate(eventArgs, sheetName: string): Promise<void> {
       if (JSON.stringify(newValues) !== JSON.stringify(mappedValues[0]) && prevPercent) {
         mapped_columns_range.values = [newValues];
         sheet.getRange(`${prevPercent[0]}5:${prevPercent[0]}9`).values = [[""], [""], [""], [""], [""]];
+        sheet.getRange(`${prevPercent[0]}10:${prevPercent[0]}12`).values = [[""], [""], [""]];
+        sheet.getRange(`${prevPercent[0]}10:${prevPercent[0]}12`).format.fill.color = AppColors.primacy_white;
         sheet.getRange(`${prevPercent[0]}16:${prevPercent[0]}${totalTableRows + 16 - 1}`).values = countArray.map(
           () => [""]
         );

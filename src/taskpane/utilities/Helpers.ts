@@ -45,6 +45,7 @@ export async function formulaPasteUnPasteWhileChangeMappings(
         await context.sync();
 
         sheet.getRange(`${actual[0]}5:${actual[0]}9`).values = [[""], [""], [""], [""], [""]];
+        sheet.getRange(`${actual[0]}10:${actual[0]}12`).values = [[""], [""], [""]];
 
         if (row11.values.flat(1)[0] !== "" && row11.values.flat(1)[0] !== Strings.backfillMapped) {
           sheet.getRange(`${actual[0]}16:${actual[0]}${totalTableRows + 16 - 1}`).values = row13.values.flat(1)[0]
