@@ -137,11 +137,9 @@ export async function onConfirmData(showToast: boolean): Promise<void> {
 // function finds the columns which are not mapped in staging area table and stores these columns in redux store
 export async function unmappedcolumn(
   onChange: boolean,
-  autoMappedRawColumns: string[] | undefined,
-  autoMappedStagingColumns: string[] | undefined,
   hitPercentageFunction: boolean,
   sheetName: string,
-  changeAddress?: string
+  worksheetEvent: Excel.WorksheetChangedEventArgs
 ): Promise<void> {
   const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
@@ -151,9 +149,6 @@ export async function unmappedcolumn(
     const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
     const stagingTableHeader = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
     await context.sync();
-
-
-    const headerStaging: string[][] = stagingTableHeader.values;
 
     const result_list = CommonMethods.getLocalStorage("result_list");
 
@@ -187,49 +182,16 @@ export async function unmappedcolumn(
         .load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      // get mapped columns
-      const raw_with_emty = range.values;
-      const mappedColumn = raw_with_emty[0].filter((column) => column);
-      const mappedStagingSheetColumns: string[] = headerStaging[0]
-        .slice(2)
-        .map((col: string, ind: number) =>
-          raw_with_emty[0][ind] ? col : undefined
-        )
-        .filter((column) => column);
-      
-        // find unmapped columns by checking mapped columns in raw SOV columns list
+      // find unmapped columns by checking mapped columns in raw SOV columns list
       const unmappedRawSovColumns: string[] = differenceWith(
         raw_sov_columns_range.values[0],
-        raw_with_emty[0],
+        range.values[0],
         isEqual
       );
 
-      if (
-        (!autoMappedRawColumns || !autoMappedRawColumns?.length) &&
-        !onChange
-      ) {
-        CommonMethods.setLocalStorage(
-          "autoMappedRawColumns",
-          JSON.stringify(mappedColumn)
-        );
-        CommonMethods.setLocalStorage(
-          "autoMappedStagingColumns",
-          JSON.stringify(mappedStagingSheetColumns)
-        );
-      }
-
-      // For Data Mapped/Quality/Completeness score when onChange is changed
-      if (
-        autoMappedRawColumns?.length &&
-        autoMappedStagingColumns?.length &&
-        onChange
-      ) {
-
-        if (hitPercentageFunction) {
-          await deleteUnMappedColumnValues(sheetName);
-          await stagingAreaPercentagesSet(autoMappedRawColumns, changeAddress, sheetName);
-        }
-      
+      if (onChange && hitPercentageFunction && worksheetEvent) {
+        await deleteUnMappedColumnValues(sheetName);
+        await stagingAreaPercentagesSet(sheetName, worksheetEvent);
       }
       
       await context.sync();
@@ -289,160 +251,33 @@ export async function deleteUnMappedColumnValues(sheetName: string): Promise<voi
   });
 }
 
-export async function stagingAreaPercentagesSet(autoMappedRawColumns: string[], changeAddress: string, sheetName: string): Promise<string[]> {
-  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
-  const manualMappedColumns: string[] = await Excel.run(async (context: Excel.RequestContext) => {
+export async function stagingAreaPercentagesSet(sheetName: string, worksheetEvent: Excel.WorksheetChangedEventArgs): Promise<void> {
+  const { activeWorksheetStagingArea } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
     const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
     await context.sync();
 
-    const _state: any = store.getState();
+    const address: string[] = worksheetEvent.address.match(/[a-zA-Z]+|[0-9]+/g);    
+    const selectedRange = stagingSheet.getRange(`${address[0]}10:${address[0]}12`);
 
-    // get TempData sheet and sync the context
-    let temp_sheet = sheets.getItem(activeTempWorksheet);
-    let last_header_cell = temp_sheet.getCell(
-      0,
-      parseInt(CommonMethods.getLocalStorage("column_count"))
-    );
-    last_header_cell.load(ExcelLoadEnumerator.address);
-    await context.sync();
-
-    let raw_sov_columns_range: Excel.Range = temp_sheet.getRange(
-      "B1:" + last_header_cell.address
-    );
-    raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
-
-    let staging_last_cell = stagingSheet.getCell(
-      1,
-      JSON.parse(CommonMethods.getLocalStorage("result_list"))?.length
-    );
-    staging_last_cell.load(ExcelLoadEnumerator.address);
-    await context.sync();
-
-    const rangeRow4: Excel.Range = stagingSheet
-      .getRange(
-        `C4:${CommonMethods.columnAddressSlice(
-          staging_last_cell.address,
-          2
-        )}4`
-      )
-      .load(ExcelLoadEnumerator.values);
-    const halfTIconsRange: Excel.Range = stagingSheet
-      .getRange(
-        `C10:${CommonMethods.columnAddressSlice(
-          staging_last_cell.address,
-          2
-        )}10`
-      )
-      .load(ExcelLoadEnumerator.values);
-    let percRange: Excel.Range = stagingSheet
-      .getRange(
-        `C11:${CommonMethods.columnAddressSlice(
-          staging_last_cell.address,
-          2
-        )}11`
-      )
-      .load(ExcelLoadEnumerator.values);
-    const arrowIconsRange: Excel.Range = stagingSheet
-      .getRange(
-        `C12:${CommonMethods.columnAddressSlice(
-          staging_last_cell.address,
-          2
-        )}12`
-      )
-      .load(ExcelLoadEnumerator.values);
-    await context.sync();
-      
-    const arr: string[] = []; // Array of manually managed columns
-
-    let initial1: string = AlphabetsEnumerator.C;
-    const rangeElevenValues: any[] = percRange.values.flat(1);
-    const match_percentage_list: (string | number)[] = rangeRow4.values
-      .flat(1)
-      .map((v: string, i) => {
-        let val = "";
-        if (v && autoMappedRawColumns.includes(v)) {
-          val = rangeElevenValues[i];
-        }
-        if (v && !autoMappedRawColumns.includes(v)) {
-          val = Strings.manuallyMapped;
-        }
-        if (changeAddress === `${initial1}4` && v) {
-          val = Strings.manuallyMapped;
-        }
-        initial1 = CommonMethods.getNextKey(initial1);
-
-        if (val === Strings.manuallyMapped) {
-          arr.push(v);
-        }
-
-        if (!v && rangeElevenValues[i] === Strings.backfillMapped) {
-          val = Strings.backfillMapped;
-        }
-
-        return val;
-      });
-
-    percRange.values = [match_percentage_list];
-    arrowIconsRange.values = [rangeRow4.values.flat(1).map((v) => (v ? Strings.arrowDown : ""))];
-    halfTIconsRange.values = [rangeRow4.values.flat(1).map((v) => (v ? Strings.halfT : ""))];
-    await context.sync();
-
-    const formats: string[] = await CommonMethods.stagingAreaPercentageFormatGet(sheetName);
-
-    const values: any[] = percRange.values.flat(1);
-    let initial: string = AlphabetsEnumerator.C;
-
-    values.forEach((val, ind: number) => {
-      let rangeHalfT: Excel.Range = stagingSheet.getRange(`${initial}10`);
-      let rangePercentage: Excel.Range = stagingSheet.getRange(`${initial}11`);
-      let rangeArrow: Excel.Range = stagingSheet.getRange(`${initial}12`);
-      const condition: boolean = !_state.auth.isSetManualMapped || (_state.auth.isSetManualMapped && formats[ind] !== AppColors.primacy_green);
-
-      if (val !== "" && typeof val === "string") {
-        if (condition) {
-          rangePercentage.format.font.size = 14;
-          rangePercentage.format.fill.color = AppColors.primacy_white;
-          rangePercentage.format.font.color = AppColors.primacy_red;
-          rangeHalfT.format.font.color = AppColors.primacy_red;
-          rangeArrow.format.font.color = AppColors.primacy_red;
-        }
-      } else if (val !== "" && typeof val === "number") {
-        if (condition) {
-          const updatedColor = CommonMethods.getRangeColor(val * 100);
-          rangePercentage.format.font.color = AppColors.primacy_black;
-          rangePercentage.format.fill.color = updatedColor;
-          rangeHalfT.format.font.color = updatedColor;
-          rangeArrow.format.font.color = updatedColor;
-        }
-      } else {
-        if (
-          val !== "" &&
-          typeof val === "string" &&
-          formats[ind] === AppColors.primacy_green
-        ) {
-          rangePercentage.format.fill.color = formats[ind];
-        } else {
-          rangePercentage.format.fill.color = AppColors.primacy_white;
-        }
-      }
-
-      initial = CommonMethods.getNextKey(initial);
-      ind++;
-    });
-
+    if ((worksheetEvent.details && !worksheetEvent.details.valueAfter) || (worksheetEvent.triggerSource === "ThisLocalAddin" && !worksheetEvent.details)) {
+      selectedRange.values = [[''], [''], ['']];
+      selectedRange.format.fill.color = AppColors.primacy_white;
+    } else if (worksheetEvent.details && worksheetEvent.details.valueAfter && worksheetEvent.details.valueAfter !== worksheetEvent.details.valueBefore) {
+      selectedRange.values = [[Strings.halfT], [Strings.manuallyMapped], [Strings.arrowDown]];
+      selectedRange.format.font.size = 14;
+      selectedRange.format.fill.color = AppColors.primacy_white;
+      selectedRange.format.font.color = AppColors.primacy_red;
+    }
     await context.sync();
 
     if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
       stagingSheet.getUsedRange().format.autofitColumns();
       stagingSheet.getUsedRange().format.autofitRows();
     }
-  
-    return arr;
   });
-  
-  return manualMappedColumns;
 }
 
 export async function adjustColorGradients(color: string, sheetName: string): Promise<void> {

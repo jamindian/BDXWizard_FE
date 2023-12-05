@@ -330,11 +330,10 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
 
         await adjustColorGradients(undefined, sheetName);        
 
-        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, false, sheetName));
-        stagingTable.onChanged.add((e: Excel.TableChangedEventArgs) => stagingTableOnChange(e, sheetName));
+        sheet.onChanged.add((e) => stagingAreaSheetOnChanged(e, sheetName));
         stagingTable.getDataBodyRange().getLastRow().delete(Excel.DeleteShiftDirection.up);
 
-        await tryCatch(unmappedcolumn(false, undefined, undefined, false, sheetName, ""));
+        await tryCatch(unmappedcolumn(false, false, sheetName, undefined));
         
         toast.success("Staging Area sheet has been successfully created.");
         store.dispatch(setLoader(false));
@@ -387,53 +386,32 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
     }
 }
 
-var debouncedRender = _.debounce(function (
+var debouncedRender = _.debounce(async function (
   event: Excel.WorksheetChangedEventArgs,
-  unMappedViaAddRisk: boolean,
-  sheetName: string,
+  sheetName: string
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
 
-  Excel.run(async (context: Excel.RequestContext) => {
-    if (triggerSource && !unMappedViaAddRisk) {
-      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
-      const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
-      const containsM: boolean = parseInt(actual[1]) === 4 && event.details?.valueBefore !== event.details.valueAfter;      
-      await unmappedcolumn(
-        true,
-        JSON.parse(CommonMethods.getLocalStorage("autoMappedRawColumns")),
-        JSON.parse(CommonMethods.getLocalStorage("autoMappedStagingColumns")),
-        parseInt(actual[1]) === 4,
-        sheetName,
-        containsM ? event.address : ""
-      );
-      await stateCityColumnsValuesMap(sheetName);
-    }
-
+  if (triggerSource) {
+    await formulaPasteUnPasteWhileChangeMappings(event, sheetName);      
+    await unmappedcolumn(
+      true,
+      true,
+      sheetName,
+      event
+    );
+    await stateCityColumnsValuesMap(sheetName);    
     await reCalculate(event, sheetName);
-
-    return context.sync();
-  }).catch(function () {
-    store.dispatch(setLoader(false));
-  });
+  }
 },
 750); // Adjust the debounce delay as needed
 
 async function stagingAreaSheetOnChanged(
   event: Excel.WorksheetChangedEventArgs,
-  unMappedViaAddRisk: boolean,
   sheetName: string,
-): Promise<Excel.WorksheetChangedEventArgs> {
-  debouncedRender(event, unMappedViaAddRisk, sheetName);
+): Promise<Excel.WorksheetChangedEventArgs> {  
+  debouncedRender(event, sheetName);
   return event;
-}
-
-export async function stagingTableOnChange(e, sheetName: string) {
-  await Excel.run(async () => {
-    if (e.changeType === "RowDeleted" || e.changeType === "RowInserted") {
-      reCalculate(e, sheetName);
-    }
-  });
 }
 
 export async function reCalculate(eventArgs, sheetName: string): Promise<void> {
