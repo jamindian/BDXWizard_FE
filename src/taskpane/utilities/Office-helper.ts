@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
-import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
+import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, stateCityColumnsValuesMap, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
 import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
@@ -10,7 +10,7 @@ import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
 import { setSheetChanged } from "@redux/Actions/Process";
 
-export async function onCleanSOV(buttonName: string, sheetName: string, batches: number): Promise<void> {
+export async function onCleanBordereaux(buttonName: string, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
   store.dispatch(setStopwatch("start"));
 
@@ -377,6 +377,8 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
             headerRange.format.autofitRows();
           }
         }
+
+        tryCatch(stateCityColumnsValuesMap(sheetName));
       });
     }
     catch (error) {
@@ -405,6 +407,7 @@ var debouncedRender = _.debounce(function (
         sheetName,
         containsM ? event.address : ""
       );
+      await stateCityColumnsValuesMap(sheetName);
     }
 
     await reCalculate(event, sheetName);

@@ -543,3 +543,35 @@ export async function setStagingAreaColorSchemes(stagingColumns: IStagingAreaCol
     await context.sync();
   });
 }
+
+export async function stateCityColumnsValuesMap(sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  await Excel.run(async (context: Excel.RequestContext) => {
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const agentStateCity: Excel.Range = stagingTable.columns.getItemOrNullObject("Agent State-City").getDataBodyRange().load(ExcelLoadEnumerator.values);
+    const insuredStateColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Insured State").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    const insuredCityColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Insured City").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    if (!agentStateCity.isNullObject && !insuredStateColumn.isNullObject && !insuredCityColumn.isNullObject) {
+      const insuredCityAddress: string[] = insuredCityColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+      const insuredStateAddress: string[] = insuredStateColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+
+      const insuredCityRow4: Excel.Range = stagingSheet.getRange(`${insuredCityAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const insuredStateRow4: Excel.Range = stagingSheet.getRange(`${insuredStateAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      if (!insuredStateRow4.values.flat(1)[0]) {
+        insuredStateColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[0].split(' ').join('')]);
+      }
+      if (!insuredCityRow4.values.flat(1)[0]) {
+        insuredCityColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[1]]);
+      }
+    }
+
+    await context.sync();
+  });
+}

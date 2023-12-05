@@ -4,7 +4,7 @@ import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
-import { mergeStagingAreas, onCleanSOV, onTrainAI } from "@taskpaneutilities/Office-helper";
+import { mergeStagingAreas, onCleanBordereaux, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { useDispatch } from "react-redux";
@@ -23,7 +23,7 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     dispatch(setStopwatch("reset"));
     const sheetName: string = await CommonMethods.getActiveWorksheetName();
     global.selectedSheet = sheetName;
-    tryCatch(onCleanSOV(buttonName, sheetName, batches > 0 ? batches : 5));
+    tryCatch(onCleanBordereaux(buttonName, sheetName, batches > 0 ? batches : 5));
   }
 
   async function trainAIOnCurrentSheet(template_type: string): Promise<void> {
