@@ -17,7 +17,7 @@ interface IProps {
 
 const DashboardButtons: FC<IProps> = ({ buttonName }) => {
   const dispatch = useDispatch();
-  const [batches, setBatches] = React.useState<number>(0);
+  const [batches, setBatches] = React.useState<number>(1);
 
   async function onCleanCurrentActiveSheet(buttonName: string): Promise<void> {
     dispatch(setStopwatch("reset"));
@@ -93,7 +93,7 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
             id="batch-size" label="Number of Batches" size="small"
             value={batches} type="number" style={{ margin: '0px auto' }}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setBatches(parseInt(event.target.value));
+              setBatches(parseInt(event.target.value) > 0 ? parseInt(event.target.value) : 1);
             }}
           />
         </div>

@@ -57,7 +57,7 @@ const App = () => {
             />
           </div>
           <div className={`cards-container`}>
-            <InfoCards />
+            <InfoCards tabValue={tabValue} />
           </div>
         </div>
       </div>
