@@ -47,7 +47,7 @@ export const lookupNumberFormats: { value: number; symbol: string; }[] = [
 ];
 
 export const appMainTabs: { id: number; label: string }[] = [
-  { id: 0, label: "POC" },
+  { id: 0, label: "Transverse" },
   { id: 1, label: "Claims" },
   { id: 2, label: "Premium" },
   { id: 3, label: "Preference" }

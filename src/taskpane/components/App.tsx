@@ -85,13 +85,13 @@ const App: React.FC<IAppProps> = () => {
                 {...a11yProps(tab.id)}
                 key={index}
                 disabled={tab.id === 6} 
-                style={{ color: "#fff", minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 130 }}
+                style={{ color: "#fff", minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 150 }}
               />
             ))}
           </Tabs>
         </AppBar>
         <TabPanel value={tabValue} index={0}>
-          <DashboardButtons buttonName="POC" />
+          <DashboardButtons buttonName="Transverse" />
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
           <DashboardButtons buttonName="Claim" />

@@ -87,7 +87,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
                 gutterBottom
                 component='div'
               >
-                Policies
+                Records
               </Typography>
             </CardContent>
           </Card>

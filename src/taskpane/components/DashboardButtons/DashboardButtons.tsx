@@ -52,7 +52,7 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
     },
     {
       id: 3,
-      condition: buttonName === "POC",
+      condition: buttonName === "Transverse",
       disabled: false,
       label: "Merge BDX",
       icon: <MergeIcon />,
@@ -87,7 +87,7 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
             </button>
           ))}
       </div>
-      { buttonName !== "POC" && (      
+      { buttonName !== "Transverse" && (      
         <div className="d-flex-row-center">
           <TextField
             id="batch-size" label="Number of Batches" size="small"
