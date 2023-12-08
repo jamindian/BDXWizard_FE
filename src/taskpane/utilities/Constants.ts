@@ -50,6 +50,7 @@ export const appMainTabs: { id: number; label: string }[] = [
   { id: 0, label: "POC" },
   { id: 1, label: "Claims" },
   { id: 2, label: "Premium" },
+  { id: 3, label: "Preference" }
 ];
 
 export const signUpFormFields = [

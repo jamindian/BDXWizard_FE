@@ -32,6 +32,13 @@ export async function onCleanBordereaux(buttonName: string, sheetName: string, b
     let sheet: Excel.Worksheet = sheets.getItemOrNullObject(activeTempWorksheet);
     await context.sync();
 
+    if (raw_sov_range.rowCount < 2 || raw_sov_range.columnCount < 2) {
+      toast.error("Please select the range first!");
+      store.dispatch(setLoader(false));
+      store.dispatch(setStopwatch("stop"));
+      return;
+    }
+
     if (workbook.protection.protected) {
       workbook.protection.unprotect("");
       await context.sync();

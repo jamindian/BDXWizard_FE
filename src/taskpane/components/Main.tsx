@@ -26,14 +26,14 @@ const Home = () => {
   }, []);
 
   return React.useMemo(() => {
-    if (token) {
-        return (
-            <App
-                token={token}
-                title={title}
-                isOfficeInitialized={isOfficeInitialized}
-            />
-        );
+    if (!token) {
+      return (
+        <App
+          token={token}
+          title={title}
+          isOfficeInitialized={isOfficeInitialized}
+        />
+      );
     }
     
     return <Authentication />;

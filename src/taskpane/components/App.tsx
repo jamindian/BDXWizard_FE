@@ -5,6 +5,7 @@ import { AppBar, Tab, Tabs } from "@mui/material";
 
 import AppLoader from "./AppLoader";
 import DashboardButtons from "./DashboardButtons/DashboardButtons";
+import Preferences from './Preferences/Preferences';
 import Timer from "./Timer/Timer";
 
 import { useSelector } from "react-redux";
@@ -97,6 +98,9 @@ const App: React.FC<IAppProps> = () => {
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
           <DashboardButtons buttonName="Premium" />
+        </TabPanel>
+        <TabPanel value={tabValue} index={3}>
+          <Preferences />
         </TabPanel>
         <Timer />
       </div>
