@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { createRoot } from "react-dom/client";
 import Main from "./components/Main";
 import { FluentProvider, webLightTheme } from "@fluentui/react-components";
@@ -10,6 +11,7 @@ import { PersistGate } from "redux-persist/integration/react";
 
 /* global document, Office, module, require */
 import "./global.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Toast from "@components/Toaster";
 
 const rootElement: HTMLElement = document.getElementById("container");

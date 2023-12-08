@@ -236,3 +236,35 @@
 .ms-welcome__main .MuiCardContent-root:last-child {
     padding-bottom: 1px;
 }
+
+
+/* auth form css  */
+.auth-form-container {
+    width: 100%;
+    max-width: 450px;
+    margin: auto;
+    margin-top: 30px;
+    padding: 16px;
+    border: 1px solid var(--primacy-whitesmoke);
+    box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%) !important;
+}
+
+.policy-terms-container .MuiFormControl-root,
+.desuctibles-container .MuiFormControl-root,
+.control-wrapper .MuiFormControl-root {
+    width: 100%;
+}
+
+.policy-terms-form {
+    padding: 20px 10px;
+}
+
+.control-wrapper {
+    padding: 6px 0;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.map-row .control-wrapper {
+    flex-grow: 1;
+}
