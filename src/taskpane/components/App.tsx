@@ -16,6 +16,11 @@ import InfoCards from "./InfoCards/InfoCards";
 import { appMainTabs } from "@taskpaneutilities/Constants";
 import TabPanel from "./TabPanel/TabPanel";
 
+interface IAppProps {
+  token: string;
+  title: string;
+  isOfficeInitialized: boolean;
+}
 
 const a11yProps = (index: any) => {
   return {
@@ -30,7 +35,7 @@ const useStyles = makeStyles({
   },
 });
 
-const App = () => {
+const App: React.FC<IAppProps> = () => {
   const styles = useStyles();
   const loader: boolean = useSelector(isLoaderSelector);
 

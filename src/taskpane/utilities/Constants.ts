@@ -1,5 +1,7 @@
 import { IStrings, IAppColor } from "@taskpaneutilities/Interface";
 
+export const APP_TITLE = "BDX Wizard";
+
 export const API_SUCCESS: number = 200;
 export const TEMP_REQUIRED: number = 307;
 export const API_CREATED: number = 201;
@@ -48,6 +50,14 @@ export const appMainTabs: { id: number; label: string }[] = [
   { id: 0, label: "POC" },
   { id: 1, label: "Claims" },
   { id: 2, label: "Premium" },
+];
+
+export const signUpFormFields = [
+  { id: 1, label: "First Name", key: "first_name", type: "text" },
+  { id: 2, label: "Last Name", key: "last_name", type: "text" },
+  { id: 3, label: "Email", key: "email", type: "email" },
+  { id: 4, label: "Company Key", key: "company_key", type: "text" },
+  { id: 5, label: "Password", key: "password", type: "password" },
 ];
 
 export const stagingAreaInitialColumns = {

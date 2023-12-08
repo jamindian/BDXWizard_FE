@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./components/App";
+import Main from "./components/Main";
 import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 import { Provider } from "react-redux";
@@ -23,7 +23,7 @@ Office.onReady(() => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <FluentProvider theme={webLightTheme}>
-          <App />
+          <Main />
           <div className="app-toaster">
             <Toast />
           </div>

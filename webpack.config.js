@@ -46,6 +46,7 @@ module.exports = async (env, options) => {
         "@services": path.resolve(__dirname, 'src/services/'),
         "@components": path.resolve(__dirname, 'src/taskpane/components/'),
         "@redux": path.resolve(__dirname, 'src/taskpane/redux/'),
+        "@hoc": path.resolve(__dirname, 'src/taskpane/hoc/'),
         "@taskpaneutilities": path.resolve(__dirname, 'src/taskpane/utilities/'),
         "@taskpane": path.resolve(__dirname, 'src/taskpane/')
       },

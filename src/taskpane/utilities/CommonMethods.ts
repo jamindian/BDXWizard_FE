@@ -1,6 +1,7 @@
 import moment from "moment";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import { AppColors, lookupNumberFormats } from "@taskpaneutilities/Constants";
+import CryptoJS from "crypto-js";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -256,6 +257,31 @@ class Methods {
     }
 
     return obj;
+  };
+
+  public encryptDecryptPassword = (
+    password: string,
+    encryption: boolean
+  ): string => {
+    let pass = "";
+
+    if (encryption) {
+      const cipherText = CryptoJS.AES.encrypt(password, "bDxwIzaRd");
+      pass = cipherText.toString();
+    } else {
+      const bytes = CryptoJS.AES.decrypt(password, "bDxwIzaRd");
+      const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+      pass = decrypted.toString();
+    }
+
+    return pass;
+  };
+
+  public getTomorrowDate = (): Date => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
   };
 }
 
