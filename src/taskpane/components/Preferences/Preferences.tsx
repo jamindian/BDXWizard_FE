@@ -42,7 +42,7 @@ const Settings = () => {
 
     //Staging area columns section
     // function to select columns to map in staging area
-    const onAddStagingColumn = (column: string) => {
+    const onAddStagingColumn = (_column: string) => {
         // let getFiltered = filteredColumns.filter((_column) => _column !== column);
         // setFilteredColumns(getFiltered);
         // let columns = [...settings.staging_area_columns_to_map];
@@ -50,7 +50,7 @@ const Settings = () => {
     };
 
     // function to remove columns from selected to map in staging area
-    const onRemoveStagingColumn = (column: string): void => {
+    const onRemoveStagingColumn = (_column: string): void => {
         // let getFiltered = settings.staging_area_columns_to_map.filter((_column) => _column !== column);
         // setSettings({ ...settings, staging_area_columns_to_map: [...getFiltered] });
         // setFilteredColumns([...filteredColumns, column]);

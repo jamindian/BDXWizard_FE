@@ -121,6 +121,11 @@ class Methods {
     localStorage.removeItem(`${key}_${name}`);
   };
 
+  public getSelectedSheet = (key: string): string => {
+    let name: string = global.selectedSheet;
+    return `${key}_${name}`;
+  };
+
   public async getWorkbookName(): Promise<string> {
     const name: string = await Excel.run(async (context: Excel.RequestContext) => {
       let workbook: Excel.Workbook = context.workbook;

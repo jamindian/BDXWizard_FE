@@ -6,6 +6,7 @@ const processSlice = createSlice({
   initialState: {
     sheetChanged: 0,
     unMappedColumns: [],
+    selectedSheetData: {}
   },
   reducers: {
     setSheetChanged: (state) => {
@@ -13,6 +14,12 @@ const processSlice = createSlice({
     },
     setUnMappedColumns: (state, action) => {
       state.unMappedColumns = action.payload;
+    },
+    setSelectedSheetData: (state, action) => {
+      state.selectedSheetData = {
+        ...state.selectedSheetData,
+        ...action.payload
+      };
     },
   },
 });
@@ -30,7 +37,8 @@ export const isSheetChangedSelector = createDraftSafeSelector(
 
 export const {
     setSheetChanged,
-    setUnMappedColumns
+    setUnMappedColumns,
+    setSelectedSheetData
 } = processSlice.actions;
 
 export default processSlice.reducer;

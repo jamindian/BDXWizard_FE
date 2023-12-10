@@ -148,21 +148,19 @@ export async function unmappedcolumn(
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
     const sheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
     const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
-    const stagingTableHeader = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
     await context.sync();
 
-    const result_list = CommonMethods.getLocalStorage("result_list");
+    const selectedSheetData = store.getState().process.selectedSheetData;
+    const result_list = selectedSheetData[`${CommonMethods.getSelectedSheet("result_list")}`];
 
     // get the last used cell in staging area sheet
     let staging_last_cell = sheet.getCell(1, result_list.length);
     staging_last_cell.load(ExcelLoadEnumerator.address);
 
     // get tempdata sheet and get last header cell and sync the context
+    const columnCount: number = selectedSheetData[`${CommonMethods.getSelectedSheet("column_count")}`];
     let temp_sheet = sheets.getItem(activeTempWorksheet);
-    let last_header_cell = temp_sheet.getCell(
-      0,
-      parseInt(CommonMethods.getLocalStorage("column_count"))
-    );
+    let last_header_cell = temp_sheet.getCell(0, columnCount);
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();
 
@@ -206,7 +204,9 @@ export async function unmappedcolumn(
 }
 
 export async function deleteUnMappedColumnValues(sheetName: string): Promise<void> {
+  const selectedSheetData = store.getState().process.selectedSheetData;
   const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -222,7 +222,8 @@ export async function deleteUnMappedColumnValues(sheetName: string): Promise<voi
       countArray.push(i);
     }
 
-    const result_list: any[] = JSON.parse(CommonMethods.getLocalStorage("result_list"));
+
+    const result_list: any[] = selectedSheetData[`${CommonMethods.getSelectedSheet("result_list")}`];
 
     let addressKey: string = AlphabetsEnumerator.C;
     for (let j = 0; j < result_list?.length - 1; j++) {

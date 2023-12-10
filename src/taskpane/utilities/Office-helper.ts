@@ -5,10 +5,10 @@ import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirm
 import _ from "lodash";
 import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
-import NetworkCalls from "../services/ApiNetworkCalls";
+import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
-import { setSheetChanged } from "@redux/Actions/Process";
+import { setSelectedSheetData, setSheetChanged } from "@redux/Actions/Process";
 
 export async function onCleanBordereaux(buttonName: string, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
@@ -59,10 +59,10 @@ export async function onCleanBordereaux(buttonName: string, sheetName: string, b
     await context.sync();
 
     store.dispatch(setManualMapped(false));
-
-    CommonMethods.removeLocalStorage("lengthdele");
-    CommonMethods.setLocalStorage("column_count", raw_sov_range.columnCount.toString());
-    CommonMethods.setLocalStorage("row_count", raw_sov_range.rowCount.toString());
+    store.dispatch(setSelectedSheetData({
+      [CommonMethods.getSelectedSheet("column_count")]: raw_sov_range.columnCount,
+      [CommonMethods.getSelectedSheet("row_count")]: raw_sov_range.rowCount
+    }));
 
     sheet.getRange("B2").copyFrom(raw_sov_range, Excel.RangeCopyType.values);
     sheet.getRange("A2").values = [["ID"]];
@@ -119,8 +119,9 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
         let sheet: Excel.Worksheet = sheets.getItemOrNullObject(activeWorksheetStagingArea);
 
         // get TempData sheet and sync the context
+        const columnCount: number = store.getState().process.selectedSheetData[`${CommonMethods.getSelectedSheet("column_count")}`];
         let temp_sheet: Excel.Worksheet = sheets.getItem(activeTempWorksheet);
-        let last_header_cell = temp_sheet.getCell(0, parseInt(CommonMethods.getLocalStorage("column_count"))).load(ExcelLoadEnumerator.address);
+        let last_header_cell = temp_sheet.getCell(0, columnCount).load(ExcelLoadEnumerator.address);
         await context.sync();
 
         // if  there is already a old staging area sheet available, delete it
@@ -154,7 +155,9 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
               match_percentage_list = match_percentage_list.map((item: any) =>
                 item && typeof item !== "string" ? `${item / 100}` : item
               );
-              CommonMethods.setLocalStorage("result_list", JSON.stringify(result_list));
+              store.dispatch(setSelectedSheetData({
+                [CommonMethods.getSelectedSheet("result_list")]: result_list,
+              }));
             }
           })
           .catch((err) => {
@@ -314,7 +317,11 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           sheet.getUsedRange().format.autofitRows();
         }
 
-        const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);        
+        const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
+        stagingTable.rows.load(ExcelLoadEnumerator.items);
+        stagingTable.columns.load(ExcelLoadEnumerator.items);
+        const sheets_name = sheets.load(ExcelLoadEnumerator.items_name);
+        await context.sync();
 
         sheet.getRange(
           `C4:${lastCellAddress}4`
@@ -383,8 +390,17 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
             headerRange.format.autofitRows();
           }
         }
-
+        
         tryCatch(stateCityColumnsValuesMap(sheetName));
+
+        NetworkCalls.userActivityLog(JSON.stringify({
+          row_count: stagingTable.rows.count - 1,
+          column_count: stagingTable.columns.count - 1,
+          sheet_name: activeWorksheetStagingArea,
+          workbook_name: global.workbookName,
+          sheets_name: sheets_name.items.map(c => c.name)
+        }));
+
       });
     }
     catch (error) {
