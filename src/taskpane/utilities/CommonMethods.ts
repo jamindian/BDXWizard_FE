@@ -145,12 +145,13 @@ class Methods {
   }
 
   public getActiveWorkSheetAndTableName = (sheetName: string): {activeWorksheetName: string; activeWorksheetStagingAreaTableName: string; activeWorksheetStagingArea: string; activeTempWorksheet: string; activeTempWorksheetTableName: string;} => {
+    const sheetSplitName: string = sheetName.replace(/[^a-zA-Z0-9 ]/g, '')?.slice(0, 17);
     return { 
       activeWorksheetName: sheetName, 
-      activeWorksheetStagingArea: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Staging Area", 
-      activeWorksheetStagingAreaTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}StagingTable`,
-      activeTempWorksheet: sheetName.replace(/[^a-zA-Z0-9 ]/g, '') + " Temp DataSheet",
-      activeTempWorksheetTableName: `BDX${sheetName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').join("")}TempdataTable`
+      activeWorksheetStagingArea: sheetSplitName + " Staging Area", 
+      activeWorksheetStagingAreaTableName: `BDX${sheetSplitName.split(' ').join("")}StagingTable`,
+      activeTempWorksheet: sheetSplitName + " TempSheet",
+      activeTempWorksheetTableName: `BDX${sheetSplitName.split(' ').join("")}TempdataTable`
     };
   }
 

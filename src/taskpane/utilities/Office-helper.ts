@@ -87,7 +87,7 @@ export async function onCleanBordereaux(buttonName: string, sheetName: string, b
     const endRow = raw_sov_range.rowCount + 2;
     sheet.getRange(`A${startRow}:A${endRow}`).values = Array.from({ length: endRow - startRow + 1 }, (_, i) => [i + 1]);
 
-    const list = Array.from({ length: (raw_sov_range.columnCount + 1) - 2 + 1 }, (_, i) => i + 2);
+    const list = Array.from({ length: (raw_sov_range.columnCount + 1) - 2 + 1 }, (_, i) => i + 2); // (raw_sov_range.columnCount + 1) - 2 + 1
 
     sheet.getRange("B2:" + last_cell.address).clear();
     sheet.getRange("B2:" + last_cell.address).values = [list];
