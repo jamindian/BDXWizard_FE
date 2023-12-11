@@ -7,7 +7,8 @@ const authSlice = createSlice({
     loader: false,
     isLoadData: 0,
     isSetManualMapped: false,
-    stopwatchState: ""
+    stopwatchState: "",
+    isLoggedIn: false,
   },
   reducers: {
     setUserHitLoadData: (state, action) => {
@@ -22,6 +23,12 @@ const authSlice = createSlice({
     setStopwatch: (state, action) => {
       state.stopwatchState = action.payload;
     },
+    setIsLoggedIn: (state, action) => {
+      state.isLoggedIn = action.payload;
+    },
+    setIsLoggedOut: (state) => {
+      state.isLoggedIn = false;
+    }
   },
 });
 
@@ -43,12 +50,18 @@ export const isStopwatchSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.stopwatchState
 );
+export const isLoggedInSelector = createDraftSafeSelector(
+  selfSelect,
+  (state) => state.isLoggedIn
+);
 
 export const {
   setUserHitLoadData,
   setManualMapped,
   setLoader,
-  setStopwatch
+  setStopwatch,
+  setIsLoggedIn,
+  setIsLoggedOut
 } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -7,7 +7,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.get(`${ApiUrls.getStagingAreaColumnsForClaims}`, {
         headers: {
-          Authorization: `Token ${_token}`,
+          Authorization: `Bearer ${_token}`,
         }
       });
     }
@@ -16,7 +16,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.get(`${ApiUrls.getStagingAreaColumnsForPremium}`, {
         headers: {
-          Authorization: `Token ${_token}`,
+          Authorization: `Bearer ${_token}`,
         }
       });
     }
@@ -25,7 +25,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.get(`${ApiUrls.getStagingAreaColumnsForPOC}`, {
         headers: {
-          Authorization: `Token ${_token}`,
+          Authorization: `Bearer ${_token}`,
         }
       });
     }
@@ -39,7 +39,7 @@ class ApiNetworkCalls {
         },
         {
           headers: {
-            Authorization: `Token ${_token}`,
+            Authorization: `Bearer ${_token}`,
           }
         }
       );
@@ -49,7 +49,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.post(
         `${ApiUrls.trainAI}`, { ...data },
-        { headers: { Authorization: `Token ${_token}` } }
+        { headers: { Authorization: `Bearer ${_token}` } }
       );
     }
 
@@ -73,7 +73,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.put(`${ApiUrls.resetPassword}`, data, {
         headers: {
-          Authorization: `Token ${_token}`,
+          Authorization: `Bearer ${_token}`,
         }
       });
     }
@@ -82,7 +82,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.post(
         `${ApiUrls.userActivityLog}`, { ...data },
-        { headers: { Authorization: `Token ${_token}` } }
+        { headers: { Authorization: `Bearer ${_token}` } }
       );
     }
 
@@ -90,7 +90,7 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.post(
         `${ApiUrls.userPreference}`, { ...data },
-        { headers: { Authorization: `Token ${_token}` } }
+        { headers: { Authorization: `Bearer ${_token}` } }
       );
     }
 
@@ -98,7 +98,16 @@ class ApiNetworkCalls {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.get(`${ApiUrls.userPreference}`, {
         headers: {
-          Authorization: `Token ${_token}`,
+          Authorization: `Bearer ${_token}`,
+        }
+      });
+    }
+
+    public async getCurrentActiveUser(): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.get(`${ApiUrls.getCurrentActiveUser}`, {
+        headers: {
+          Authorization: `Bearer ${_token}`,
         }
       });
     }

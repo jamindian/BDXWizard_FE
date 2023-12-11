@@ -58,6 +58,7 @@ const SignUpPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
         NetworkCalls.userSignUp(values).then(() => {
           toast.success("Your account has been created successfully.");
           setLoading(false);
+          setTabValue(0);
         }).catch((e) => {
           toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
           setLoading(false);

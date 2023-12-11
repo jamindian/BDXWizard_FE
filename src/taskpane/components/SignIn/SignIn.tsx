@@ -8,8 +8,9 @@ import CustomButton from "@components/CustomButton/CustomButton";
 import { useCookies } from 'react-cookie';
 import { PasswordField } from "@components/CustomField/PasswordField";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
-import { AlertsMsgs } from "../../utilities/Constants";
-import NetworkCalls from "../../services/ApiNetworkCalls";
+import { AlertsMsgs } from "@taskpaneutilities/Constants";
+import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
+import { setIsLoggedIn } from "@redux/Actions/Auth";
 
 const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValue }) => {
 
@@ -82,12 +83,14 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
   async function onUserLogin(account: { email: string, password: string, otp?: string; }): Promise<void> {
     NetworkCalls.userSignIn(account).then((res) => {
       toast.success("Logged in successfully!");
-      CommonMethods.setAccessToken(res.data.token);
+      CommonMethods.setAccessToken(res.data.access);
+      dispatch(setIsLoggedIn(true));
       setLoading(false);
       setIsLoginError(false);
     }).catch((e) => {
       setLoading(false);
       setIsLoginError(true);
+      localStorage.removeItem("token");
       toast.error(e.response.data.detail || AlertsMsgs.somethingWentWrong);
     });
   }
