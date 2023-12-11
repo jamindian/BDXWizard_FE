@@ -26,7 +26,7 @@ const Home = () => {
   }, []);
 
   return React.useMemo(() => {
-    if (!token) {
+    if (token) {
       return (
         <App
           token={token}

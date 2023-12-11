@@ -13,6 +13,7 @@ interface IPasswordField {
   onChange: (e) => void;
   pressEnter: () => void;
   error?: boolean;
+  isRequired?: boolean;
 }
 
 export const PasswordField: React.FC<IPasswordField> = ({
@@ -20,6 +21,7 @@ export const PasswordField: React.FC<IPasswordField> = ({
   onChange,
   pressEnter,
   error,
+  isRequired
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
 
@@ -37,7 +39,7 @@ export const PasswordField: React.FC<IPasswordField> = ({
       variant="outlined"
       className="password-field"
     >
-      <InputLabel htmlFor="outlined-adornment-password">Password</InputLabel>
+      <InputLabel htmlFor="outlined-adornment-password">Password {isRequired ? '*' : ''}</InputLabel>
       <OutlinedInput
         id="outlined-adornment-password"
         type={showPassword ? "text" : "password"}
@@ -45,7 +47,7 @@ export const PasswordField: React.FC<IPasswordField> = ({
         onChange={(e) => onChange(e)}
         onKeyPress={(e) => e.key === "Enter" && pressEnter()}
         error={error}
-        label="Password"
+        label={`Password ${isRequired ? ' *' : ''}`}
         name="password"
         autoComplete="on"
         required

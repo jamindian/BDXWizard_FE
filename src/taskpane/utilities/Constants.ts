@@ -54,11 +54,9 @@ export const appMainTabs: { id: number; label: string }[] = [
 ];
 
 export const signUpFormFields = [
-  { id: 1, label: "First Name", key: "first_name", type: "text" },
-  { id: 2, label: "Last Name", key: "last_name", type: "text" },
-  { id: 3, label: "Email", key: "email", type: "email" },
-  { id: 4, label: "Company Key", key: "company_key", type: "text" },
-  { id: 5, label: "Password", key: "password", type: "password" },
+  { id: 1, label: "Email", key: "email", type: "email" },
+  { id: 2, label: "Company Name", key: "company_name", type: "text" },
+  { id: 3, label: "Password", key: "password", type: "password" },
 ];
 
 export const stagingAreaInitialColumns = {

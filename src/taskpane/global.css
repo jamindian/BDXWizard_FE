@@ -18,6 +18,10 @@
     nudge 2s linear infinite alternate;
 }
 
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
 @keyframes pulse {
     0%, 100% {
     }

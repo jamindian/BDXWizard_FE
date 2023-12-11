@@ -9,23 +9,22 @@ import { toast } from "react-toastify";
 import { signUpFormFields } from "@taskpaneutilities/Constants";
 import { AuthWrapper } from "@hoc/AuthWrapper";
 import CustomButton from "@components/CustomButton/CustomButton";
+import { TermsOfConditions } from "./TermsConditions";
+import { PrivacyPolicy } from "./PolicyTerms";
+import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 
 interface IAccount {
-  first_name: string;
   email: string;
   password: string;
-  last_name: string;
-  company_key: string;
+  company_name: string;
 }
 
-const SignUpPage = () => {
+const SignUpPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValue }) => {
   const dispatch = useDispatch();
-  const [account, setAccount] = useState<IAccount>({
-    first_name: "",
+  const [values, setValues] = useState<IAccount>({
     email: "",
     password: "",
-    last_name: "",
-    company_key: "",
+    company_name: "",
   });
   const [checkbox, setCheckbox] = useState<{ active: string; flag: boolean }>({
     flag: false,
@@ -37,30 +36,32 @@ const SignUpPage = () => {
   // User Register Function
   const onRegister = (): void => {
     if (
-      !account.first_name ||
-      !account.last_name ||
-      !account.company_key ||
-      !account.email ||
-      !account.password
+      !values.company_name ||
+      !values.email ||
+      !values.password
     ) {
       let err = {};
-      Object.keys(account).forEach((key) => {
-        if (!account[key]) {
+      Object.keys(values).forEach((key) => {
+        if (!values[key]) {
           err = { ...err, [key]: ["This field may not be blank."] };
         } else {
           err = { ...err, [key]: "" };
         }
       });
 
+      setError(err);
     } else {
       if (!checkbox.flag) {
         toast.error("Please agree to all the terms and conditions");
       } else {
         setLoading(true);
-
-        setTimeout(() => {
+        NetworkCalls.userSignUp(values).then(() => {
+          toast.success("Your account has been created successfully.");
           setLoading(false);
-        }, 6000);
+        }).catch((e) => {
+          toast.error(e.response.data[0] || "Something went wrong");
+          setLoading(false);
+        });
       }
     }
   };
@@ -68,9 +69,10 @@ const SignUpPage = () => {
   const onInputChange = useCallback(
     (e: any) => {
       const { name, value } = e.target;
-      setAccount({ ...account, [name]: value });
+      setValues({ ...values, [name]: value });
+      setError({ ...error, [name]: "" });
     },
-    [account]
+    [values, error]
   );
 
   const handleChange = useCallback(
@@ -81,7 +83,7 @@ const SignUpPage = () => {
   );
 
   return (
-    <AuthWrapper message="Do you have an account ? Sign in.">
+    <AuthWrapper message="Do you have an account ? Sign in." onClick={() => setTabValue(0)}>
       {signUpFormFields.map((field, index) => (
         <div className="control-wrapper" key={index}>
           <div className="w-100">
@@ -91,13 +93,13 @@ const SignUpPage = () => {
               name={field.key}
               required
               type={field.type}
-              value={account[field.key]}
+              value={values[field.key]}
               onChange={onInputChange}
               variant="outlined"
             />
           </div>
           {error?.[field.key] && (
-            <p className="error-text">{error?.[field.key][0]}</p>
+            <p className="error-text text-sm m-0">{error?.[field.key][0]}</p>
           )}
         </div>
       ))}
@@ -112,8 +114,8 @@ const SignUpPage = () => {
             />
           }
           label={
-            <p style={{ fontSize: 13 }}>
-              I agree to <b>SOV Wizard</b>
+            <p style={{ fontSize: 13 }} className="m-0">
+              I agree to <b>BDX Wizard</b>
               <span
                 style={{
                   textDecoration: "underline",
@@ -145,6 +147,15 @@ const SignUpPage = () => {
         loading={loading}
         onClick={() => onRegister()}
         title="Register"
+      />
+
+      <PrivacyPolicy
+        open={checkbox.active === "privacy"}
+        handleClose={() => handleChange("", "active")}
+      />
+      <TermsOfConditions
+        open={checkbox.active === "terms"}
+        handleClose={() => handleChange("", "active")}
       />
     </AuthWrapper>
   );

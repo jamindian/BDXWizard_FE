@@ -9,7 +9,7 @@ import { useCookies } from 'react-cookie';
 import { PasswordField } from "@components/CustomField/PasswordField";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 
-const SignInPage = () => {
+const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValue }) => {
 
   const dispatch = useDispatch();
   const [cookies, setCookie, removeCookie] = useCookies(['credentials']);
@@ -108,7 +108,7 @@ const SignInPage = () => {
 
   const onConfirmReset = (): void => {
     if (!accountReset.email || !accountReset.password || !accountReset.last_otp_secret) {
-    //   toast.error(AlertsMsgs.requiredFields);
+      toast.error("Fields with (*) are required.");
     } else {
     //   dispatch(setOnLoginStatus('loading'));
     //   dispatch(onConfirmResetPassword(accountReset));      
@@ -117,7 +117,7 @@ const SignInPage = () => {
 
   return (
     
-    <AuthWrapper message={confirmReset ? 'Confirm reset password' : 'Already have\'t an account ? Sign Up'}>
+    <AuthWrapper message={confirmReset ? 'Confirm reset password' : 'Already have\'t an account ? Sign Up'} onClick={() => setTabValue(1)}>
     {confirmReset ?
       <>
 
@@ -128,7 +128,7 @@ const SignInPage = () => {
         </div>
         <div className="control-wrapper">
           <div className="w-100">
-            <PasswordField error={false} 
+            <PasswordField error={false} isRequired
               value={accountReset.password} onChange={onConfirmInputChange}
               pressEnter={() => console.log()}
             />
@@ -159,7 +159,7 @@ const SignInPage = () => {
         {!isReset &&
           <div className="control-wrapper">
             <div className="w-100">
-              <PasswordField error={isLoginError} 
+              <PasswordField error={isLoginError} isRequired
                 value={account.password} onChange={onInputChange}
                 pressEnter={() => !isReset ? onLogin() : onReset()}
               />
@@ -193,7 +193,7 @@ const SignInPage = () => {
         <CustomButton loading={status === 'loading'} onClick={() => !isReset ? onLogin() : onReset() } title={ !isReset ? 'Login' : 'Reset Password' } />
 
         <div className="d-flex justify-content-center">
-          <div className="p-2">
+          <div className="p-2 cursor-pointer">
             <p className="text-link" onClick={() => setIsReset((prevState) => !prevState)}>
               {isReset ? 'Remembered? Sign In' : 'Forgot Password? Reset here.'}
             </p>

@@ -38,10 +38,10 @@ const Authentication = () => {
         </Tabs>
       </AppBar>
       <TabPanel value={tabValue} index={0}>
-        <SignInPage />
+        <SignInPage setTabValue={setTabValue} />
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
-        <SignUpPage />
+        <SignUpPage setTabValue={setTabValue} />
       </TabPanel>
     </>
   );
