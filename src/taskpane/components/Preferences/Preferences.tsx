@@ -9,6 +9,7 @@ import CustomButton from "@components/CustomButton/CustomButton";
 import { setLoader } from '@redux/Actions/Auth';
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
 import { IStagingAreaColumn } from '@taskpaneutilities/Interface';
+import { AlertsMsgs } from '../../utilities/Constants';
 
 const Settings = () => {
 
@@ -16,29 +17,40 @@ const Settings = () => {
     
     const [stagingColumns, setStagingColumns] = useState<{ selected: string[]; default: string[]; remaining: string[]; }>({ selected: [], default: [], remaining: [] });
     const [loading, setLoading] = useState<boolean>(true);
+    const [btnLoading, setBtnLoading] = useState<string>("");
     const [settings, setSettings] = useState<any>(undefined);
     const [userPreferences, setUserPreferences] = useState<{ company_name: string; profile_name: string; poc_columns: string[]; }[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; }>({ name: "", selected: "" });
 
     useEffect(() => {
-        async function run(): Promise<void> {
-            const prefrences = await NetworkCalls.getAllUserPreference();
-            const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
-            const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
-            setStagingColumns({ default: StagingColumns.map(c => c.column_name), selected: [], remaining: StagingColumns.map(c => c.column_name) });
-            setUserPreferences(prefrences.data ?? []);
-            setLoading(false);
-        }
-        
-        run();
+        initialRun();
     }, []);
 
+    async function initialRun(): Promise<void> {
+        const prefrences = await NetworkCalls.getAllUserPreference();
+        const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
+        const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
+        setStagingColumns({ default: StagingColumns.map(c => c.column_name), selected: [], remaining: StagingColumns.map(c => c.column_name) });
+        setUserPreferences(prefrences.data ?? []);
+        setLoading(false);
+    }
+
     // Call redux action for save setting
-    const saveCurrentSettings = (): void => {
-        const args = { ...settings };
-        setLoading(true);
-        dispatch(setLoader(true));
-    };
+    const saveCurrentSettings = useCallback(async (key: string) => {
+        setBtnLoading(key);
+        const u = await NetworkCalls.getCurrentActiveUser();
+        const args = { company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected };
+        NetworkCalls.createUserPreference(args).then(async () => {
+            toast.success('Preferences saved successfuly!');
+            setBtnLoading("");
+            
+            const prefrences = await NetworkCalls.getAllUserPreference();
+            setUserPreferences(prefrences.data ?? []);
+        }).catch(() => {
+            toast.error(AlertsMsgs.somethingWentWrong);
+            setBtnLoading("");
+        });
+    }, [stagingColumns, profile]);
 
     const onSettingsChange = useCallback((name: string, value: any[] | any) => {
         setSettings({ ...settings, [name]: value });
@@ -115,8 +127,8 @@ const Settings = () => {
             </div>
             
             <div className='d-flex d-flex-row-center'>
-                <CustomButton loading={false} onClick={() => saveCurrentSettings()} title="Save" />
-                <CustomButton loading={false} onClick={() => saveCurrentSettings()} title="Save As" />
+                <CustomButton loading={btnLoading === "save"} onClick={() => saveCurrentSettings("save")} title="Save" />
+                <CustomButton loading={btnLoading === "save_as"} onClick={() => profile.name && saveCurrentSettings("save_as")} title="Save As" />
             </div>
             
         </form>
