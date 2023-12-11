@@ -92,17 +92,19 @@ const App: React.FC<IAppProps> = () => {
         </AppBar>
         <TabPanel value={tabValue} index={0}>
           <DashboardButtons buttonName="Transverse" />
+          <Timer />
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
           <DashboardButtons buttonName="Claim" />
+          <Timer />
         </TabPanel>
         <TabPanel value={tabValue} index={2}>
           <DashboardButtons buttonName="Premium" />
+          <Timer />
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
           <Preferences />
         </TabPanel>
-        <Timer />
       </div>
     </div>
   );

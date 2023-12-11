@@ -19,14 +19,10 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const unMappedColumns: string[] = useSelector(isUnMappedColumnsSelector);
 
   React.useEffect(() => {
-    if (sheetChanged !== 0) {
+    if (sheetChanged !== 0 || tabValue) {
       getExcelColumnsResults();
     }
-  }, [sheetChanged]);
-
-  React.useEffect(() => {
-    setData({ policies: 0, GEP: 0, GWP: 0 });
-  }, [tabValue]);
+  }, [sheetChanged, tabValue]);
 
   async function getExcelColumnsResults(): Promise<void> {
     const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
