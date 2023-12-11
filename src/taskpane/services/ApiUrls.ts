@@ -3,7 +3,7 @@ class Urls {
   public readonly signin = '/auth/token/';
   public readonly signup = '/auth/create/';
   public readonly refreshToken = '/auth/token/refresh/';
-  public readonly forgotPassword = '/auth/create/';
+  public readonly forgotPassword = '/auth/forgot-password/';
   public readonly resetPassword = '/auth/reset-password/';
   public readonly userActivityLog = '/activity-log/';
   public readonly userPreference = '/preference/';

@@ -6,7 +6,7 @@ import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import { toast } from "react-toastify";
-import { signUpFormFields } from "@taskpaneutilities/Constants";
+import { AlertsMsgs, signUpFormFields } from "@taskpaneutilities/Constants";
 import { AuthWrapper } from "@hoc/AuthWrapper";
 import CustomButton from "@components/CustomButton/CustomButton";
 import { TermsOfConditions } from "./TermsConditions";
@@ -59,7 +59,7 @@ const SignUpPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
           toast.success("Your account has been created successfully.");
           setLoading(false);
         }).catch((e) => {
-          toast.error(e.response.data[0] || "Something went wrong");
+          toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
           setLoading(false);
         });
       }

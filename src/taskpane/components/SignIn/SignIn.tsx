@@ -8,6 +8,8 @@ import CustomButton from "@components/CustomButton/CustomButton";
 import { useCookies } from 'react-cookie';
 import { PasswordField } from "@components/CustomField/PasswordField";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
+import { AlertsMsgs } from "../../utilities/Constants";
+import NetworkCalls from "../../services/ApiNetworkCalls";
 
 const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValue }) => {
 
@@ -19,8 +21,9 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
   const [isLoginError, setIsLoginError] = useState<boolean>(false);
   const [isOtpRequired, setIsOtpRequired] = useState<boolean>(false);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
-  const [accountReset, setAccountReset] = useState<{ email: string, password: string, last_otp_secret: string }>({ email: '', password: '', last_otp_secret: '' });
+  const [accountReset, setAccountReset] = useState<{ email: string, new_password: string, otp: string }>({ email: '', new_password: '', otp: '' });
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if(cookies && Object.keys(cookies)?.length > 0 && cookies?.credentials){
@@ -28,20 +31,6 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
       setRememberMe(true);
     }
   }, []);
-
-  // useEffect(() => {
-  //   toggleFormUi();
-  // }, [isEmailSent, isConfirmedReset]);
-
-  // const toggleFormUi = (): void => {
-  //   if (isEmailSent) {
-  //     setConfirmReset(true);
-  //   }
-  //   if (isConfirmedReset) {
-  //     setConfirmReset(false);
-  //     setIsReset(false);
-  //   }
-  // }
 
   const doRememberMe = async (flag: boolean) => {
     if((account.email || account.password) && flag){
@@ -56,62 +45,85 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
     setRememberMe(flag);
   };
 
-  // call Redux action for Login
-  const onLogin = (): void => {
-    if(!account.email || !account.password){
-    //   toast.error(AlertsMsgs.requiredFields);
-    }
-    else if(!CommonMethods.validateEmail(account.email)){
-      toast.error("Enter a valid email address.");
-    } else {
-    //   dispatch(setOnLoginStatus('loading'));
-      
-    //   if(isOtpRequired){
-    //     if(!account?.otp){
-    //       toast.error(AlertsMsgs.requiredFields);
-    //       dispatch(setOnLoginStatus('idle'));
-    //     } else {
-    //       dispatch(onUserLoginViaOtp(account));
-    //     }
-    //   }
-
-    //   if(!isOtpRequired){
-    //     dispatch(onUserLogin(account));
-    //   }
-
-      setTimeout(() => {
-        // dispatch(setOnLoginStatus('idle'));
-      }, 2000);
-    }
-  };
-
   // Input value change and updated in state
   const onInputChange = useCallback((e: any) => {
     const { name, value } = e.target;
     setAccount({ ...account, [name]: value });
   }, [account]);
 
-  //For reset password
-  const onReset = (): void => {
-    if (!account.email) {
-      toast.error("Please provide your email.");
-    } else {
-      const email = account.email;
-    //   dispatch(setOnLoginStatus('loading'));
-    //   dispatch(onForgotPassword({ "email": email }));
-    }
-  };
-
   const onConfirmInputChange = useCallback((e: any) => {
     setAccountReset({ ...accountReset, [e.target.name]: e.target.value });
   }, [accountReset]);
 
-  const onConfirmReset = (): void => {
-    if (!accountReset.email || !accountReset.password || !accountReset.last_otp_secret) {
-      toast.error("Fields with (*) are required.");
+  const onLogin = (): void => {
+    if(!account.email || !account.password){
+      toast.error(AlertsMsgs.requiredFields);
+    }
+    else if(!CommonMethods.validateEmail(account.email)){
+      toast.error("Enter a valid email address.");
     } else {
-    //   dispatch(setOnLoginStatus('loading'));
-    //   dispatch(onConfirmResetPassword(accountReset));      
+      setLoading(true);
+      
+      if(isOtpRequired){
+        if(!account?.otp){
+          toast.error(AlertsMsgs.requiredFields);
+          setLoading(false);
+        } else {
+          onUserLogin(account);
+        }
+      }
+
+      if(!isOtpRequired){
+        onUserLogin(account);
+      }
+    }
+  };
+
+  async function onUserLogin(account: { email: string, password: string, otp?: string; }): Promise<void> {
+    NetworkCalls.userSignIn(account).then((res) => {
+      toast.success("Logged in successfully!");
+      CommonMethods.setAccessToken(res.data.token);
+      setLoading(false);
+      setIsLoginError(false);
+    }).catch((e) => {
+      setLoading(false);
+      setIsLoginError(true);
+      toast.error(e.response.data.detail || AlertsMsgs.somethingWentWrong);
+    });
+  }
+
+  const onForgotPassword = (): void => {
+    if (!account.email) {
+      toast.error("Please provide your email.");
+    } else {
+      setLoading(true);
+      NetworkCalls.forgotPassword({ email: account.email }).then(() => {
+        toast.success("Reset information sent to your email!");
+        setConfirmReset(true);
+        setLoading(false);
+        setIsOtpRequired(true);
+      }).catch((e) => {
+        setLoading(false);
+        toast.error(e.response.data.error || AlertsMsgs.somethingWentWrong);
+        setIsOtpRequired(false);
+      });
+    }
+  };
+
+  const onConfirmReset = (): void => {
+    if (!accountReset.email || !accountReset.new_password || !accountReset.otp) {
+      toast.error(AlertsMsgs.requiredFields);
+    } else {
+      setLoading(true);
+      NetworkCalls.resetPassword(accountReset).then(() => {
+        toast.success("Password has been reset. Please login.");
+        setLoading(false);
+        setConfirmReset(false);
+        setIsReset(false);
+      }).catch((e) => {
+        setLoading(false);
+        toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
+      });
     }
   };
 
@@ -120,7 +132,6 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
     <AuthWrapper message={confirmReset ? 'Confirm reset password' : 'Already have\'t an account ? Sign Up'} onClick={() => setTabValue(1)}>
     {confirmReset ?
       <>
-
         <div className="control-wrapper">
           <div className="w-100">
             <TextField label="Email" name="email" required type="email" value={accountReset.email} onChange={onConfirmInputChange} variant="outlined" />
@@ -129,17 +140,17 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
         <div className="control-wrapper">
           <div className="w-100">
             <PasswordField error={false} isRequired
-              value={accountReset.password} onChange={onConfirmInputChange}
+              value={accountReset.new_password} onChange={onConfirmInputChange}
               pressEnter={() => console.log()}
             />
           </div>
         </div>
         <div className="control-wrapper">
           <div className="w-100">
-            <TextField label="OTP secret" name="last_otp_secret" required type="text" value={accountReset.last_otp_secret} onChange={onConfirmInputChange} variant="outlined" />
+            <TextField label="OTP secret" name="last_otp_secret" required type="text" value={accountReset.otp} onChange={onConfirmInputChange} variant="outlined" />
           </div>
         </div>
-        <CustomButton loading={status === 'loading'} onClick={() => onConfirmReset()} title="Confirm Reset" />
+        <CustomButton loading={loading} onClick={() => onConfirmReset()} title="Confirm Reset" />
         <div className="d-flex justify-content-center">
           <div className="p-2">
             <p className="text-link">Reset information sent to your email.</p>
@@ -161,7 +172,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
             <div className="w-100">
               <PasswordField error={isLoginError} isRequired
                 value={account.password} onChange={onInputChange}
-                pressEnter={() => !isReset ? onLogin() : onReset()}
+                pressEnter={() => !isReset ? onLogin() : onForgotPassword()}
               />
             </div>
           </div>
@@ -190,7 +201,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
           />
         )}
 
-        <CustomButton loading={status === 'loading'} onClick={() => !isReset ? onLogin() : onReset() } title={ !isReset ? 'Login' : 'Reset Password' } />
+        <CustomButton loading={loading} onClick={() => !isReset ? onLogin() : onForgotPassword() } title={ !isReset ? 'Login' : 'Reset Password' } />
 
         <div className="d-flex justify-content-center">
           <div className="p-2 cursor-pointer">

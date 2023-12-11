@@ -59,6 +59,12 @@ export const signUpFormFields = [
   { id: 3, label: "Password", key: "password", type: "password" },
 ];
 
+export const AlertsMsgs = {
+  unAuthorized: "Unauthorized access! Please login to continue.",
+  requiredFields: "Fields with (*) are required.",
+  somethingWentWrong: "Something went wrong!"
+};
+
 export const stagingAreaInitialColumns = {
   ID: { displayName: '', headerColor: '', bodyColor: '' },
   INSURER: { displayName: '', headerColor: '', bodyColor: '' },

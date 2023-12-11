@@ -61,15 +61,15 @@ class ApiNetworkCalls {
       return httpRequest.post(`${ApiUrls.signup}`, data);
     };
 
-    public async refreshToken(data: any): Promise<any> {
+    public async refreshToken(data: { refresh: string; }): Promise<any> {
       return httpRequest.post(`${ApiUrls.refreshToken}`, data);
     };
 
-    public async forgotPassword(data: any): Promise<any> {
+    public async forgotPassword(data: { email: string }): Promise<any> {
       return httpRequest.post(`${ApiUrls.forgotPassword}`, data);
     };
 
-    public async resetPassword(data: any): Promise<any> {
+    public async resetPassword(data: { email: string; new_password: string; otp: string; }): Promise<any> {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.put(`${ApiUrls.resetPassword}`, data, {
         headers: {
