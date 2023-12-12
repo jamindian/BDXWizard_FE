@@ -208,7 +208,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
 
         <div className="d-flex justify-content-center">
           <div className="p-2 cursor-pointer">
-            <p className="text-link" onClick={() => setIsReset((prevState) => !prevState)}>
+            <p className="text-link btn-hover" onClick={() => setIsReset((prevState) => !prevState)}>
               {isReset ? 'Remembered? Sign In' : 'Forgot Password? Reset here.'}
             </p>
           </div>

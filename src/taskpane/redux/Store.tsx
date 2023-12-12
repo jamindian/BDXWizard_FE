@@ -1,4 +1,4 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore, UnknownAction } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage";
 import { persistReducer } from "redux-persist";
 
@@ -10,6 +10,13 @@ const rootReducer = combineReducers({
   process: ProcessReducer
 });
 
+const reducerProxy = (state: any, action: UnknownAction) => {
+  if(action.type === 'logout') {
+    return rootReducer(undefined, action);
+  }
+  return rootReducer(state, action);
+}
+
 const persistConfig = {
   key: "root",
   version: 1,
@@ -17,7 +24,7 @@ const persistConfig = {
   whitelist: ["auth", "process"],
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer(persistConfig, reducerProxy);
 
 export const store = configureStore({
   reducer: persistedReducer,

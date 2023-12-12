@@ -1,15 +1,14 @@
-import { createDraftSafeSelector, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createDraftSafeSelector, createSlice } from "@reduxjs/toolkit";
 import { StoreDef } from "../Store";
+import { AuthInitialState } from "../InitialStates";
+
+export const appLogout = createAsyncThunk("auth/logout", async function (_payload, thunkAPI) {
+  thunkAPI.dispatch({ type: 'logout' });
+});
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    loader: false,
-    isLoadData: 0,
-    isSetManualMapped: false,
-    stopwatchState: "",
-    isLoggedIn: false,
-  },
+  initialState: AuthInitialState,
   reducers: {
     setUserHitLoadData: (state, action) => {
       state.isLoadData = action.payload;
@@ -25,9 +24,6 @@ const authSlice = createSlice({
     },
     setIsLoggedIn: (state, action) => {
       state.isLoggedIn = action.payload;
-    },
-    setIsLoggedOut: (state) => {
-      state.isLoggedIn = false;
     }
   },
 });
@@ -60,8 +56,7 @@ export const {
   setManualMapped,
   setLoader,
   setStopwatch,
-  setIsLoggedIn,
-  setIsLoggedOut
+  setIsLoggedIn
 } = authSlice.actions;
 
 export default authSlice.reducer;

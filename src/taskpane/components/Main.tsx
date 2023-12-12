@@ -13,7 +13,6 @@ const title: string = APP_TITLE;
 
 const Home = () => {
   const isLoggedIn: boolean = useSelector(isLoggedInSelector);
-  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     async function run(){
@@ -23,20 +22,11 @@ const Home = () => {
     run();
   }, []);
 
-  useEffect(() => {
-    const _token = CommonMethods.getAccessToken();
-    if (isLoggedIn || _token) {
-      setToken(_token);
-    } else {
-      setToken(null);
-    }
-  }, [isLoggedIn]);
-
   return React.useMemo(() => {
-    if (token) {
+    if (isLoggedIn || CommonMethods.getAccessToken()) {
       return (
         <App
-          token={token}
+          token={CommonMethods.getAccessToken()}
           title={title}
           isOfficeInitialized={isOfficeInitialized}
         />
@@ -44,7 +34,7 @@ const Home = () => {
     }
     
     return <Authentication />;
-  }, [token, isOfficeInitialized, title]);
+  }, [isLoggedIn, isOfficeInitialized, title]);
 };
 
 export default Home;

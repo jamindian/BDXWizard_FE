@@ -1,13 +1,10 @@
 import { createDraftSafeSelector, createSlice } from "@reduxjs/toolkit";
 import { StoreDef } from "../Store";
+import { ProcessInitialState } from "../InitialStates";
 
 const processSlice = createSlice({
   name: "process",
-  initialState: {
-    sheetChanged: 0,
-    unMappedColumns: [],
-    selectedSheetData: {}
-  },
+  initialState: ProcessInitialState,
   reducers: {
     setSheetChanged: (state) => {
       state.sheetChanged = state.sheetChanged + 1; // action.payload;

@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { setIsLoggedOut } from "../redux/Actions/Auth";
+import { appLogout, setIsLoggedIn } from "../redux/Actions/Auth";
 import { APP_TITLE } from "@taskpaneutilities/Constants";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 
@@ -63,9 +63,12 @@ const Header: React.FC<HeaderProps> = (props: HeaderProps) => {
 
   //call the redux action for logout
   async function signOut(): Promise<void> {
+    await appLogout();
     localStorage.clear();
-    dispatch(setIsLoggedOut());
     toast.success("User logged out successfully.");
+    setTimeout(() => {
+      dispatch(setIsLoggedIn(false));
+    }, 750);
   };
 
   return (

@@ -57,7 +57,7 @@ const Settings = () => {
     }, [settings]);
 
     const onAddStagingColumn = useCallback((_column: string) => {
-        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
+        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.remaining.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
     }, [stagingColumns]);
 
     const onRemoveStagingColumn = useCallback((_column: string) => {
@@ -66,7 +66,7 @@ const Settings = () => {
 
     const onChangeProfileSelection = useCallback((value: string) => {
         const selections: string[] = userPreferences.find(f => f.profile_name === value).poc_columns ?? [];
-        setProfile({ ...profile, selected: value });
+        setProfile({ name: "", selected: value });
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selections.includes(c)), selected: selections });
     }, [stagingColumns, userPreferences, profile]);
 
