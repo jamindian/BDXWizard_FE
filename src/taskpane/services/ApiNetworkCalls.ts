@@ -71,7 +71,7 @@ class ApiNetworkCalls {
 
     public async resetPassword(data: { email: string; new_password: string; otp: string; }): Promise<any> {
       let _token = CommonMethods.getAccessToken();
-      return httpRequest.put(`${ApiUrls.resetPassword}`, data, {
+      return httpRequest.post(`${ApiUrls.resetPassword}`, data, {
         headers: {
           Authorization: `Bearer ${_token}`,
         }

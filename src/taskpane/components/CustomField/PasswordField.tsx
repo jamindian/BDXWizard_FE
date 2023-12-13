@@ -14,6 +14,7 @@ interface IPasswordField {
   pressEnter: () => void;
   error?: boolean;
   isRequired?: boolean;
+  name?: string;
 }
 
 export const PasswordField: React.FC<IPasswordField> = ({
@@ -21,7 +22,8 @@ export const PasswordField: React.FC<IPasswordField> = ({
   onChange,
   pressEnter,
   error,
-  isRequired
+  isRequired,
+  name
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
 
@@ -48,7 +50,7 @@ export const PasswordField: React.FC<IPasswordField> = ({
         onKeyPress={(e) => e.key === "Enter" && pressEnter()}
         error={error}
         label={`Password ${isRequired ? ' *' : ''}`}
-        name="password"
+        name={name ? name : "password"}
         autoComplete="on"
         required
         endAdornment={

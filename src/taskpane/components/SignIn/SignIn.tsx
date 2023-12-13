@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { FormControlLabel, Checkbox, TextField } from '@mui/material';
 import { AuthWrapper } from "@hoc/AuthWrapper";
@@ -123,6 +123,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
         setLoading(false);
         setConfirmReset(false);
         setIsReset(false);
+        setIsOtpRequired(false);
       }).catch((e) => {
         setLoading(false);
         toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
@@ -144,13 +145,13 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
           <div className="w-100">
             <PasswordField error={false} isRequired
               value={accountReset.new_password} onChange={onConfirmInputChange}
-              pressEnter={() => console.log()}
+              pressEnter={() => console.log()} name="new_password"
             />
           </div>
         </div>
         <div className="control-wrapper">
           <div className="w-100">
-            <TextField label="OTP secret" name="last_otp_secret" required type="text" value={accountReset.otp} onChange={onConfirmInputChange} variant="outlined" />
+            <TextField label="OTP secret" name="otp" required type="text" value={accountReset.otp} onChange={onConfirmInputChange} variant="outlined" />
           </div>
         </div>
         <CustomButton loading={loading} onClick={() => onConfirmReset()} title="Confirm Reset" />
