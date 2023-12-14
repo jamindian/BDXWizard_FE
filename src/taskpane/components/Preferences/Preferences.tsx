@@ -116,7 +116,7 @@ const Settings = () => {
                     </div>
                     <div className="w-50">
                         <div className="control-group mt-0 h-100">
-                            <FormLabel component="legend" className='thin'>Selected columns for mapping</FormLabel><br />
+                            <FormLabel component="legend" className='thin'>Selected columns for automapping</FormLabel><br />
                             {stagingColumns.selected.map(column => (
                                 <Chip key={column + "s"} variant="outlined" size="medium" label={column} onDelete={() => onRemoveStagingColumn(column)} style={{ margin: 3 }}
                                 />
