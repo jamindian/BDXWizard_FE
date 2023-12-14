@@ -90,7 +90,7 @@ const Settings = () => {
                             disablePortal fullWidth
                             value={profile.selected as any[] | any}
                             onChange={(_e: any, value: any[] | any) => onChangeProfileSelection(value)}
-                            options={userPreferences.map(p => p.profile_name)} size="small"
+                            options={userPreferences?.map(p => p.profile_name)} size="small"
                             renderInput={(params) => <TextField {...params} label="Profiles" />}
                         />                   
                     </Grid>
@@ -105,24 +105,24 @@ const Settings = () => {
                     <div className="w-50">
                         <div className="control-group mt-0 h-100">
                             <FormLabel component="legend" className='thin'>Columns yet to map</FormLabel><br />
-                            {stagingColumns.remaining.map(column => (
+                            {stagingColumns?.remaining?.map(column => (
                                 <Chip key={column + "s"} variant="outlined" size="medium" label={column} onClick={() => onAddStagingColumn(column)} style={{ margin: 3 }}
                                 />
                             ))}
                             { loading ? ( <CircularProgress color="primary" size={16} /> ) : (
-                                stagingColumns.remaining.length === 0 && <p className='m-0'>All columns are selected.</p>
+                                stagingColumns?.remaining?.length === 0 && <p className='m-0'>All columns are selected.</p>
                             )}
                         </div>
                     </div>
                     <div className="w-50">
                         <div className="control-group mt-0 h-100">
                             <FormLabel component="legend" className='thin'>Selected columns for automapping</FormLabel><br />
-                            {stagingColumns.selected.map(column => (
+                            {stagingColumns?.selected?.map(column => (
                                 <Chip key={column + "s"} variant="outlined" size="medium" label={column} onDelete={() => onRemoveStagingColumn(column)} style={{ margin: 3 }}
                                 />
                             ))}
                             { loading ? ( <CircularProgress color="primary" size={16} /> ) : (
-                                stagingColumns.selected.length === 0 && <p className='m-0'>No columns are selected.</p>
+                                stagingColumns?.selected?.length === 0 && <p className='m-0'>No columns are selected.</p>
                             )}
                         </div>
                     </div>
