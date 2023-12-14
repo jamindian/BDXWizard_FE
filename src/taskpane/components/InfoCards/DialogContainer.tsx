@@ -42,8 +42,8 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           open={props.activeModal === ModalTypesEnumerator.UNMAPPED_COLUMNS}
           onClose={toggleModal} fullWidth={true} maxWidth={"sm"}
         >
-          <DialogTitle>Unmapped Columns for {props.userProfile.profile_name} Profile</DialogTitle>
-          <DialogContent>
+          <DialogTitle>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile</DialogTitle>
+          <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
               {props.data.unMappedProfileColumns.map((item, index) => (
@@ -56,7 +56,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           </DialogContent>
 
           <DialogTitle>Unmapped Source Data Columns</DialogTitle>
-          <DialogContent>
+          <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
             <List>
               {props.data.unMappedRawColumns.map((item, index) => (

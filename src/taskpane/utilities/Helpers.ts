@@ -165,7 +165,6 @@ export async function unmappedcolumn(
     await context.sync();
 
     const latestUserProfile: IUserProfile = store.getState().process.latestUserProfile;
-    console.log(latestUserProfile);
 
     // get tempdata header range and load values
     let raw_sov_columns_range = temp_sheet.getRange(

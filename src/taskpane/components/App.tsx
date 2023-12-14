@@ -10,12 +10,13 @@ import Timer from "./Timer/Timer";
 
 import { useSelector } from "react-redux";
 import { isLoaderSelector, setLoader, setStopwatch } from "@redux/Actions/Auth";
-import { store } from "@redux/Store";
 import { Assets } from "@taskpane/utilities/Assets";
 import Header from "./Header";
 import InfoCards from "./InfoCards/InfoCards";
 import { appMainTabs } from "@taskpaneutilities/Constants";
 import TabPanel from "./TabPanel/TabPanel";
+import { useDispatch } from "react-redux";
+import { setUnMappedColumns } from "@redux/Actions/Process";
 
 interface IAppProps {
   token: string;
@@ -38,13 +39,16 @@ const useStyles = makeStyles({
 
 const App: React.FC<IAppProps> = () => {
   const styles = useStyles();
+  const dispatch = useDispatch();
+
   const loader: boolean = useSelector(isLoaderSelector);
 
   const [tabValue, setTabValue] = React.useState<number>(0);
 
   React.useEffect(() => {
-    store.dispatch(setLoader(false));
-    store.dispatch(setStopwatch("reset"));
+    dispatch(setLoader(false));
+    dispatch(setStopwatch("reset"));
+    dispatch(setUnMappedColumns({ unMappedRawColumns: [], unMappedProfileColumns: [] }));
   }, []);
 
   const handleChange = (_event, newValue: number): void => {

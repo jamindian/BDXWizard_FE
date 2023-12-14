@@ -31,11 +31,15 @@ const Settings = () => {
     async function initialRun(): Promise<void> {
         const prefrences = await NetworkCalls.getAllUserPreference();
         const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
-        const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
-        setStagingColumns({ default: StagingColumns.map(c => c.column_name).filter(f => f !== "ID"), selected: [], remaining: StagingColumns.map(c => c.column_name).filter(f => f !== "ID") });
-        setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
-        setProfile(prefrences.data[prefrences.data?.length - 1]);
+
+        const p: IUserProfile[] = prefrences.data?.filter(f => f?.profile_name) ?? [];
+        const StagingColumns: string[] = columnsResponse?.data?.map(c => c.column_name)?.filter(f => f !== "ID") ?? [];
+
+        setUserPreferences(p);
+        setProfile({ name: "", selected: p[p?.length - 1]?.profile_name });
+        setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !p[p?.length - 1]?.poc_columns.includes(c)), selected: p[p?.length - 1]?.poc_columns });
         setLoading(false);
+        dispatch(setLatestUserProfile(p[p?.length - 1]));
     }
 
     // Call redux action for save setting

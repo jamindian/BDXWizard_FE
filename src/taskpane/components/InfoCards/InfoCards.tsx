@@ -40,7 +40,9 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
       const id: Excel.Range = stagingTable.columns.getItem("ID").getDataBodyRange().load(ExcelLoadEnumerator.values);
       let gwp: Excel.Range, gep: Excel.Range;
 
-      if (tabValue === 0) {
+      console.log(tabValue);
+
+      if ([0, 3].includes(tabValue)) {
         gwp = stagingTable.columns.getItem("Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
         gep = stagingTable.columns.getItem("Total Gross Premium including Terrorism").getDataBodyRange().load(ExcelLoadEnumerator.values);
       }
@@ -106,7 +108,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
                 gutterBottom
                 component='div'
               >
-                { tabValue === 0 ? 'Premium' : tabValue === 1 ? 'Total Recovery Reserves' : 'Gross Written Premium' }
+                { [0, 3].includes(tabValue) ? 'Premium' : tabValue === 1 ? 'Total Recovery Reserves' : 'Gross Written Premium' }
               </Typography>
             </CardContent>
           </Card>
@@ -127,7 +129,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
                 gutterBottom
                 component='div'
               >
-                { tabValue === 0 ? 'Total Gross Premium' : tabValue === 1 ? 'Total Reserves Indemnity' : 'Gross Earned Premium' }
+                { [0, 3].includes(tabValue) ? 'Total Gross Premium' : tabValue === 1 ? 'Total Reserves Indemnity' : 'Gross Earned Premium' }
               </Typography>
             </CardContent>
           </Card>
