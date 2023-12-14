@@ -10,13 +10,17 @@ const processSlice = createSlice({
       state.sheetChanged = state.sheetChanged + 1; // action.payload;
     },
     setUnMappedColumns: (state, action) => {
-      state.unMappedColumns = action.payload;
+      state.unMappedRawColumns = action.payload.unMappedRawColumns;
+      state.unMappedProfileColumns = action.payload.unMappedProfileColumns;
     },
     setSelectedSheetData: (state, action) => {
       state.selectedSheetData = {
         ...state.selectedSheetData,
         ...action.payload
       };
+    },
+    setLatestUserProfile: (state, action) => {
+      state.latestUserProfile = action.payload;
     },
   },
 });
@@ -25,17 +29,25 @@ const selfSelect = (state: StoreDef) => state.process;
 
 export const isUnMappedColumnsSelector = createDraftSafeSelector(
   selfSelect,
-  (state) => state.unMappedColumns
+  (state) => {
+    return { unMappedRawColumns: state.unMappedRawColumns, unMappedProfileColumns: state.unMappedProfileColumns };
+  }
 );
 export const isSheetChangedSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.sheetChanged
 );
+export const isLatestUserProfileSelector = createDraftSafeSelector(
+  selfSelect,
+  (state) => state.latestUserProfile
+);
+
 
 export const {
     setSheetChanged,
     setUnMappedColumns,
-    setSelectedSheetData
+    setSelectedSheetData,
+    setLatestUserProfile
 } = processSlice.actions;
 
 export default processSlice.reducer;

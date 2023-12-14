@@ -46,3 +46,7 @@ export interface IStagingAreaColumn {
   body_colour_code: string;
   display_name: string;
 }
+
+export interface IUserProfile {
+  company_name: string; profile_name: string; poc_columns: string[];
+}

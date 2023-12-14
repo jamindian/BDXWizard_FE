@@ -8,6 +8,10 @@ export const AuthInitialState = {
 
 export const ProcessInitialState = {
     sheetChanged: 0,
-    unMappedColumns: [],
-    selectedSheetData: {}
+    unMappedRawColumns: [],
+    unMappedProfileColumns: [],
+    selectedSheetData: {},
+    latestUserProfile: {
+        company_name: "", profile_name: "", poc_columns: []
+    }
 };

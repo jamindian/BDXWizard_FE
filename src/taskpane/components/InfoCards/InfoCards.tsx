@@ -4,8 +4,9 @@ import { useSelector } from "react-redux";
 import { Card, CardContent, Typography } from "@mui/material";
 import { ExcelLoadEnumerator, ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import DialogContainer from "./DialogContainer";
-import { isSheetChangedSelector, isUnMappedColumnsSelector } from "@redux/Actions/Process";
+import { isSheetChangedSelector, isUnMappedColumnsSelector, isLatestUserProfileSelector } from "@redux/Actions/Process";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
+import { IUserProfile } from "@taskpaneutilities/Interface";
 
 interface IInfoCards {
   tabValue: number;
@@ -16,7 +17,8 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const [data, setData] = React.useState<{ policies: number; GWP: number; GEP: number; }>({ policies: 0, GEP: 0, GWP: 0 });
 
   const sheetChanged: number = useSelector(isSheetChangedSelector);
-  const unMappedColumns: string[] = useSelector(isUnMappedColumnsSelector);
+  const { unMappedProfileColumns, unMappedRawColumns } = useSelector(isUnMappedColumnsSelector);
+  const userProfile: IUserProfile = useSelector(isLatestUserProfileSelector);
 
   React.useEffect(() => {
     if (sheetChanged !== 0 || tabValue) {
@@ -137,7 +139,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
           >
             <CardContent className="d-flex-column-center">
               <Typography className="card-pos" color="textSecondary" component='div'>
-                {unMappedColumns.length}
+                {unMappedRawColumns?.length ?? 0}
               </Typography>
               <Typography
                 className="card-root-title"
@@ -152,9 +154,8 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
         </div>
 
         <DialogContainer
-          activeModal={activeModal}
-          toggleModal={toggleModal}
-          data={{ ...data, unMappedColumns }}
+          activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile}
+          data={{ ...data, unMappedProfileColumns: unMappedProfileColumns, unMappedRawColumns: unMappedRawColumns }}
         />
       </div>
     );
@@ -162,7 +163,9 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     activeModal,
     data,
     tabValue,
-    unMappedColumns,
+    unMappedProfileColumns,
+    unMappedRawColumns,
+    userProfile
   ]);
 };
 

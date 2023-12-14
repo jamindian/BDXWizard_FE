@@ -11,11 +11,13 @@ import {
   ListItemText,
 } from "@mui/material";
 import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
+import { IUserProfile } from "@taskpaneutilities/Interface";
 
 interface IDialogContainer {
   activeModal: string;
   toggleModal: (name: string) => void;
-  data: { unMappedColumns: string[]; policies: number; GWP: number; GEP: number; };
+  data: { unMappedRawColumns: string[]; unMappedProfileColumns: string[]; policies: number; GWP: number; GEP: number; };
+  userProfile: IUserProfile;
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
@@ -33,20 +35,31 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           fullWidth={true}
           maxWidth={"xs"}
         >
-        </Dialog>        
+        </Dialog>
         
         {/* unmappedColumns */}
         <Dialog
           open={props.activeModal === ModalTypesEnumerator.UNMAPPED_COLUMNS}
-          onClose={toggleModal}
-          fullWidth={true}
-          maxWidth={"sm"}
+          onClose={toggleModal} fullWidth={true} maxWidth={"sm"}
         >
-          <DialogTitle>Unmapped Columns</DialogTitle>
+          <DialogTitle>Unmapped Columns for {props.userProfile.profile_name} Profile</DialogTitle>
           <DialogContent>
-            {props.data.unMappedColumns.length === 0 && <span>No columns found.</span>}
+            {props.data.unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {props.data.unMappedColumns.map((item, index) => (
+              {props.data.unMappedProfileColumns.map((item, index) => (
+                <ListItem key={index}>
+                  {" "}
+                  <ListItemText primary={item}></ListItemText>{" "}
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+
+          <DialogTitle>Unmapped Source Data Columns</DialogTitle>
+          <DialogContent>
+            {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
+            <List>
+              {props.data.unMappedRawColumns.map((item, index) => (
                 <ListItem key={index}>
                   {" "}
                   <ListItemText primary={item}></ListItemText>{" "}

@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Button } from '@mui/material';
-import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress } from '@mui/material';
+import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog, DialogTitle,
+    DialogActions, Button, DialogContent,
+} from '@mui/material';
 
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import CustomButton from "@components/CustomButton/CustomButton";
-import { setLoader } from '@redux/Actions/Auth';
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
-import { IStagingAreaColumn } from '@taskpaneutilities/Interface';
-import { AlertsMsgs } from '../../utilities/Constants';
+import { IStagingAreaColumn, IUserProfile } from '@taskpaneutilities/Interface';
+import { AlertsMsgs } from '@taskpaneutilities/Constants';
+import { setLatestUserProfile } from '@redux/Actions/Process';
 
 const Settings = () => {
 
@@ -17,6 +18,7 @@ const Settings = () => {
     
     const [stagingColumns, setStagingColumns] = useState<{ selected: string[]; default: string[]; remaining: string[]; }>({ selected: [], default: [], remaining: [] });
     const [loading, setLoading] = useState<boolean>(true);
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
     const [settings, setSettings] = useState<any>(undefined);
     const [userPreferences, setUserPreferences] = useState<{ company_name: string; profile_name: string; poc_columns: string[]; }[]>([]);
@@ -30,8 +32,9 @@ const Settings = () => {
         const prefrences = await NetworkCalls.getAllUserPreference();
         const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
         const StagingColumns: IStagingAreaColumn[] = columnsResponse?.data ?? [];
-        setStagingColumns({ default: StagingColumns.map(c => c.column_name), selected: [], remaining: StagingColumns.map(c => c.column_name) });
-        setUserPreferences(prefrences.data ?? []);
+        setStagingColumns({ default: StagingColumns.map(c => c.column_name).filter(f => f !== "ID"), selected: [], remaining: StagingColumns.map(c => c.column_name).filter(f => f !== "ID") });
+        setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
+        setProfile(prefrences.data[prefrences.data?.length - 1]);
         setLoading(false);
     }
 
@@ -46,6 +49,8 @@ const Settings = () => {
             
             const prefrences = await NetworkCalls.getAllUserPreference();
             setUserPreferences(prefrences.data ?? []);
+            dispatch(setLatestUserProfile(args));
+            setDialogOpen(false);
         }).catch(() => {
             toast.error(AlertsMsgs.somethingWentWrong);
             setBtnLoading("");
@@ -65,10 +70,10 @@ const Settings = () => {
     }, [stagingColumns]);
 
     const onChangeProfileSelection = useCallback((value: string) => {
-        const selections: string[] = userPreferences.find(f => f.profile_name === value).poc_columns ?? [];
-        setProfile({ name: "", selected: value });
-        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selections.includes(c)), selected: selections });
-    }, [stagingColumns, userPreferences, profile]);
+        const selected: IUserProfile = userPreferences.find(f => f.profile_name === value);
+        setProfile({ name: selected.profile_name, selected: value });
+        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
+    }, [stagingColumns, userPreferences]);
 
     return (
         <form noValidate autoComplete='off'>
@@ -76,12 +81,6 @@ const Settings = () => {
             <div className="control-group">
                 <br />
                 <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
-                    <Grid item xs={6} sm={6} md={6} lg={6}>
-                        <TextField 
-                            label="New Profile Name" name="new_profile_name" variant="outlined" value={profile.name} size="small"
-                            onChange={(e) => setProfile({ ...profile, name: e.target.value })} type="text" fullWidth
-                        />
-                    </Grid>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
                         <Autocomplete
                             disablePortal fullWidth
@@ -128,9 +127,25 @@ const Settings = () => {
             
             <div className='d-flex d-flex-row-center'>
                 <CustomButton loading={btnLoading === "save"} onClick={() => saveCurrentSettings("save")} title="Save" />
-                <CustomButton loading={btnLoading === "save_as"} onClick={() => profile.name && saveCurrentSettings("save_as")} title="Save As" />
+                <CustomButton loading={btnLoading === "save_as"} onClick={() => setDialogOpen(true)} title="Save As" />
             </div>
             
+            <Dialog
+                open={dialogOpen} onClose={setDialogOpen} fullWidth={true} maxWidth={"xs"}
+            >
+                <DialogContent>
+                    <br />
+                    <TextField 
+                        label="New Profile Name" name="new_profile_name" variant="outlined" value={profile.name} size="small"
+                        onChange={(e) => setProfile({ ...profile, name: e.target.value })} type="text" fullWidth
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDialogOpen(false)} color="primary"> Close </Button>
+                    <Button onClick={() => profile.name && saveCurrentSettings("save_as")} color="primary"> Done </Button>
+                </DialogActions>
+            </Dialog>
+
         </form>
     )
 };

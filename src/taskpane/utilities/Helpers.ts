@@ -3,7 +3,7 @@ import { AppColors, Strings } from "@taskpaneutilities/Constants";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
-import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
+import { IStagingAreaColumn, IUserProfile } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setUnMappedColumns } from "@redux/Actions/Process";
@@ -164,6 +164,9 @@ export async function unmappedcolumn(
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();
 
+    const latestUserProfile: IUserProfile = store.getState().process.latestUserProfile;
+    console.log(latestUserProfile);
+
     // get tempdata header range and load values
     let raw_sov_columns_range = temp_sheet.getRange(
       "B1:" + last_header_cell.address
@@ -171,7 +174,15 @@ export async function unmappedcolumn(
     raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
 
       // get source data header rage in staging area sheet and load values
-      const range: Excel.Range = sheet
+      const range4: Excel.Range = sheet
+        .getRange(
+          `C4:${CommonMethods.columnAddressSlice(
+            staging_last_cell.address,
+            3
+          )}4`
+        )
+        .load(ExcelLoadEnumerator.values);
+      const range15: Excel.Range = sheet
         .getRange(
           `C4:${CommonMethods.columnAddressSlice(
             staging_last_cell.address,
@@ -184,7 +195,13 @@ export async function unmappedcolumn(
       // find unmapped columns by checking mapped columns in raw SOV columns list
       const unmappedRawSovColumns: string[] = differenceWith(
         raw_sov_columns_range.values[0],
-        range.values[0],
+        range4.values[0],
+        isEqual
+      );
+
+      const unMappedProfileColumns: string[] = differenceWith(
+        latestUserProfile.poc_columns,
+        range15.values[0],
         isEqual
       );
 
@@ -199,7 +216,7 @@ export async function unmappedcolumn(
         sheet.getUsedRange().format.autofitRows();
       }    
 
-      store.dispatch(setUnMappedColumns(unmappedRawSovColumns));
+      store.dispatch(setUnMappedColumns({ unMappedRawColumns: unmappedRawSovColumns, unMappedProfileColumns: unMappedProfileColumns }));
   });
 }
 
