@@ -36,7 +36,7 @@ const Settings = () => {
         const StagingColumns: string[] = columnsResponse?.data?.map(c => c.column_name)?.filter(f => f !== "ID") ?? [];
 
         setUserPreferences(p);
-        setProfile({ name: "", selected: p[p?.length - 1]?.profile_name });
+        setProfile({ name: p[p?.length - 1]?.profile_name, selected: p[p?.length - 1]?.profile_name });
         setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !p[p?.length - 1]?.poc_columns.includes(c)) ?? [], selected: p[p?.length - 1]?.poc_columns ?? [] });
         setLoading(false);
         dispatch(setLatestUserProfile(p[p?.length - 1]));

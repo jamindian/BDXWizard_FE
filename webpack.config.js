@@ -26,7 +26,6 @@ module.exports = async (env, options) => {
   const envPath = path.resolve(__dirname, envFile);
   const envVars = require('dotenv').config({ path: envPath }).parsed || {};
 
-  const dev = options.mode === "development";
   const config = {
     devtool: "source-map",
     entry: {
@@ -97,12 +96,14 @@ module.exports = async (env, options) => {
           },
           {
             from: "manifest*.xml",
-            to: "[name]" + "[ext]",
+            to: "[name]." + buildType + "[ext]",
             transform(content) {
-              if (dev) {
+              if (isDevelopment) {
                 return content;
               } else {
-                return content.toString().replace(new RegExp(urlDev, "g"), urlProd);
+                return content
+                  .toString()
+                  .replace(new RegExp(urlDev, "g"), urlProd);
               }
             },
           },
@@ -111,7 +112,7 @@ module.exports = async (env, options) => {
       new HtmlWebpackPlugin({
         filename: "taskpane.html",
         template: "./src/taskpane/taskpane.html",
-        chunks: ["polyfill", "vendor", "taskpane"],
+        chunks: ["taskpane", "vendor", "polyfills"],
       }),
       new HtmlWebpackPlugin({
         filename: "commands.html",
@@ -130,10 +131,10 @@ module.exports = async (env, options) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      server: {
-        type: "https",
-        options: env.WEBPACK_BUILD || options.https !== undefined ? options.https : await getHttpsOptions(),
-      },
+      https:
+        env.WEBPACK_BUILD || options.https !== undefined
+          ? options.https
+          : await getHttpsOptions(),
       port: process.env.npm_package_config_dev_server_port || 3000,
     },
   };
