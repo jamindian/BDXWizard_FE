@@ -183,10 +183,10 @@ export async function unmappedcolumn(
         .load(ExcelLoadEnumerator.values);
       const range15: Excel.Range = sheet
         .getRange(
-          `C4:${CommonMethods.columnAddressSlice(
+          `C15:${CommonMethods.columnAddressSlice(
             staging_last_cell.address,
             3
-          )}4`
+          )}15`
         )
         .load(ExcelLoadEnumerator.values);
       await context.sync();
@@ -198,15 +198,18 @@ export async function unmappedcolumn(
         isEqual
       );
 
-      const unMappedProfileColumns: string[] = differenceWith(
-        latestUserProfile.poc_columns,
-        range15.values[0],
-        isEqual
-      );
+      const unMappedProfileColumns: string[] = [];
+      for (let i = 0; i < latestUserProfile.poc_columns.length; i++) {
+        const findIndex: number = range15.values.flat(1).findIndex(f => f === latestUserProfile.poc_columns[i]);
+
+        if (range4.values.flat(1)[findIndex] === "") {
+          unMappedProfileColumns.push(latestUserProfile.poc_columns[i]);
+        }
+      }
 
       if (onChange && hitPercentageFunction && worksheetEvent) {
         await deleteUnMappedColumnValues(sheetName);
-        await stagingAreaPercentagesSet(sheetName, worksheetEvent);
+        await stagingAreaPercentagesSet(sheetName, worksheetEvent);      
       }
       
       await context.sync();

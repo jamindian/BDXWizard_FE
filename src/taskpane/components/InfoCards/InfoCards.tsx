@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Card, CardContent, Typography } from "@mui/material";
 import { ExcelLoadEnumerator, ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import DialogContainer from "./DialogContainer";
-import { isSheetChangedSelector, isUnMappedColumnsSelector, isLatestUserProfileSelector } from "@redux/Actions/Process";
+import { isSheetChangedSelector, isUnMappedColumnsSelector, isLatestUserProfileSelector, isSelectedSheetDataSelector } from "@redux/Actions/Process";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { IUserProfile } from "@taskpaneutilities/Interface";
 
@@ -19,6 +19,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const sheetChanged: number = useSelector(isSheetChangedSelector);
   const { unMappedProfileColumns, unMappedRawColumns } = useSelector(isUnMappedColumnsSelector);
   const userProfile: IUserProfile = useSelector(isLatestUserProfileSelector);
+  const selectedData = useSelector(isSelectedSheetDataSelector);
 
   React.useEffect(() => {
     if (sheetChanged !== 0 || tabValue) {
@@ -39,8 +40,6 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
 
       const id: Excel.Range = stagingTable.columns.getItem("ID").getDataBodyRange().load(ExcelLoadEnumerator.values);
       let gwp: Excel.Range, gep: Excel.Range;
-
-      console.log(tabValue);
 
       if ([0, 3].includes(tabValue)) {
         gwp = stagingTable.columns.getItem("Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
@@ -141,7 +140,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
           >
             <CardContent className="d-flex-column-center">
               <Typography className="card-pos" color="textSecondary" component='div'>
-                {unMappedRawColumns?.length ?? 0}
+                {unMappedProfileColumns?.length ?? 0}
               </Typography>
               <Typography
                 className="card-root-title"
@@ -158,6 +157,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
         <DialogContainer
           activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile}
           data={{ ...data, unMappedProfileColumns: unMappedProfileColumns, unMappedRawColumns: unMappedRawColumns }}
+          rawSheetColumnCount={selectedData[`${CommonMethods.getSelectedSheet("column_count")}`] ?? 0}
         />
       </div>
     );

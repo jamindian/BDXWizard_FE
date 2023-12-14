@@ -18,6 +18,7 @@ interface IDialogContainer {
   toggleModal: (name: string) => void;
   data: { unMappedRawColumns: string[]; unMappedProfileColumns: string[]; policies: number; GWP: number; GEP: number; };
   userProfile: IUserProfile;
+  rawSheetColumnCount: number;
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
@@ -42,7 +43,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           open={props.activeModal === ModalTypesEnumerator.UNMAPPED_COLUMNS}
           onClose={toggleModal} fullWidth={true} maxWidth={"sm"}
         >
-          <DialogTitle>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile</DialogTitle>
+          <DialogTitle>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile ({props.data.unMappedProfileColumns.length} - {props.userProfile.poc_columns.length})</DialogTitle>
           <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
@@ -55,7 +56,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
             </List>
           </DialogContent>
 
-          <DialogTitle>Unmapped Source Data Columns</DialogTitle>
+          <DialogTitle>Unmapped Source Data Columns ({props.data.unMappedRawColumns.length} - {props.rawSheetColumnCount})</DialogTitle>
           <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
             <List>

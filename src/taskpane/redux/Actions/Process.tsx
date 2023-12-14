@@ -37,6 +37,10 @@ export const isSheetChangedSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.sheetChanged
 );
+export const isSelectedSheetDataSelector = createDraftSafeSelector(
+  selfSelect,
+  (state) => state.selectedSheetData
+);
 export const isLatestUserProfileSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.latestUserProfile

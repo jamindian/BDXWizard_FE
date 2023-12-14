@@ -393,13 +393,13 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
         
         tryCatch(stateCityColumnsValuesMap(sheetName));
 
-        NetworkCalls.userActivityLog(JSON.stringify({
+        NetworkCalls.userActivityLog({
           row_count: stagingTable.rows.count - 1,
           column_count: stagingTable.columns.count - 1,
           sheet_name: activeWorksheetStagingArea,
           workbook_name: global.workbookName,
-          sheets_name: sheets_name.items.map(c => c.name)
-        }));
+          sheets_name: sheets_name.items.map(c => c.name).toString()
+        });
 
       });
     }
