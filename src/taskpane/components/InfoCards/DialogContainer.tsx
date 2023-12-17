@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import { IUserProfile } from "@taskpaneutilities/Interface";
+import { goToColumnRow4 } from "@taskpaneutilities/Helpers";
 
 interface IDialogContainer {
   activeModal: string;
@@ -47,10 +48,9 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {props.data.unMappedProfileColumns.map((item, index) => (
-                <ListItem key={index}>
-                  {" "}
-                  <ListItemText primary={item}></ListItemText>{" "}
+              {props.data.unMappedProfileColumns.map((item: string, index) => (
+                <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item, global.selectedSheet)}>
+                  <ListItemText primary={item}></ListItemText>
                 </ListItem>
               ))}
             </List>
@@ -61,9 +61,8 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
             {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
             <List>
               {props.data.unMappedRawColumns.map((item, index) => (
-                <ListItem key={index}>
-                  {" "}
-                  <ListItemText primary={item}></ListItemText>{" "}
+                <ListItem key={index}>                  
+                  <ListItemText primary={item}></ListItemText>
                 </ListItem>
               ))}
             </List>

@@ -408,26 +408,43 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
     await context.sync();
 
     const agentStateCity: Excel.Range = stagingTable.columns.getItemOrNullObject("Agent State-City").getDataBodyRange().load(ExcelLoadEnumerator.values);
-    const insuredStateColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Insured State").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
-    const insuredCityColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Insured City").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    const brokerAgentStateColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Broker/Agent State").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+    const brokerAgentCityColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Broker/Agent City").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
     await context.sync();
 
-    if (!agentStateCity.isNullObject && !insuredStateColumn.isNullObject && !insuredCityColumn.isNullObject) {
-      const insuredCityAddress: string[] = insuredCityColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
-      const insuredStateAddress: string[] = insuredStateColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+    if (!agentStateCity.isNullObject && !brokerAgentStateColumn.isNullObject && !brokerAgentCityColumn.isNullObject) {
+      const brokerAgentCityAddress: string[] = brokerAgentCityColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+      const brokerAgentStateAddress: string[] = brokerAgentStateColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
 
-      const insuredCityRow4: Excel.Range = stagingSheet.getRange(`${insuredCityAddress[0]}4`).load(ExcelLoadEnumerator.values);
-      const insuredStateRow4: Excel.Range = stagingSheet.getRange(`${insuredStateAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const brokerAgentCityRow4: Excel.Range = stagingSheet.getRange(`${brokerAgentCityAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const brokerAgentStateRow4: Excel.Range = stagingSheet.getRange(`${brokerAgentStateAddress[0]}4`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (!insuredStateRow4.values.flat(1)[0]) {
-        insuredStateColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[0].split(' ').join('')]);
+      if (!brokerAgentStateRow4.values.flat(1)[0]) {
+        brokerAgentStateColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[0].split(' ').join('')]);
       }
-      if (!insuredCityRow4.values.flat(1)[0]) {
-        insuredCityColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[1]]);
+      if (!brokerAgentCityRow4.values.flat(1)[0]) {
+        brokerAgentCityColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[1]]);
       }
     }
 
+    await context.sync();
+  });
+}
+
+export async function goToColumnRow4(columnName: string, sheetName: string): Promise<void> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  await Excel.run(async (context: Excel.RequestContext) => {
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(columnName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+    stagingSheet.getRange(`${add}4`).select();    
     await context.sync();
   });
 }
