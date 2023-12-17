@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import { IUserProfile } from "@taskpaneutilities/Interface";
-import { goToColumnRow4 } from "@taskpaneutilities/Helpers";
+import { getUnMappedProfileColumnsColors, goToColumnRow4 } from "@taskpaneutilities/Helpers";
 
 interface IDialogContainer {
   activeModal: string;
@@ -23,6 +23,15 @@ interface IDialogContainer {
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
+
+  const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
+  React.useEffect(() => {
+    async function run(): Promise<void> {
+      const r = await getUnMappedProfileColumnsColors(props.data.unMappedProfileColumns, global.selectedSheet);
+      setUnMappedProfileColumns(r);
+    }    
+    run();
+  }, [props.data.unMappedProfileColumns]);
 
   const toggleModal = (): void => {
     props.toggleModal("");
@@ -46,11 +55,11 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
         >
           <DialogTitle>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile ({props.data.unMappedProfileColumns.length} of {props.userProfile.poc_columns.length})</DialogTitle>
           <DialogContent style={{ overflowY: "visible" }}>
-            {props.data.unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
+            {unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {props.data.unMappedProfileColumns.map((item: string, index) => (
-                <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item, global.selectedSheet)}>
-                  <ListItemText primary={item}></ListItemText>
+              {unMappedProfileColumns.map((item, index) => (
+                <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
+                  <ListItemText style={{ color: item.color }} primary={item.column}></ListItemText>
                 </ListItem>
               ))}
             </List>

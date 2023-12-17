@@ -448,3 +448,35 @@ export async function goToColumnRow4(columnName: string, sheetName: string): Pro
     await context.sync();
   });
 }
+
+export async function getUnMappedProfileColumnsColors(columnNames: string[], sheetName: string): Promise<{ color: string; column: string; }[]> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const arr: { color: string; column: string; }[] = await Excel.run(async (context: Excel.RequestContext) => {
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const values: { color: string; column: string; }[] = [];
+    for (const column of columnNames) {
+      const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(column).getDataBodyRange().load(ExcelLoadEnumerator.address);
+      await context.sync();
+
+      const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+      const row4 = stagingSheet.getRange(`${add}4`).load(ExcelLoadEnumerator.values);
+      const row13 = stagingSheet.getRange(`${add}13`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      if (row4.values.flat(1)[0] || row13.values.flat(1)[0]) {
+        values.push({ color: AppColors.primacy_green, column });
+      }
+      else {
+        values.push({ color: AppColors.primacy_red, column });
+      }
+    }
+
+    return values;
+  });
+
+  return arr;
+}

@@ -84,7 +84,7 @@ const SignUpPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
   );
 
   return (
-    <AuthWrapper message="Do you have an account ? Sign in." onClick={() => setTabValue(0)}>
+    <AuthWrapper message="Already have an account ? Sign in." onClick={() => setTabValue(0)}>
       {signUpFormFields.map((field, index) => (
         <div className="control-wrapper" key={index}>
           <div className="w-100">

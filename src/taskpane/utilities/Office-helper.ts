@@ -414,12 +414,13 @@ var debouncedRender = _.debounce(async function (
   sheetName: string
 ) {
   const triggerSource: boolean = event.triggerSource !== "ThisLocalAddin";
+  const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
 
   if (triggerSource) {
     await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
     await unmappedcolumn(
       true,
-      true,
+      parseInt(actual[1]) === 4,
       sheetName,
       event
     );

@@ -133,7 +133,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
 
   return (
     
-    <AuthWrapper message={confirmReset ? 'Confirm reset password' : 'Already have\'t an account ? Sign Up'} onClick={() => setTabValue(1)}>
+    <AuthWrapper message={confirmReset ? 'Confirm reset password' : "Don't have an account ? Sign up."} onClick={() => setTabValue(1)}>
     {confirmReset ?
       <>
         <div className="control-wrapper">
