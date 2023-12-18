@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog, DialogTitle,
-    DialogActions, Button, DialogContent,
+import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog,
+    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from '@mui/material/IconButton';
 
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import CustomButton from "@components/CustomButton/CustomButton";
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
-import { IStagingAreaColumn, IUserProfile } from '@taskpaneutilities/Interface';
+import { IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
 import { setLatestUserProfile } from '@redux/Actions/Process';
 
@@ -20,7 +22,7 @@ const Settings = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
-    const [settings, setSettings] = useState<any>(undefined);
+    const [deletePreference, setDeletePreference] = useState<{flag: boolean;}>({ flag: false });
     const [userPreferences, setUserPreferences] = useState<{ company_name: string; profile_name: string; poc_columns: string[]; }[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; }>({ name: "", selected: "" });
 
@@ -61,10 +63,6 @@ const Settings = () => {
         });
     }, [stagingColumns, profile]);
 
-    const onSettingsChange = useCallback((name: string, value: any[] | any) => {
-        setSettings({ ...settings, [name]: value });
-    }, [settings]);
-
     const onAddStagingColumn = useCallback((_column: string) => {
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.remaining.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
     }, [stagingColumns]);
@@ -87,10 +85,26 @@ const Settings = () => {
                 <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
                         <Autocomplete
-                            disablePortal fullWidth
+                            disablePortal fullWidth filterSelectedOptions
                             value={profile.selected as any[] | any}
                             onChange={(_e: any, value: any[] | any) => onChangeProfileSelection(value)}
                             options={userPreferences?.map(p => p.profile_name)} size="small"
+                            getOptionLabel={(option) => option}
+                            renderOption={(props, option) => (
+                                <ListItem
+                                    {...props}
+                                    secondaryAction={
+                                        <IconButton edge="end" aria-label="delete" size="small" onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeletePreference({ flag: true });
+                                        }}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    }
+                                >
+                                    <ListItemText primary={option} secondary={""} />
+                                </ListItem>
+                            )}
                             renderInput={(params) => <TextField {...params} label="Profiles" />}
                         />                   
                     </Grid>
@@ -147,6 +161,19 @@ const Settings = () => {
                 <DialogActions>
                     <Button onClick={() => setDialogOpen(false)} color="primary"> Close </Button>
                     <Button onClick={() => profile.name && saveCurrentSettings("save_as")} color="primary"> Done </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={deletePreference.flag} onClose={() => setDeletePreference({ flag: false })} fullWidth={true} maxWidth={"xs"}
+            >
+                <DialogTitle>Delete Preference</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete this preference?
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeletePreference({ flag: false })} color="primary"> Close </Button>
+                    <Button onClick={() => console.log("")} color="primary"> Delete </Button>
                 </DialogActions>
             </Dialog>
 
