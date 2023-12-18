@@ -52,9 +52,8 @@ const Timer = () => {
 
 	return (
 		<div
-			style={{ textAlign: "center", margin: "auto" }}
+			style={{ bottom: "5px", right: "5px", position: "absolute" }}
 		>
-			<h2>Sheet Load Time</h2>
 			<div className="timer">
                 <span className="digits">
                     {("0" + Math.floor((time / 3600000) % 24)).slice(-2)}:

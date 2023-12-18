@@ -83,7 +83,7 @@ const App: React.FC<IAppProps> = () => {
               sx: { background: "#fff" }
             }}
           >
-            {[...appMainTabs].map((tab, index) => (
+            {[...appMainTabs].filter(f => f.condition).map((tab, index) => (
               <Tab
                 label={tab.label}
                 {...a11yProps(tab.id)}

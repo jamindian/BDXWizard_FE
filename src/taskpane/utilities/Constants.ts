@@ -46,11 +46,11 @@ export const lookupNumberFormats: { value: number; symbol: string; }[] = [
   { value: 1e18, symbol: "E" },
 ];
 
-export const appMainTabs: { id: number; label: string }[] = [
-  { id: 0, label: "Transverse" },
-  { id: 1, label: "Claims" },
-  { id: 2, label: "Premium" },
-  { id: 3, label: "Preferences" }
+export const appMainTabs: { id: number; label: string, condition: boolean; }[] = [
+  { id: 0, label: "Transverse", condition: true },
+  { id: 1, label: "Claims", condition: false },
+  { id: 2, label: "Premium", condition: false },
+  { id: 3, label: "Preferences", condition: true }
 ];
 
 export const signUpFormFields = [
