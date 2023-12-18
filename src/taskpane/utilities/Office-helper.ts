@@ -417,7 +417,9 @@ var debouncedRender = _.debounce(async function (
   const actual: string[] = event.address.match(/[a-zA-Z]+|[0-9]+/g);
 
   if (triggerSource) {
-    await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
+    if ([4, 13].includes(parseInt(actual[1]))) {
+      await formulaPasteUnPasteWhileChangeMappings(event, sheetName);
+    }
     await unmappedcolumn(
       true,
       parseInt(actual[1]) === 4,
@@ -428,7 +430,7 @@ var debouncedRender = _.debounce(async function (
     await reCalculate(event, sheetName);
   }
 },
-750); // Adjust the debounce delay as needed
+200); // Adjust the debounce delay as needed
 
 async function stagingAreaSheetOnChanged(
   event: Excel.WorksheetChangedEventArgs,

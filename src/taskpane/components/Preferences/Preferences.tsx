@@ -22,9 +22,9 @@ const Settings = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
-    const [deletePreference, setDeletePreference] = useState<{flag: boolean;}>({ flag: false });
-    const [userPreferences, setUserPreferences] = useState<{ company_name: string; profile_name: string; poc_columns: string[]; }[]>([]);
-    const [profile, setProfile] = useState<{ name: string; selected: string; }>({ name: "", selected: "" });
+    const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
+    const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
+    const [profile, setProfile] = useState<{ name: string; selected: string; id: number; }>({ name: "", selected: "", id: null });
 
     useEffect(() => {
         initialRun();
@@ -34,34 +34,51 @@ const Settings = () => {
         const prefrences = await NetworkCalls.getAllUserPreference();
         const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
 
-        const p: IUserProfile[] = prefrences.data?.filter(f => f?.profile_name) ?? [];
+        const activeProfile: IUserProfile = prefrences.data?.find(f => f?.active) ?? prefrences.data[0];
         const StagingColumns: string[] = columnsResponse?.data?.map(c => c.column_name)?.filter(f => f !== "ID") ?? [];
 
-        setUserPreferences(p);
-        setProfile({ name: p[p?.length - 1]?.profile_name, selected: p[p?.length - 1]?.profile_name });
-        setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !p[p?.length - 1]?.poc_columns.includes(c)) ?? [], selected: p[p?.length - 1]?.poc_columns ?? [] });
+        setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
+        setProfile({ name: activeProfile?.profile_name, selected: activeProfile?.profile_name, id: activeProfile?.id });
+        setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !activeProfile?.poc_columns.includes(c)) ?? [], selected: activeProfile?.poc_columns ?? [] });
         setLoading(false);
-        dispatch(setLatestUserProfile(p[p?.length - 1]));
+        dispatch(setLatestUserProfile(activeProfile));
     }
 
     // Call redux action for save setting
     const saveCurrentSettings = useCallback(async (key: string) => {
         setBtnLoading(key);
         const u = await NetworkCalls.getCurrentActiveUser();
-        const args = { company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected };
-        NetworkCalls.createUserPreference(args).then(async () => {
-            toast.success('Preferences saved successfuly!');
-            setBtnLoading("");
-            
-            const prefrences = await NetworkCalls.getAllUserPreference();
-            setUserPreferences(prefrences.data ?? []);
-            dispatch(setLatestUserProfile(args));
-            setDialogOpen(false);
-        }).catch(() => {
-            toast.error(AlertsMsgs.somethingWentWrong);
-            setBtnLoading("");
-        });
+
+        if (key === "save") {
+            NetworkCalls.updateUserPreference(profile.id, { profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
+                toast.success('Preference updated successfuly!');
+                setBtnLoading("");
+                
+                const prefrences = await NetworkCalls.getAllUserPreference();
+                setUserPreferences(prefrences.data ?? []);
+                dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
+                setDialogOpen(false);
+            }).catch(() => {
+                toast.error(AlertsMsgs.somethingWentWrong);
+                setBtnLoading("");
+            });
+        } else {
+            NetworkCalls.createUserPreference({ company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
+                toast.success('Preference saved successfuly!');
+                setBtnLoading("");
+                
+                const prefrences = await NetworkCalls.getAllUserPreference();
+                setUserPreferences(prefrences.data ?? []);
+                dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
+                setDialogOpen(false);
+            }).catch(() => {
+                toast.error(AlertsMsgs.somethingWentWrong);
+                setBtnLoading("");
+            });
+        }        
     }, [stagingColumns, profile]);
+
+
 
     const onAddStagingColumn = useCallback((_column: string) => {
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.remaining.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
@@ -73,7 +90,7 @@ const Settings = () => {
 
     const onChangeProfileSelection = useCallback((value: string) => {
         const selected: IUserProfile = userPreferences.find(f => f.profile_name === value);
-        setProfile({ name: selected.profile_name, selected: value });
+        setProfile({ name: selected.profile_name, selected: value, id: selected.id });
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
     }, [stagingColumns, userPreferences]);
 
@@ -85,7 +102,7 @@ const Settings = () => {
                 <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
                         <Autocomplete
-                            disablePortal fullWidth filterSelectedOptions
+                            disablePortal fullWidth
                             value={profile.selected as any[] | any}
                             onChange={(_e: any, value: any[] | any) => onChangeProfileSelection(value)}
                             options={userPreferences?.map(p => p.profile_name)} size="small"
@@ -96,7 +113,7 @@ const Settings = () => {
                                     secondaryAction={
                                         <IconButton edge="end" aria-label="delete" size="small" onClick={(e) => {
                                             e.stopPropagation();
-                                            setDeletePreference({ flag: true });
+                                            setDeletePreference({ flag: true, id: userPreferences.find(p => p.profile_name === option).id });
                                         }}>
                                             <DeleteIcon />
                                         </IconButton>
@@ -165,15 +182,21 @@ const Settings = () => {
             </Dialog>
 
             <Dialog
-                open={deletePreference.flag} onClose={() => setDeletePreference({ flag: false })} fullWidth={true} maxWidth={"xs"}
+                open={deletePreference.flag} onClose={() => setDeletePreference({ flag: false, id: null })} fullWidth={true} maxWidth={"xs"}
             >
                 <DialogTitle>Delete Preference</DialogTitle>
                 <DialogContent>
                     Are you sure you want to delete this preference?
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeletePreference({ flag: false })} color="primary"> Close </Button>
-                    <Button onClick={() => console.log("")} color="primary"> Delete </Button>
+                    <Button onClick={() => setDeletePreference({ flag: false, id: null })} color="primary"> Close </Button>
+                    <Button onClick={() => deletePreference.id && NetworkCalls.deleteUserPreference(deletePreference.id).then(() => {
+                        toast.success('Preferences has been deleted successfuly!');
+                        setDeletePreference({ flag: false, id: null });
+                        initialRun();
+                    }).catch(() => {
+                        toast.error(AlertsMsgs.somethingWentWrong);
+                    })} color="primary"> Delete </Button>
                 </DialogActions>
             </Dialog>
 

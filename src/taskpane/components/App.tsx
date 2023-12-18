@@ -85,10 +85,10 @@ const App: React.FC<IAppProps> = () => {
           >
             {[...appMainTabs].filter(f => f.condition).map((tab, index) => (
               <Tab
+                value={tab.id}
                 label={tab.label}
                 {...a11yProps(tab.id)}
                 key={index}
-                disabled={tab.id === 6} 
                 style={{ color: "#fff", minWidth: tab.id === 1 ? 145 : tab.id === 3 ? 100 : 150 }}
               />
             ))}

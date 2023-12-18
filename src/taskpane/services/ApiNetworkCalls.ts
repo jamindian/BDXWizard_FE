@@ -111,6 +111,24 @@ class ApiNetworkCalls {
         }
       });
     }
+
+    public async updateUserPreference(id: number, data: { profile_name: string; poc_columns: string[]; }): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.patch(`${ApiUrls.userPreference}${id}/`, data, {
+        headers: {
+          Authorization: `Bearer ${_token}`,
+        }
+      });
+    }
+
+    public async deleteUserPreference(id: number): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.delete(`${ApiUrls.userPreference}${id}/`, {
+        headers: {
+          Authorization: `Bearer ${_token}`,
+        }
+      });
+    }
 }
 
 const NetworkCalls = new ApiNetworkCalls();
