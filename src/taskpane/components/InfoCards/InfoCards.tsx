@@ -12,9 +12,11 @@ interface IInfoCards {
   tabValue: number;
 }
 
+interface ICardsData { policies: number; GWP: number; GEP: number; };
+
 const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const [activeModal, setActiveModal] = useState<string>("");
-  const [data, setData] = React.useState<{ policies: number; GWP: number; GEP: number; }>({ policies: 0, GEP: 0, GWP: 0 });
+  const [data, setData] = React.useState<ICardsData>({ policies: 0, GEP: 0, GWP: 0 });
 
   const sheetChanged: number = useSelector(isSheetChangedSelector);
   const { unMappedProfileColumns, unMappedRawColumns } = useSelector(isUnMappedColumnsSelector);
@@ -27,14 +29,36 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     }
   }, [sheetChanged, tabValue]);
 
-  async function getExcelColumnsResults(): Promise<void> {
-    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
-    const results = await Excel.run(async (context: Excel.RequestContext) => {
-      // get staging area sheet and sync the context
+  async function getExcelColumnsResultsForFinalStagingArea(): Promise<ICardsData> {
+    const results: ICardsData = await Excel.run(async (context: Excel.RequestContext) => {
       const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-      const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+      const stagingSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
       await context.sync();
 
+      // const rows = stagingSheet.getUsedRange().get(Excel.SpecialCellType.constants, Excel.SpecialCellValueType.text).load(ExcelLoadEnumerator.values);
+      // await context.sync();
+
+      // console.log(rows.values);
+
+      return { GEP: 0, GWP: 0, policies: 0 };
+    });
+
+    return results;
+  }
+
+  async function getExcelColumnsResults(): Promise<void> {
+    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
+    const results: ICardsData = await Excel.run(async (context: Excel.RequestContext) => {
+      // get staging area sheet and sync the context
+      const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+      const activeSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+      await context.sync();
+
+      if (activeSheet.name.includes("Final Staging")) {
+        return await getExcelColumnsResultsForFinalStagingArea();
+      }
+
+      const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
       const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
       await context.sync();
 

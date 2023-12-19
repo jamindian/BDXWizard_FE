@@ -664,6 +664,7 @@ export async function mergeStagingAreas(): Promise<void> {
 
       toast.success("Staging Area sheets merged successfully!");
       store.dispatch(setLoader(false));
+      store.dispatch(setSheetChanged());
     });
   }
   catch (err) {

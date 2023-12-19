@@ -63,7 +63,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
             <List>
               {unMappedProfileColumns.map((item, index) => (
                 <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
-                  <ListItemText style={{ color: item.color }} primary={item.column}></ListItemText>
+                  <ListItemText className="btn-hover" style={{ color: item.color }} primary={item.column}></ListItemText>
                 </ListItem>
               ))}
             </List>

@@ -425,12 +425,14 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
 
       const brokerAgentCityRow4: Excel.Range = stagingSheet.getRange(`${brokerAgentCityAddress[0]}4`).load(ExcelLoadEnumerator.values);
       const brokerAgentStateRow4: Excel.Range = stagingSheet.getRange(`${brokerAgentStateAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const brokerAgentCityRow13: Excel.Range = stagingSheet.getRange(`${brokerAgentCityAddress[0]}13`).load(ExcelLoadEnumerator.values);
+      const brokerAgentStateRow13: Excel.Range = stagingSheet.getRange(`${brokerAgentStateAddress[0]}13`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (!brokerAgentStateRow4.values.flat(1)[0]) {
+      if (!brokerAgentStateRow4.values.flat(1)[0] && !brokerAgentStateRow13.values.flat(1)[0]) {
         brokerAgentStateColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[0].split(' ').join('')]);
       }
-      if (!brokerAgentCityRow4.values.flat(1)[0]) {
+      if (!brokerAgentCityRow4.values.flat(1)[0] && !brokerAgentCityRow13.values.flat(1)[0]) {
         brokerAgentCityColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[1]]);
       }
     }
@@ -439,9 +441,10 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
       const tgpItAddress: string[] = tgpItColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
 
       const tgpItRow4: Excel.Range = stagingSheet.getRange(`${tgpItAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const tgpItRow13: Excel.Range = stagingSheet.getRange(`${tgpItAddress[0]}13`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (!tgpItRow4.values.flat(1)[0]) {
+      if (!tgpItRow4.values.flat(1)[0] && !tgpItRow13.values.flat(1)[0]) {
         const s1: any[] = premium.values.flat(1).map(x => typeof x === "number" ? x : 0);
         const s2: any[] = terrorismPremium.values.flat(1).map(x => typeof x === "number" ? x : 0);
         tgpItColumn.values = tgpItColumn.values.flat(1).map((_, i) => [parseFloat(s1[i]) + parseFloat(s2[i])]);
@@ -452,9 +455,10 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
       const tExpDateAddress: string[] = tExpDateColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
 
       const tExpDateRow4: Excel.Range = stagingSheet.getRange(`${tExpDateAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      const tExpDateRow13: Excel.Range = stagingSheet.getRange(`${tExpDateAddress[0]}13`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (!tExpDateRow4.values.flat(1)[0]) {
+      if (!tExpDateRow4.values.flat(1)[0] && !tExpDateRow13.values.flat(1)[0]) {
         tExpDateColumn.values = policyExpirationDate.values.flat(1).map((v) => [v]);
         tExpDateColumn.numberFormat = [["[$-409]mm/dd/yyyy"]];
       }
