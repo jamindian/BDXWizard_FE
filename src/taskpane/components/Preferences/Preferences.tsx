@@ -49,33 +49,18 @@ const Settings = () => {
         setBtnLoading(key);
         const u = await NetworkCalls.getCurrentActiveUser();
 
-        if (key === "save") {
-            NetworkCalls.updateUserPreference(profile.id, { profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
-                toast.success('Preference updated successfuly!');
-                setBtnLoading("");
-                
-                const prefrences = await NetworkCalls.getAllUserPreference();
-                setUserPreferences(prefrences.data ?? []);
-                dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
-                setDialogOpen(false);
-            }).catch(() => {
-                toast.error(AlertsMsgs.somethingWentWrong);
-                setBtnLoading("");
-            });
-        } else {
-            NetworkCalls.createUserPreference({ company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
-                toast.success('Preference saved successfuly!');
-                setBtnLoading("");
-                
-                const prefrences = await NetworkCalls.getAllUserPreference();
-                setUserPreferences(prefrences.data ?? []);
-                dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
-                setDialogOpen(false);
-            }).catch(() => {
-                toast.error(AlertsMsgs.somethingWentWrong);
-                setBtnLoading("");
-            });
-        }        
+        NetworkCalls.createUserPreference({ company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
+            toast.success('Preference saved successfuly!');
+            setBtnLoading("");
+            
+            const prefrences = await NetworkCalls.getAllUserPreference();
+            setUserPreferences(prefrences.data ?? []);
+            dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
+            setDialogOpen(false);
+        }).catch(() => {
+            toast.error(AlertsMsgs.somethingWentWrong);
+            setBtnLoading("");
+        });
     }, [stagingColumns, profile]);
 
 

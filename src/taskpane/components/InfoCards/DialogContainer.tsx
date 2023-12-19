@@ -25,13 +25,17 @@ interface IDialogContainer {
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
 
   const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
-  React.useEffect(() => {
-    async function run(): Promise<void> {
-      const r = await getUnMappedProfileColumnsColors(props.data.unMappedProfileColumns, global.selectedSheet);
-      setUnMappedProfileColumns(r);
-    }    
-    run();
-  }, [props.data.unMappedProfileColumns]);
+
+  React.useEffect(() => {   
+    if (props.activeModal) {
+      run();
+    }
+  }, [props.data.unMappedProfileColumns, props.activeModal]);
+
+  async function run(): Promise<void> {
+    const r = await getUnMappedProfileColumnsColors(props.data.unMappedProfileColumns, global.selectedSheet);
+    setUnMappedProfileColumns(r);
+  }
 
   const toggleModal = (): void => {
     props.toggleModal("");

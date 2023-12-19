@@ -410,6 +410,13 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
     const agentStateCity: Excel.Range = stagingTable.columns.getItemOrNullObject("Agent State-City").getDataBodyRange().load(ExcelLoadEnumerator.values);
     const brokerAgentStateColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Broker/Agent State").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
     const brokerAgentCityColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Broker/Agent City").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+
+    const premium: Excel.Range = stagingTable.columns.getItemOrNullObject("Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
+    const terrorismPremium: Excel.Range = stagingTable.columns.getItemOrNullObject("Terrorism Premium").getDataBodyRange().load(ExcelLoadEnumerator.values);
+    const tgpItColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Total Gross Premium including Terrorism").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+
+    const policyExpirationDate: Excel.Range = stagingTable.columns.getItemOrNullObject("Policy Expiration Date").getDataBodyRange().load(ExcelLoadEnumerator.values);
+    const tExpDateColumn: Excel.Range = stagingTable.columns.getItemOrNullObject("Transaction Expiration Date").getDataBodyRange().load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
     await context.sync();
 
     if (!agentStateCity.isNullObject && !brokerAgentStateColumn.isNullObject && !brokerAgentCityColumn.isNullObject) {
@@ -425,6 +432,31 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
       }
       if (!brokerAgentCityRow4.values.flat(1)[0]) {
         brokerAgentCityColumn.values = agentStateCity.values.flat(1).map((v: string) => [v.split('-')[1]]);
+      }
+    }
+
+    if (!premium.isNullObject && !terrorismPremium.isNullObject && !tgpItColumn.isNullObject) {
+      const tgpItAddress: string[] = tgpItColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+
+      const tgpItRow4: Excel.Range = stagingSheet.getRange(`${tgpItAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      if (!tgpItRow4.values.flat(1)[0]) {
+        const s1: any[] = premium.values.flat(1).map(x => typeof x === "number" ? x : 0);
+        const s2: any[] = terrorismPremium.values.flat(1).map(x => typeof x === "number" ? x : 0);
+        tgpItColumn.values = tgpItColumn.values.flat(1).map((_, i) => [parseFloat(s1[i]) + parseFloat(s2[i])]);
+      }
+    }
+
+    if (!policyExpirationDate.isNullObject && !tExpDateColumn.isNullObject) {
+      const tExpDateAddress: string[] = tExpDateColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g);
+
+      const tExpDateRow4: Excel.Range = stagingSheet.getRange(`${tExpDateAddress[0]}4`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      if (!tExpDateRow4.values.flat(1)[0]) {
+        tExpDateColumn.values = policyExpirationDate.values.flat(1).map((v) => [v]);
+        tExpDateColumn.numberFormat = [["[$-409]mm/dd/yyyy"]];
       }
     }
 
@@ -458,7 +490,7 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[], she
 
     const values: { color: string; column: string; }[] = [];
     for (const column of columnNames) {
-      const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(column).getDataBodyRange().load(ExcelLoadEnumerator.address);
+      const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(column).getDataBodyRange().load(ExcelLoadEnumerator.address).load(ExcelLoadEnumerator.values);
       await context.sync();
 
       const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
@@ -467,7 +499,7 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[], she
       const row13 = stagingSheet.getRange(`${add}13`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (row4.values.flat(1)[0] || row13.values.flat(1)[0]) {
+      if (row4.values.flat(1)[0] || row13.values.flat(1)[0] || currentColumn.values.flat(1).find(f => f)) {
         values.push({ color: AppColors.primacy_green, column });
       }
       else {

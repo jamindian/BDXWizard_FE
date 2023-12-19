@@ -31,7 +31,8 @@
     "start:web": "office-addin-debugging start manifest.xml web",
     "stop": "office-addin-debugging stop manifest.xml",
     "validate": "office-addin-manifest validate manifest.xml",
-    "watch": "webpack --mode development --watch"
+    "watch": "webpack --mode development --watch",
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -66,6 +67,7 @@
   "devDependencies": {
     "@babel/core": "^7.23.5",
     "@babel/preset-typescript": "^7.23.3",
+    "@types/jest": "^29.5.11",
     "@types/lodash": "^4.14.202",
     "@types/office-js": "^1.0.361",
     "@types/office-runtime": "^1.0.35",
@@ -81,6 +83,7 @@
     "file-loader": "^6.2.0",
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.4",
+    "jest": "^27.5.1",
     "less": "^4.2.0",
     "less-loader": "^11.1.3",
     "office-addin-cli": "^1.5.8",
