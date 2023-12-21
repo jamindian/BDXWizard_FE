@@ -17,6 +17,7 @@ interface ICardsData { policies: number; GWP: number; GEP: number; };
 const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const [activeModal, setActiveModal] = useState<string>("");
   const [data, setData] = React.useState<ICardsData>({ policies: 0, GEP: 0, GWP: 0 });
+  const [showUnmappedOption, setShowUnmappedOption] = React.useState<boolean>(true);
 
   const sheetChanged: number = useSelector(isSheetChangedSelector);
   const { unMappedProfileColumns, unMappedRawColumns } = useSelector(isUnMappedColumnsSelector);
@@ -29,36 +30,61 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     }
   }, [sheetChanged, tabValue]);
 
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      getExcelColumnsResults();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   async function getExcelColumnsResultsForFinalStagingArea(): Promise<ICardsData> {
     const results: ICardsData = await Excel.run(async (context: Excel.RequestContext) => {
       const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
       const stagingSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
       await context.sync();
 
-      // const rows = stagingSheet.getUsedRange().get(Excel.SpecialCellType.constants, Excel.SpecialCellValueType.text).load(ExcelLoadEnumerator.values);
-      // await context.sync();
+      const premium: Excel.Range = stagingSheet.getUsedRange().find("Premium", { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      const tgpIt: Excel.Range = stagingSheet.getUsedRange().find("Total Gross Premium including Terrorism", { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      const lastRow: Excel.Range = stagingSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
+      await context.sync();
 
-      // console.log(rows.values);
+      const start: number = parseInt(premium.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]) + 1;
+      const end: string = lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1];
 
-      return { GEP: 0, GWP: 0, policies: 0 };
+      const premiumAddress: string = premium.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+      const tgpItAddress: string = tgpIt.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+      const premiumValues: Excel.Range = stagingSheet.getRange(`${premiumAddress}${start}:${premiumAddress}${end}`).load(ExcelLoadEnumerator.values);
+      const tgpItValues: Excel.Range = stagingSheet.getRange(`${tgpItAddress}${start}:${tgpItAddress}${end}`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      return { GEP: CommonMethods.arrayValuesSum(tgpItValues.values.flat(1)), GWP: CommonMethods.arrayValuesSum(premiumValues.values.flat(1)), policies: premiumValues.values.flat(1).length };
     });
 
     return results;
   }
 
   async function getExcelColumnsResults(): Promise<void> {
-    const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(global.selectedSheet);
     const results: ICardsData = await Excel.run(async (context: Excel.RequestContext) => {
       // get staging area sheet and sync the context
       const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
       const activeSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
       await context.sync();
 
-      if (activeSheet.name.includes("Final Staging")) {
+      if (!activeSheet.name.includes("Staging Area")) {
+        return { GEP: 0, GWP: 0, policies: 0 };
+      }
+
+      if (activeSheet.name.includes("Final Staging Area")) {
+        setShowUnmappedOption(false);
         return await getExcelColumnsResultsForFinalStagingArea();
       }
 
-      const stagingSheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+      setShowUnmappedOption(true);
+
+      const activeWorksheetStagingAreaTableName: string = CommonMethods.getActiveSheetTableName(activeSheet.name);
+      const stagingSheet: Excel.Worksheet = sheets.getItem(activeSheet.name);
       const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
       await context.sync();
 
@@ -157,26 +183,28 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
             </CardContent>
           </Card>
         </div>        
-        <div>
-          <Card
-            className="card-root"
-            onClick={() => toggleModal(ModalTypesEnumerator.UNMAPPED_COLUMNS)}
-          >
-            <CardContent className="d-flex-column-center">
-              <Typography className="card-pos" color="textSecondary" component='div'>
-                {unMappedProfileColumns?.length ?? 0}
-              </Typography>
-              <Typography
-                className="card-root-title"
-                color="textSecondary"
-                gutterBottom
-                component='div'
-              >
-                Unmapped
-              </Typography>
-            </CardContent>
-          </Card>
-        </div>
+        { showUnmappedOption && (        
+          <div>
+            <Card
+              className="card-root"
+              onClick={() => toggleModal(ModalTypesEnumerator.UNMAPPED_COLUMNS)}
+            >
+              <CardContent className="d-flex-column-center">
+                <Typography className="card-pos" color="textSecondary" component='div'>
+                  {unMappedProfileColumns?.length ?? 0}
+                </Typography>
+                <Typography
+                  className="card-root-title"
+                  color="textSecondary"
+                  gutterBottom
+                  component='div'
+                >
+                  Unmapped
+                </Typography>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <DialogContainer
           activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile}
@@ -191,7 +219,8 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     tabValue,
     unMappedProfileColumns,
     unMappedRawColumns,
-    userProfile
+    userProfile,
+    showUnmappedOption,
   ]);
 };
 

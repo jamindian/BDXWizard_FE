@@ -160,6 +160,11 @@ class Methods {
     };
   }
 
+  public getActiveSheetTableName = (sheetName: string): string => {
+    const sheetSplitName: string = sheetName.split("Staging Area")[0].trim();
+    return `BDX${sheetSplitName.split(' ').join("")}StagingTable`;
+  }
+
   public getSheetTableName(sname: string, temp: boolean): string {
     return `BDX${sname.split(' ').join("")}${temp ? 'TempdataTable' : 'StagingTable'}`;
   }
