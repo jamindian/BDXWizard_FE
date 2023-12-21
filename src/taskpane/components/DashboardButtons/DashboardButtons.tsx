@@ -4,12 +4,13 @@ import MergeIcon from "@mui/icons-material/Merge";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
 import AutoGraphIcon from "@mui/icons-material/AutoGraph";
-import { mergeStagingAreas, onCleanBordereaux, onTrainAI } from "@taskpaneutilities/Office-helper";
+import { exportCurrentSheetToCSV, mergeStagingAreas, onCleanBordereaux, onTrainAI } from "@taskpaneutilities/Office-helper";
 import { tryCatch } from "@taskpaneutilities/Helpers";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { useDispatch } from "react-redux";
 import { setStopwatch } from "@redux/Actions/Auth";
 import TextField from '@mui/material/TextField';
+import BeenhereIcon from "@mui/icons-material/Beenhere";
 
 interface IProps {
   buttonName: string;
@@ -60,13 +61,22 @@ const DashboardButtons: FC<IProps> = ({ buttonName }) => {
       onClick: () => mergeStagingAreas(),
     },    
     {
-      id: 7,
+      id: 4,
       condition: true,
       disabled: false,
       label: "Train AI",
       icon: <AutoGraphIcon />,
       hover: "train_AI",
       onClick: () => trainAIOnCurrentSheet(buttonName === "Claim" ? buttonName+"s" : buttonName),
+    },
+    {
+      id: 5,
+      condition: true,
+      disabled: false,
+      label: "Export",
+      icon: <BeenhereIcon />,
+      hover: "export",
+      onClick: () => exportCurrentSheetToCSV(),
     },
   ];
 

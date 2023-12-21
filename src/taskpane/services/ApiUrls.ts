@@ -15,6 +15,7 @@ class Urls {
   public readonly stagingColumnsToMap  = '/meta_data/staging_area_column/staging-columns-to-map/';
   public readonly downloadCustomTemplate = '';
   public readonly trainAI = '/process/save-maps/';
+  public readonly exportToCSV = '/process/export-to-csv/';
 }
   
 const ApiUrls = new Urls();

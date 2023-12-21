@@ -45,7 +45,7 @@ function httpErrorHandler(error) {
 
 function createHttpInstance() {
   const instance = axios.create({
-    baseURL: process.env.REACT_APP_BASE_URL,
+    baseURL: process.env.REACT_APP_BASE_URL + "/api_v1",
     headers: {
       'Content-Type': 'application/json'
     },

@@ -94,6 +94,14 @@ class ApiNetworkCalls {
       );
     }
 
+    public async exportToCsv(data: any): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.post(
+        `${ApiUrls.exportToCSV}`, { ...data },
+        { headers: { Authorization: `Bearer ${_token}` } }
+      );
+    }
+
     public async getAllUserPreference(): Promise<any> {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.get(`${ApiUrls.userPreference}`, {
@@ -115,6 +123,15 @@ class ApiNetworkCalls {
     public async deleteUserPreference(id: number): Promise<any> {
       let _token = CommonMethods.getAccessToken();
       return httpRequest.delete(`${ApiUrls.userPreference}${id}/`, {
+        headers: {
+          Authorization: `Bearer ${_token}`,
+        }
+      });
+    }
+
+    public async getActiveUserPreference(): Promise<any> {
+      let _token = CommonMethods.getAccessToken();
+      return httpRequest.get(`${ApiUrls.userPreference}?active=true`, {
         headers: {
           Authorization: `Bearer ${_token}`,
         }

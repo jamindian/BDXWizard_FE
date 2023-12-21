@@ -3,7 +3,7 @@ import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, stateCityColumnsValuesMap, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
-import { API_UNAUTHORISED, AppColors, Strings } from "@taskpaneutilities/Constants";
+import { API_UNAUTHORISED, AlertsMsgs, AppColors, Strings } from "@taskpaneutilities/Constants";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
@@ -527,7 +527,7 @@ export async function reCalculate(eventArgs, sheetName: string): Promise<void> {
 export async function onTrainAI(
   sheetName: string,
   template_type: string,
-) {
+): Promise<void> {
 
   store.dispatch(setLoader(true));
   
@@ -596,6 +596,57 @@ export async function onTrainAI(
     store.dispatch(setLoader(false));
     store.dispatch(setManualMapped(false));
   }
+}
+
+export async function exportCurrentSheetToCSV(): Promise<void> {
+  store.dispatch(setLoader(true));
+  
+  try {
+    const obj: {workbook_name: string, sheet_name: string, headers: string[], rows: any[][]} = await Excel.run(async (context: Excel.RequestContext) => {
+      let workbook: Excel.Workbook = context.workbook;
+      workbook.load(ExcelLoadEnumerator.name);
+
+      const sheets: Excel.WorksheetCollection = workbook.worksheets;
+      const activeSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+      await context.sync();
+
+      const activeWorksheetStagingAreaTableName: string = CommonMethods.getActiveSheetTableName(activeSheet.name);
+      const stagingSheet: Excel.Worksheet = sheets.getItem(activeSheet.name);
+      const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
+      await context.sync();
+
+      const headers = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
+      const body = stagingTable.getDataBodyRange().load(ExcelLoadEnumerator.values);
+      await context.sync();
+
+      const dateColumnIndexes: number[] = headers.values[0].map((h, ind) => h.includes("Date") ? ind : undefined).filter((f) => f);
+
+      const result = {
+        headers: headers.values[0],
+        rows: CommonMethods.findDateColumnsAndModifyForExports(
+          dateColumnIndexes,
+          body.values
+        ),
+        sheet_name: activeSheet.name,
+        workbook_name: workbook.name,
+      };
+    
+      return result;
+    });
+
+    NetworkCalls.exportToCsv(obj).then((res) => {
+      const finalUrl: string = process.env.REACT_APP_BASE_URL + res.data?.file_url;
+      window.open(finalUrl);
+      toast.success("Your requested file is successfully downloaded!");
+      store.dispatch(setLoader(false));
+    }).catch(() => {
+      toast.error("Unable to download file.");
+    });
+  }
+  catch (err) {
+    store.dispatch(setLoader(false));
+  }
+  
 }
 
 export async function mergeStagingAreas(): Promise<void> {

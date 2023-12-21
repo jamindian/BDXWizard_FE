@@ -1,5 +1,6 @@
 import moment from "moment";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
+import momentMsDate from "moment-msdate";
 import { AppColors, lookupNumberFormats } from "@taskpaneutilities/Constants";
 import CryptoJS from "crypto-js";
 
@@ -168,6 +169,27 @@ class Methods {
   public getSheetTableName(sname: string, temp: boolean): string {
     return `BDX${sname.split(' ').join("")}${temp ? 'TempdataTable' : 'StagingTable'}`;
   }
+
+  public findDateColumnsAndModifyForExports = (
+    indexes: number[],
+    arr: any[][]
+  ): any[][] => {
+    const modify: any[][] = [];
+    for (let i = 0; i < arr.length; i++) {
+      let current: any[] = arr[i];
+      for (let j = 0; j < current.length; j++) {
+        if (indexes.includes(j) && typeof current[j] === "number") {
+          const date = JSON.stringify(
+            momentMsDate.fromOADate(current[j], "America/New_York")
+          );
+          current[j] = this.convertIntoDateFormat(true, JSON.parse(date));
+        }
+      }
+      modify.push(current);
+    }
+
+    return modify;
+  };
 
   public nextChar = (str: string): string => {
     let _c = str.slice(0, str.length - 1);
