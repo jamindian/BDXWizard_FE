@@ -10,8 +10,12 @@ interface IProps {
 
 const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, setStaginConstants }) => {
     
-    const [basedOn, setBasedOn] = useState<string>("");
+    const [basedOn, setBasedOn] = useState<string>("Constant Value");
     const [activeColumn, setActiveColumn] = useState<string[]>([]);
+
+    React.useEffect(() => {
+        setActiveColumn(Object.keys(staginConstants));
+    }, []);
 
     const onChangeInput = React.useCallback((k: string, v: string) => {
         setStaginConstants({ ...staginConstants, [k]: v });
@@ -52,7 +56,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
             { activeColumn.length > 0 && basedOn && (
                 <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
                     { activeColumn.map((c) => (
-                        <Grid item xs={6} sm={6} md={6} lg={6}>
+                        <Grid item xs={6} sm={6} md={6} lg={6} key={c}>
                             <TextField 
                                 label={`${c} ${basedOn}`} name={`search_columns_${c.toLowerCase().split(' ').join()}`} 
                                 value={staginConstants[c]} size="small" className='mt-3' variant="outlined" type="text" fullWidth

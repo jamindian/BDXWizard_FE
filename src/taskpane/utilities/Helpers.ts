@@ -552,10 +552,15 @@ export async function adjustPreferenceStagingConstants(staginConstants: { [key: 
 
     for (const [key, value] of Object.entries(staginConstants)) {
       const column: Excel.Range = stagingSheet.getUsedRange().find(key, { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      const lastRow: Excel.Range = stagingSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
       await context.sync();
+
+      const start: number = parseInt(column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]) + 1;
+      const end: number = parseInt(lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]);
 
       const add: string = column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
       stagingSheet.getRange(`${add}13`).values = [[value]];
+      stagingSheet.getRange(`${add}${start}:${add}${end}`).values = Array.from({ length: end - start + 1 }, () => [value]);;
     }
 
     await context.sync();

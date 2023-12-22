@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog,
-    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle, Divider
+    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle, Divider, setRef
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
@@ -63,6 +63,7 @@ const Settings = () => {
         }).then(async () => {
             toast.success('Preference saved successfuly!');
             setBtnLoading("");
+            setCreateNew(false);
             
             const prefrences = await NetworkCalls.getAllUserPreference();
             setUserPreferences(prefrences.data ?? []);
@@ -98,6 +99,20 @@ const Settings = () => {
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
     }, [stagingColumns, userPreferences]);
 
+    const onClickCreateNew = useCallback(async () => {
+        const f: boolean = !createNew;
+        if (f) {
+            setUserPreferences([{ active: true, poc_columns: [], staging_constants: {}, id: 0, profile_name: "New Profile 1", company_name: userPreferences[0].company_name }, ...userPreferences.map(f => { return { ...f, active: false } })]);
+            setProfile({ ...profile, poc_columns: [], id: 0, name: "New Profile 1", selected: "New Profile 1" });
+            setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default, selected: [] });
+        } else {
+            const prefrences = await NetworkCalls.getAllUserPreference();
+            setUserPreferences(prefrences?.data ?? []);
+            onChangeProfileSelection(prefrences?.data?.find(f => f?.active).profile_name);
+        }
+        setCreateNew(f);
+    }, [stagingColumns, userPreferences, createNew]);
+
     return (
         <form noValidate autoComplete='off'>
             
@@ -106,10 +121,13 @@ const Settings = () => {
                 <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={4}>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
                         <Autocomplete
-                            disablePortal fullWidth
+                            disablePortal fullWidth size="small"
                             value={profile.selected as any[] | any}
-                            onChange={(_e: any, value: any[] | any) => onChangeProfileSelection(value)}
-                            options={userPreferences?.map(p => p.profile_name)} size="small"
+                            onChange={(_e: any, value: any[] | any) => {
+                                onChangeProfileSelection(value);
+                                setCreateNew(false);
+                            }}
+                            options={CommonMethods.removeDublicatesInArray(userPreferences?.map(p => p.profile_name))}
                             getOptionLabel={(option) => option}
                             renderOption={(props, option) => (
                                 <ListItem
@@ -130,7 +148,7 @@ const Settings = () => {
                         />
                     </Grid>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
-                        <Button onClick={() => setCreateNew(!createNew)} color="primary"> { createNew ? "Reset" : "Create New" } </Button>
+                        <Button onClick={() => onClickCreateNew()} color="primary"> { createNew ? "Reset" : "Create New" } </Button>
                     </Grid>
                 </Grid>
             </div>
@@ -194,7 +212,9 @@ const Settings = () => {
             <Divider />
             <br />
 
-            <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
+            { stagingColumns.default.length > 0 && (
+                <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
+            )}
 
             <div className='d-flex d-flex-row-center'>
                 <CustomButton loading={btnLoading === "save"} onClick={() => !createNew && saveCurrentSettings("save")} title="Save" />

@@ -394,7 +394,7 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
         });
 
         const activePreference = await NetworkCalls.getActiveUserPreference();
-        tryCatch(adjustPreferenceStagingConstants(activePreference?.data[0] ?? {}));
+        tryCatch(adjustPreferenceStagingConstants(activePreference?.data[0]?.staging_constants ?? {}));
         store.dispatch(setLatestUserProfile(activePreference?.data[0]));
       });
     }
