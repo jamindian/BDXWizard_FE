@@ -4,13 +4,18 @@ import { Grid, Autocomplete, TextField } from '@mui/material';
 
 interface IProps {
     stagingColumns: string[];
+    staginConstants: { [key: string]: string; };
+    setStaginConstants: (arg: { [key: string]: string; }) => void;
 }
 
-const FormulaConstant: React.FC<IProps> = ({ stagingColumns }) => {
+const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, setStaginConstants }) => {
     
     const [basedOn, setBasedOn] = useState<string>("");
     const [activeColumn, setActiveColumn] = useState<string[]>([]);
-    const [input, setInput] = useState<string>("");
+
+    const onChangeInput = React.useCallback((k: string, v: string) => {
+        setStaginConstants({ ...staginConstants, [k]: v });
+    }, [staginConstants]);
 
     return (
         <React.Fragment>
@@ -22,9 +27,9 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns }) => {
                         value={activeColumn as any[] | any}
                         onChange={(_e: any, value: any[] | any) => {
                             setActiveColumn(value);
-                            setInput("");
+                            setStaginConstants({});
                         }}
-                        options={stagingColumns} size="small" getOptionLabel={(option) => option}                        
+                        options={stagingColumns} size="small" getOptionLabel={(option) => option}
                         renderInput={(params) => <TextField {...params} label="Staging Area Columns" />}
                     />
                 </Grid>
@@ -35,7 +40,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns }) => {
                             value={basedOn as any[] | any}
                             onChange={(_e: any, value: any[] | any) => {
                                 setBasedOn(value);
-                                setInput("");
+                                setStaginConstants({});
                             }}
                             options={["Constant Value", "Formula"]} size="small"
                             getOptionLabel={(option) => option}
@@ -49,8 +54,9 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns }) => {
                     { activeColumn.map((c) => (
                         <Grid item xs={6} sm={6} md={6} lg={6}>
                             <TextField 
-                                label={`${c} ${basedOn}`} name="search_columns" variant="outlined" value={input} size="small"
-                                onChange={(e) => setInput(e.target.value)} type="text" fullWidth className='mt-3'
+                                label={`${c} ${basedOn}`} name={`search_columns_${c.toLowerCase().split(' ').join()}`} 
+                                value={staginConstants[c]} size="small" className='mt-3' variant="outlined" type="text" fullWidth
+                                onChange={(e) => onChangeInput(c, e.target.value)}
                             />
                         </Grid>
                     )) }                    

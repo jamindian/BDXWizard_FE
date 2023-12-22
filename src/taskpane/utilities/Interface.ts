@@ -50,4 +50,5 @@ export interface IStagingAreaColumn {
 export interface IUserProfile {
   company_name: string; profile_name: string; poc_columns: string[];
   id: number; active: boolean;
+  staging_constants: { [key: string]: string; };
 }

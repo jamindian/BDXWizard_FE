@@ -24,6 +24,7 @@ const Settings = () => {
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
     const [search, setSearch] = useState<string>("");
+    const [staginConstants, setStaginConstants] = useState<{ [key: string]: string; }>({});
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; id: number; }>({ name: "", selected: "", id: null });
@@ -41,6 +42,7 @@ const Settings = () => {
 
         setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
         setProfile({ name: activeProfile?.profile_name, selected: activeProfile?.profile_name, id: activeProfile?.id });
+        setStaginConstants(Object.keys(activeProfile.staging_constants).length > 0 ? activeProfile.staging_constants : {});
         setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !activeProfile?.poc_columns.includes(c)) ?? [], selected: activeProfile?.poc_columns ?? [] });
         setLoading(false);
         dispatch(setLatestUserProfile(activeProfile));
@@ -51,7 +53,10 @@ const Settings = () => {
         setBtnLoading(key);
         const u = await NetworkCalls.getCurrentActiveUser();
 
-        NetworkCalls.createUserPreference({ company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected }).then(async () => {
+        NetworkCalls.createUserPreference({ 
+            company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected,
+            staging_constants: staginConstants
+        }).then(async () => {
             toast.success('Preference saved successfuly!');
             setBtnLoading("");
             
@@ -63,7 +68,7 @@ const Settings = () => {
             toast.error(AlertsMsgs.somethingWentWrong);
             setBtnLoading("");
         });
-    }, [stagingColumns, profile]);
+    }, [stagingColumns, profile, staginConstants]);
 
 
 
@@ -159,7 +164,7 @@ const Settings = () => {
             <Divider />
             <br />
 
-            <FormulaConstant stagingColumns={stagingColumns.default} />
+            <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
 
             <div className='d-flex d-flex-row-center'>
                 <CustomButton loading={btnLoading === "save"} onClick={() => saveCurrentSettings("save")} title="Save" />

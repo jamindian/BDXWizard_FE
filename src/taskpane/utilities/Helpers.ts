@@ -516,3 +516,30 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[], she
 
   return arr;
 }
+
+export async function getExcelColumnsResultsForFinalStagingArea(): Promise<{ policies: number; GWP: number; GEP: number; }> {
+  const results: { policies: number; GWP: number; GEP: number; } = await Excel.run(async (context: Excel.RequestContext) => {
+    const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+    const stagingSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+    await context.sync();
+
+    const premium: Excel.Range = stagingSheet.getUsedRange().find("Premium", { completeMatch: true }).load(ExcelLoadEnumerator.address);
+    const tgpIt: Excel.Range = stagingSheet.getUsedRange().find("Total Gross Premium including Terrorism", { completeMatch: true }).load(ExcelLoadEnumerator.address);
+    const lastRow: Excel.Range = stagingSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const start: number = parseInt(premium.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]) + 1;
+    const end: string = lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1];
+
+    const premiumAddress: string = premium.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+    const tgpItAddress: string = tgpIt.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+    const premiumValues: Excel.Range = stagingSheet.getRange(`${premiumAddress}${start}:${premiumAddress}${end}`).load(ExcelLoadEnumerator.values);
+    const tgpItValues: Excel.Range = stagingSheet.getRange(`${tgpItAddress}${start}:${tgpItAddress}${end}`).load(ExcelLoadEnumerator.values);
+    await context.sync();
+
+    return { GEP: CommonMethods.arrayValuesSum(tgpItValues.values.flat(1)), GWP: CommonMethods.arrayValuesSum(premiumValues.values.flat(1)), policies: premiumValues.values.flat(1).length };
+  });
+
+  return results;
+}
