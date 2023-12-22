@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
-import { adjustColorGradients, formulaPasteUnPasteWhileChangeMappings, onConfirmData, stateCityColumnsValuesMap, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
+import { adjustColorGradients, adjustPreferenceStagingConstants, formulaPasteUnPasteWhileChangeMappings, onConfirmData, stateCityColumnsValuesMap, tryCatch, unmappedcolumn } from "@taskpaneutilities/Helpers";
 import _ from "lodash";
 import { API_UNAUTHORISED, AlertsMsgs, AppColors, Strings } from "@taskpaneutilities/Constants";
 import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
@@ -194,23 +194,15 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
         SourceDataSampleTable.format.font.size = 12;
 
         //change formatting for the header row of the Source Data Sample Table B4
-        sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).format.fill.color = AppColors.primary_light_blue;
-        sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).format.font.color = AppColors.primacy_black;
-        sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).format.font.size = 14;
-        sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`).format.font.bold = true;
+        const rangeRowB4: Excel.Range = sheet.getRange(`${AlphabetsEnumerator.B}4:${lastCellAddress}4`);
+        rangeRowB4.format.fill.color = AppColors.primary_light_blue;
+        rangeRowB4.format.font.color = AppColors.primacy_black;
+        rangeRowB4.format.font.size = 14;
+        rangeRowB4.format.font.bold = true;
 
         //add 'ID' as the header name in cell B4 and enter the first 5 IDs as 1 to 5
-        sheet.getRange("B5").values = [["1"]];
-        sheet.getRange("B6").values = [["=B5 + 1"]];
-        sheet.getRange("B7").values = [["=B6 + 1"]];
-        sheet.getRange("B8").values = [["=B7 + 1"]];
-        sheet.getRange("B9").values = [["=B8 + 1"]];
-
-        sheet.getRange("B5").numberFormat = [["#"]];
-        sheet.getRange("B6").numberFormat = [["#"]];
-        sheet.getRange("B7").numberFormat = [["#"]];
-        sheet.getRange("B8").numberFormat = [["#"]];
-        sheet.getRange("B9").numberFormat = [["#"]];
+        sheet.getRange("B5:B9").values = [["1"], ["2"], ["3"], ["4"], ["5"]];
+        sheet.getRange("B5:B9").numberFormat = [["#"]];
 
         // Percentages section
         let percRangeHalfTIcons: Excel.Range = sheet
@@ -401,6 +393,8 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           sheets_name: sheets_name.items.map(c => c.name).toString()
         });
 
+        const activePreference = await NetworkCalls.getActiveUserPreference();
+        tryCatch(adjustPreferenceStagingConstants(activePreference?.data[0] ?? {}));
       });
     }
     catch (error) {

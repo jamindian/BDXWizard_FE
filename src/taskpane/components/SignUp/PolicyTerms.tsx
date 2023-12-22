@@ -168,7 +168,7 @@ export const PrivacyPolicy: React.FC<IPrivacyPolicy> = ({
               {
                 title: "Website ",
                 heading:
-                  "refers to Wizard Analytics accessible from www.sovwizard.com",
+                  "refers to Wizard Analytics accessible from www.bdx.sovwizard.com",
               },
               {
                 title: "You ",
@@ -569,7 +569,7 @@ export const PrivacyPolicy: React.FC<IPrivacyPolicy> = ({
             </p>
             {[
               "By email: contact@wizardanalytics.io",
-              "By visiting this page on our website: www.sovwizard.com",
+              "By visiting this page on our website: www.bdx.sovwizard.com",
             ].map((item, index) => (
               <p key={index} style={{ marginLeft: "25px" }}>
                 {item}

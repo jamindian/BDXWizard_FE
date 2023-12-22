@@ -109,7 +109,7 @@ export const TermsOfConditions: React.FC<ITermsOfConditions> = ({
               {
                 title: "Website ",
                 heading:
-                  "refers to Wizard Analytics accessible from www.sovwizard.com.",
+                  "refers to Wizard Analytics accessible from www.bdx.sovwizard.com.",
               },
               {
                 title: "You ",

@@ -10,7 +10,7 @@ export const API_UNAUTHORISED: number = 401;
 export const API_DOES_NOT_EXIST: number = 404;
 
 export const Strings: IStrings = {
-  secret: "sOvwIzaRd",
+  secret: "bDxwIzaRd",
   manuallyMapped: "M",
   backfillMapped: "AI",
   halfT: "=UNICHAR(8969)",

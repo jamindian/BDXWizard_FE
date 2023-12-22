@@ -543,3 +543,21 @@ export async function getExcelColumnsResultsForFinalStagingArea(): Promise<{ pol
 
   return results;
 }
+
+export async function adjustPreferenceStagingConstants(staginConstants: { [key: string]: string; }): Promise<void> {
+  await Excel.run(async (context: Excel.RequestContext) => {
+    const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+    const stagingSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
+    await context.sync();
+
+    for (const [key, value] of Object.entries(staginConstants)) {
+      const column: Excel.Range = stagingSheet.getUsedRange().find(key, { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      await context.sync();
+
+      const add: string = column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+      stagingSheet.getRange(`${add}13`).values = [[value]];
+    }
+
+    await context.sync();
+  });
+}

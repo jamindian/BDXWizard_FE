@@ -24,6 +24,7 @@ const Settings = () => {
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
     const [search, setSearch] = useState<string>("");
+    const [createNew, setCreateNew] = useState<boolean>(false);
     const [staginConstants, setStaginConstants] = useState<{ [key: string]: string; }>({});
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
@@ -32,6 +33,15 @@ const Settings = () => {
     useEffect(() => {
         initialRun();
     }, []);
+
+    useEffect(() => {
+        if (search) {
+            setStagingColumns({
+                ...stagingColumns, selected: stagingColumns.default.filter(f => search ? f.includes(search) : f),
+                remaining: stagingColumns.default.filter(f => search ? f.includes(search) : f)
+            });
+        }
+    }, [search]);
 
     async function initialRun(): Promise<void> {
         const prefrences = await NetworkCalls.getAllUserPreference();
@@ -69,8 +79,6 @@ const Settings = () => {
             setBtnLoading("");
         });
     }, [stagingColumns, profile, staginConstants]);
-
-
 
     const onAddStagingColumn = useCallback((_column: string) => {
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.remaining.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
@@ -118,7 +126,7 @@ const Settings = () => {
                         />
                     </Grid>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
-                        <Button onClick={() => console.log()} color="primary"> Create New </Button>
+                        <Button onClick={() => setCreateNew(!createNew)} color="primary"> { createNew ? "Reset" : "Create New" } </Button>
                     </Grid>
                 </Grid>
             </div>
@@ -130,6 +138,7 @@ const Settings = () => {
                     <TextField 
                         label="Search Columns" name="search_columns" variant="outlined" value={search} size="small"
                         onChange={(e) => setSearch(e.target.value)} type="text" style={{ width: "70%", margin: "0 auto" }}
+                        disabled={loading}
                     />
                 </div>
 
@@ -167,7 +176,7 @@ const Settings = () => {
             <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
 
             <div className='d-flex d-flex-row-center'>
-                <CustomButton loading={btnLoading === "save"} onClick={() => saveCurrentSettings("save")} title="Save" />
+                <CustomButton loading={btnLoading === "save"} onClick={() => !createNew && saveCurrentSettings("save")} title="Save" />
                 <CustomButton loading={btnLoading === "save_as"} onClick={() => setDialogOpen(true)} title="Save As" />
             </div>
             
