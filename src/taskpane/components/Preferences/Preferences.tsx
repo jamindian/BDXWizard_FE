@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog,
-    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle,
+    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle, Divider
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
@@ -13,6 +13,7 @@ import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
 import { IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
 import { setLatestUserProfile } from '@redux/Actions/Process';
+import FormulaConstant from './FormulaConstant';
 
 const Settings = () => {
 
@@ -22,6 +23,7 @@ const Settings = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const [btnLoading, setBtnLoading] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; id: number; }>({ name: "", selected: "", id: null });
@@ -108,15 +110,24 @@ const Settings = () => {
                                 </ListItem>
                             )}
                             renderInput={(params) => <TextField {...params} label="Profiles" />}
-                        />                   
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={6} md={6} lg={6}>
+                        <Button onClick={() => console.log()} color="primary"> Create New </Button>
                     </Grid>
                 </Grid>
             </div>
             <br />
+
             <div className="control-group">
-                <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex justify-content-between align-items-center mb-3">
                     <FormLabel component="legend" className='bold'>Staging area columns</FormLabel>
+                    <TextField 
+                        label="Search Columns" name="search_columns" variant="outlined" value={search} size="small"
+                        onChange={(e) => setSearch(e.target.value)} type="text" style={{ width: "70%", margin: "0 auto" }}
+                    />
                 </div>
+
                 <div className="control-wrapper d-flex justify-content-between">
                     <div className="w-50">
                         <div className="control-group mt-0 h-100">
@@ -144,7 +155,12 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
-            
+
+            <Divider />
+            <br />
+
+            <FormulaConstant stagingColumns={stagingColumns.default} />
+
             <div className='d-flex d-flex-row-center'>
                 <CustomButton loading={btnLoading === "save"} onClick={() => saveCurrentSettings("save")} title="Save" />
                 <CustomButton loading={btnLoading === "save_as"} onClick={() => setDialogOpen(true)} title="Save As" />
