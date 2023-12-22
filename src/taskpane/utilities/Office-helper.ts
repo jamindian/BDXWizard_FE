@@ -8,7 +8,7 @@ import { IStagingAreaColumn } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setLoader, setManualMapped, setStopwatch } from "@redux/Actions/Auth";
-import { setSelectedSheetData, setSheetChanged } from "@redux/Actions/Process";
+import { setLatestUserProfile, setSelectedSheetData, setSheetChanged } from "@redux/Actions/Process";
 
 export async function onCleanBordereaux(buttonName: string, sheetName: string, batches: number): Promise<void> {
   store.dispatch(setLoader(true));
@@ -395,6 +395,7 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
 
         const activePreference = await NetworkCalls.getActiveUserPreference();
         tryCatch(adjustPreferenceStagingConstants(activePreference?.data[0] ?? {}));
+        store.dispatch(setLatestUserProfile(activePreference?.data[0]));
       });
     }
     catch (error) {

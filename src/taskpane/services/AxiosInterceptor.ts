@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from "axios";
 import { toast } from "react-toastify";
 // import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { API_DOES_NOT_EXIST, API_UNAUTHORISED, API_SUCCESS, API_DELETE } from "@taskpaneutilities/Constants";
+import { store } from "@redux/Store";
+import { setIsLoggedIn } from "@redux/Actions/Auth";
 
 function httpErrorHandler(error) {
   if (error === null) throw new Error('Unrecoverable error!! Error is null!')
@@ -27,7 +29,9 @@ function httpErrorHandler(error) {
         if (response.data?.message) {
           toast.error(response.data?.message);
         } else {
-          // CommonMethods.unAuthorizaedLogout(true);
+          localStorage.clear();
+          toast.error("Please login to access this resource.");
+          store.dispatch(setIsLoggedIn(false));
         }
       } else if (statusCode === 300) {
         toast.warning(response.data?.message);

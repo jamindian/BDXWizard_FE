@@ -23,6 +23,10 @@ class Methods {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
+  public removeDublicatesInArray = (arr: any[]): any[] => {
+    return arr?.filter((x, i, a) => a?.indexOf(x) == i);
+  };
+
   public removeCommas = (x: string): string => {
     return x.split(",").join("");
   };

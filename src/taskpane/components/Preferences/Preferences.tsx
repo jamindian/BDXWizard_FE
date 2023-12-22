@@ -14,6 +14,8 @@ import { IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
 import { setLatestUserProfile } from '@redux/Actions/Process';
 import FormulaConstant from './FormulaConstant';
+import CommonMethods from '@taskpaneutilities/CommonMethods';
+import { adjustPreferenceStagingConstants, tryCatch } from '@taskpaneutilities/Helpers';
 
 const Settings = () => {
 
@@ -25,23 +27,15 @@ const Settings = () => {
     const [btnLoading, setBtnLoading] = useState<string>("");
     const [search, setSearch] = useState<string>("");
     const [createNew, setCreateNew] = useState<boolean>(false);
+    const [selectionWithInSearch, setSelectionWithInSearch] = useState<{ add: string[]; remove: string[]; }>({ add: [], remove: [] });
     const [staginConstants, setStaginConstants] = useState<{ [key: string]: string; }>({});
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
-    const [profile, setProfile] = useState<{ name: string; selected: string; id: number; }>({ name: "", selected: "", id: null });
+    const [profile, setProfile] = useState<{ name: string; selected: string; id: number; poc_columns: string[] }>({ name: "", selected: "", id: null, poc_columns: [] });
 
     useEffect(() => {
         initialRun();
     }, []);
-
-    useEffect(() => {
-        if (search) {
-            setStagingColumns({
-                ...stagingColumns, selected: stagingColumns.default.filter(f => search ? f.includes(search) : f),
-                remaining: stagingColumns.default.filter(f => search ? f.includes(search) : f)
-            });
-        }
-    }, [search]);
 
     async function initialRun(): Promise<void> {
         const prefrences = await NetworkCalls.getAllUserPreference();
@@ -51,8 +45,8 @@ const Settings = () => {
         const StagingColumns: string[] = columnsResponse?.data?.map(c => c.column_name)?.filter(f => f !== "ID") ?? [];
 
         setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
-        setProfile({ name: activeProfile?.profile_name, selected: activeProfile?.profile_name, id: activeProfile?.id });
-        setStaginConstants(Object.keys(activeProfile.staging_constants).length > 0 ? activeProfile.staging_constants : {});
+        setProfile({ name: activeProfile?.profile_name, selected: activeProfile?.profile_name, id: activeProfile?.id, poc_columns: activeProfile?.poc_columns });
+        setStaginConstants(activeProfile?.staging_constants ? activeProfile?.staging_constants : {});
         setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !activeProfile?.poc_columns.includes(c)) ?? [], selected: activeProfile?.poc_columns ?? [] });
         setLoading(false);
         dispatch(setLatestUserProfile(activeProfile));
@@ -74,6 +68,10 @@ const Settings = () => {
             setUserPreferences(prefrences.data ?? []);
             dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
             setDialogOpen(false);
+
+            if (Object.keys(staginConstants).length > 0) {
+                tryCatch(adjustPreferenceStagingConstants(staginConstants));
+            }
         }).catch(() => {
             toast.error(AlertsMsgs.somethingWentWrong);
             setBtnLoading("");
@@ -81,16 +79,22 @@ const Settings = () => {
     }, [stagingColumns, profile, staginConstants]);
 
     const onAddStagingColumn = useCallback((_column: string) => {
-        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.remaining.filter(c => c !== _column), selected: [...stagingColumns.selected, _column] });
-    }, [stagingColumns]);
+        setStagingColumns({ ...stagingColumns, remaining: CommonMethods.removeDublicatesInArray(stagingColumns.remaining.filter(c => c !== _column)), selected: CommonMethods.removeDublicatesInArray([...stagingColumns.selected, _column]) });
+        if (search) {
+            setSelectionWithInSearch({ ...selectionWithInSearch, add: [...selectionWithInSearch.add, _column] });
+        }
+    }, [stagingColumns, search, selectionWithInSearch]);
 
     const onRemoveStagingColumn = useCallback((_column: string) => {
-        setStagingColumns({ ...stagingColumns, remaining: [...stagingColumns.remaining, _column], selected: stagingColumns.selected.filter(c => c !== _column) });
-    }, [stagingColumns]);
+        setStagingColumns({ ...stagingColumns, remaining: CommonMethods.removeDublicatesInArray([...stagingColumns.remaining, _column]), selected: CommonMethods.removeDublicatesInArray(stagingColumns.selected.filter(c => c !== _column)) });
+        if (search) {
+            setSelectionWithInSearch({ ...selectionWithInSearch, remove: [...selectionWithInSearch.remove, _column] });
+        }
+    }, [stagingColumns, search, selectionWithInSearch]);
 
     const onChangeProfileSelection = useCallback((value: string) => {
         const selected: IUserProfile = userPreferences.find(f => f.profile_name === value);
-        setProfile({ name: selected.profile_name, selected: value, id: selected.id });
+        setProfile({ name: selected.profile_name, selected: value, id: selected.id, poc_columns: selected?.poc_columns });
         setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
     }, [stagingColumns, userPreferences]);
 
@@ -137,8 +141,25 @@ const Settings = () => {
                     <FormLabel component="legend" className='bold'>Staging area columns</FormLabel>
                     <TextField 
                         label="Search Columns" name="search_columns" variant="outlined" value={search} size="small"
-                        onChange={(e) => setSearch(e.target.value)} type="text" style={{ width: "70%", margin: "0 auto" }}
-                        disabled={loading}
+                        onChange={(e) => {
+                            const v: string = e.target.value;
+                            setSearch(v);      
+                            let obj = {
+                                default: stagingColumns.default, 
+                                remaining: stagingColumns.default.filter(c => !profile?.poc_columns.includes(c) && !selectionWithInSearch?.add.includes(c)) ?? [], 
+                                selected: [...profile?.poc_columns, ...selectionWithInSearch.add].filter(c => !selectionWithInSearch?.remove.includes(c)) ?? []
+                            }
+
+                            if (v) {
+                                obj = {
+                                    ...stagingColumns, selected: stagingColumns.selected.filter(function (str) { return str.indexOf(v) !== -1; }),
+                                    remaining: stagingColumns.remaining.filter(function (str) { return str.indexOf(v) !== -1; })
+                                }
+                            }
+
+                            setStagingColumns(obj);
+                        }} 
+                        type="text" style={{ width: "70%", margin: "0 auto" }} disabled={loading}                        
                     />
                 </div>
 
