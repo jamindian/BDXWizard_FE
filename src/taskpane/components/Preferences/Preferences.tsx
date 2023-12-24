@@ -170,8 +170,8 @@ const Settings = () => {
 
                             if (v) {
                                 obj = {
-                                    ...stagingColumns, selected: stagingColumns.selected.filter(function (str) { return str.indexOf(v) !== -1; }),
-                                    remaining: stagingColumns.remaining.filter(function (str) { return str.indexOf(v) !== -1; })
+                                    ...stagingColumns, selected: stagingColumns.selected.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; }),
+                                    remaining: stagingColumns.remaining.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; })
                                 }
                             }
 
