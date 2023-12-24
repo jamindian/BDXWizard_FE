@@ -3,6 +3,7 @@ import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enu
 import momentMsDate from "moment-msdate";
 import { AppColors, lookupNumberFormats } from "@taskpaneutilities/Constants";
 import CryptoJS from "crypto-js";
+import { IBasicObject } from "./Interface";
 
 class Methods {
   public validateEmail = (email: string): boolean => {
@@ -84,6 +85,15 @@ class Methods {
 
     return sum;
   };
+
+  public ObjectReset = (obj: IBasicObject): IBasicObject => {
+    const arg = {};
+    Object.keys(obj).forEach((key: string) => {
+      arg[key] = "";
+    });
+    
+    return arg;
+  }
 
   public getNextKey = (key: string): string => {
     if (key === AlphabetsEnumerator.Z || key === AlphabetsEnumerator.Z.toLowerCase()) {

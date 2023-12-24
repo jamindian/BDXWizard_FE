@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import CustomButton from "@components/CustomButton/CustomButton";
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
-import { IUserProfile } from '@taskpaneutilities/Interface';
+import { IBasicObject, IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
 import { setLatestUserProfile } from '@redux/Actions/Process';
 import FormulaConstant from './FormulaConstant';
@@ -28,7 +28,7 @@ const Settings = () => {
     const [search, setSearch] = useState<string>("");
     const [createNew, setCreateNew] = useState<boolean>(false);
     const [selectionWithInSearch, setSelectionWithInSearch] = useState<{ add: string[]; remove: string[]; }>({ add: [], remove: [] });
-    const [staginConstants, setStaginConstants] = useState<{ [key: string]: string; }>({});
+    const [staginConstants, setStaginConstants] = useState<IBasicObject>({});
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; id: number; poc_columns: string[] }>({ name: "", selected: "", id: null, poc_columns: [] });

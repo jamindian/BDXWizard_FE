@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 
 import { Grid, Autocomplete, TextField } from '@mui/material';
+import { IBasicObject } from '@taskpaneutilities/Interface';
+import CommonMethods from '@taskpaneutilities/CommonMethods';
 
 interface IProps {
     stagingColumns: string[];
-    staginConstants: { [key: string]: string; };
-    setStaginConstants: (arg: { [key: string]: string; }) => void;
+    staginConstants: IBasicObject;
+    setStaginConstants: (arg: IBasicObject) => void;
 }
 
 const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, setStaginConstants }) => {
@@ -31,7 +33,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
                         value={activeColumn as any[] | any}
                         onChange={(_e: any, value: any[] | any) => {
                             setActiveColumn(value);
-                            setStaginConstants({});
+                            setStaginConstants(CommonMethods.ObjectReset(staginConstants));
                         }}
                         options={stagingColumns} size="small" getOptionLabel={(option) => option}
                         renderInput={(params) => <TextField {...params} label="Staging Area Columns" />}
@@ -44,7 +46,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
                             value={basedOn as any[] | any}
                             onChange={(_e: any, value: any[] | any) => {
                                 setBasedOn(value);
-                                setStaginConstants({});
+                                setStaginConstants(CommonMethods.ObjectReset(staginConstants));
                             }}
                             options={["Constant Value", "Formula"]} size="small"
                             getOptionLabel={(option) => option}
