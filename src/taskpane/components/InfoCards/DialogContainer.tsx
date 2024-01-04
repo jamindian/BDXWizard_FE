@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import { IUserProfile } from "@taskpaneutilities/Interface";
-import { getUnMappedProfileColumnsColors, goToColumnRow4 } from "@taskpaneutilities/Helpers";
+import { getMappedWLowConfidenceColumns, getUnMappedProfileColumnsColors, goToColumnRow4 } from "@taskpaneutilities/Helpers";
 
 interface IDialogContainer {
   activeModal: string;
@@ -25,6 +25,7 @@ interface IDialogContainer {
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
 
   const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
+  const [mappedWLowConfidence, setMappedWLowConfidence] = React.useState<{ lowConfidence: boolean; column: string; }[]>([]);
 
   React.useEffect(() => {   
     if (props.activeModal) {
@@ -33,8 +34,10 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
   }, [props.data.unMappedProfileColumns, props.activeModal]);
 
   async function run(): Promise<void> {
+    const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);
     const r = await getUnMappedProfileColumnsColors(props.data.unMappedProfileColumns, global.selectedSheet);
     setUnMappedProfileColumns(r);
+    setMappedWLowConfidence(ml);
   }
 
   const toggleModal = (): void => {
@@ -61,9 +64,21 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           <DialogContent style={{ overflowY: "visible" }}>
             {unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {unMappedProfileColumns.map((item, index) => (
+              {unMappedProfileColumns.map((item, index: number) => (
                 <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
                   <ListItemText className="btn-hover" style={{ color: item.color }} primary={item.column}></ListItemText>
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+
+          <DialogTitle>Mapped with low confidence ({mappedWLowConfidence.filter(f => f.lowConfidence).length} of {mappedWLowConfidence.length})</DialogTitle>
+          <DialogContent style={{ overflowY: "visible" }}>
+            {mappedWLowConfidence.length === 0 && <span>No columns found.</span>}
+            <List>
+              {mappedWLowConfidence.filter(f => f.lowConfidence).map((item, index: number) => (
+                <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
+                  <ListItemText className="btn-hover" primary={item.column}></ListItemText>
                 </ListItem>
               ))}
             </List>
@@ -73,7 +88,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
           <DialogContent style={{ overflowY: "visible" }}>
             {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
             <List>
-              {props.data.unMappedRawColumns.map((item, index) => (
+              {props.data.unMappedRawColumns.map((item, index: number) => (
                 <ListItem key={index}>                  
                   <ListItemText primary={item}></ListItemText>
                 </ListItem>

@@ -276,3 +276,23 @@
 .map-row .control-wrapper {
     flex-grow: 1;
 }
+
+.mention-input {
+    letter-spacing: inherit;
+    color: black;
+    padding: 4px 0 5px;
+    border: 0;
+    box-sizing: content-box;
+    border-color: #f8f9fa;
+    background: none;
+    height: 40px;
+    margin: 0;
+    -webkit-tap-highlight-color: #BCCEFB;
+    display: block;
+    min-width: 0;
+    width: 46%;
+    border-radius: 4px;
+    animation-duration: 10ms;
+    padding-top: 1px;
+    padding: 8.5px 14px;
+}

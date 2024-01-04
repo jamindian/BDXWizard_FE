@@ -304,20 +304,13 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
         // Formula paste logic divided into chunks END
         await context.sync();
 
-        if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
-          sheet.getUsedRange().format.autofitColumns();
-          sheet.getUsedRange().format.autofitRows();
-        }
-
         const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
         stagingTable.rows.load(ExcelLoadEnumerator.items);
         stagingTable.columns.load(ExcelLoadEnumerator.items);
         const sheets_name = sheets.load(ExcelLoadEnumerator.items_name);
         await context.sync();
 
-        sheet.getRange(
-          `C4:${lastCellAddress}4`
-        ).dataValidation.rule = {
+        sheet.getRange(`C4:${lastCellAddress}4`).dataValidation.rule = {
           list: {
             inCellDropDown: true,
             source: selectedRawColumns.map((c) => c.toString()).toString(),
@@ -366,7 +359,6 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
             headerRange.format.font.bold = true;
             headerRange.format.font.color = AppColors.primacy_black;
             headerRange.format.rowHeight = 22;
-            headerRange.format.columnWidth = 200;
     
             headerRange.format.horizontalAlignment = Excel.HorizontalAlignment.center;
             headerRange.format.verticalAlignment = Excel.VerticalAlignment.center;
@@ -378,8 +370,8 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           
             CommonMethods.setRangeBorders(bodyRange, AppColors.primary_blue, true);
     
-            headerRange.format.autofitColumns();
-            headerRange.format.autofitRows();
+            bodyRange.format.columnWidth = column.display_name === "ID" ? 50 : 225;
+            headerRange.format.columnWidth = column.display_name === "ID" ? 50 : 225;
           }
         }
         

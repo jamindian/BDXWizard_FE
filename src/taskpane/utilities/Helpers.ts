@@ -147,7 +147,6 @@ export async function unmappedcolumn(
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
     const sheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
-    const stagingTable: Excel.Table = sheet.tables.getItem(activeWorksheetStagingAreaTableName);
     await context.sync();
 
     const selectedSheetData = store.getState().process.selectedSheetData;
@@ -213,10 +212,6 @@ export async function unmappedcolumn(
       }
       
       await context.sync();
-      if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
-        sheet.getUsedRange().format.autofitColumns();
-        sheet.getUsedRange().format.autofitRows();
-      }    
 
       store.dispatch(setUnMappedColumns({ unMappedRawColumns: unmappedRawSovColumns, unMappedProfileColumns: unMappedProfileColumns }));
   });
@@ -292,12 +287,8 @@ export async function stagingAreaPercentagesSet(sheetName: string, worksheetEven
       selectedRange.format.fill.color = AppColors.primacy_white;
       selectedRange.format.font.color = AppColors.primacy_red;
     }
+    
     await context.sync();
-
-    if (Office.context.requirements.isSetSupported("ExcelApi", "1.2")) {
-      stagingSheet.getUsedRange().format.autofitColumns();
-      stagingSheet.getUsedRange().format.autofitRows();
-    }
   });
 }
 
@@ -509,6 +500,53 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[], she
       else {
         values.push({ color: AppColors.primacy_red, column });
       }
+    }
+
+    return values;
+  });
+
+  return arr;
+}
+
+export async function getMappedWLowConfidenceColumns(sheetName: string): Promise<{ column: string; lowConfidence: boolean; }[]> {
+  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const arr: { lowConfidence: boolean; column: string; }[] = await Excel.run(async (context: Excel.RequestContext) => {
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
+    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address)
+    .load(ExcelLoadEnumerator.columns)
+    .load(ExcelLoadEnumerator.columnCount);
+    await context.sync();
+
+    let colLength: number = stagingTable.columns.count;
+    let staging_last_cell = stagingSheet.getCell(1, colLength);
+    staging_last_cell.load(ExcelLoadEnumerator.address);
+    await context.sync();
+
+    const range11: Excel.Range = stagingSheet
+      .getRange(
+        `C11:${CommonMethods.columnAddressSlice(
+          staging_last_cell.address,
+          2
+        )}11`
+      )
+      .load(ExcelLoadEnumerator.values);
+    await context.sync();
+
+    const values: { lowConfidence: boolean; column: string; }[] = [];
+    const range11Values: any[] = range11.values.flat(1);
+    let initial: string = AlphabetsEnumerator.C;
+
+    for (const v of range11Values) {
+      if (typeof v === 'string') {
+        initial = CommonMethods.getNextKey(initial);
+        continue;
+      }
+
+      const range15 = stagingSheet.getRange(`${initial}15`).load(ExcelLoadEnumerator.values);
+      await context.sync();
+      values.push({ lowConfidence: v < 1, column: range15.values.flat(1)[0] });
+
+      initial = CommonMethods.getNextKey(initial);
     }
 
     return values;
