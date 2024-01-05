@@ -21,6 +21,7 @@ interface IDialogContainer {
   data: { unMappedRawColumns: string[]; unMappedProfileColumns: string[]; policies: number; GWP: number; GEP: number; };
   userProfile: IUserProfile;
   rawSheetColumnCount: number;
+  sheetChanged: number;
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
@@ -29,10 +30,10 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
   const [mappedWLowConfidence, setMappedWLowConfidence] = React.useState<{ lowConfidence: boolean; column: string; }[]>([]);
 
   React.useEffect(() => {   
-    if (props.activeModal) {
+    if (props.activeModal && props.sheetChanged !== 0) {
       run();
     }
-  }, [props.data.unMappedProfileColumns, props.activeModal]);
+  }, [props.data.unMappedProfileColumns, props.sheetChanged, props.activeModal]);
 
   async function run(): Promise<void> {
     const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);

@@ -181,7 +181,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
         )}
 
         <DialogContainer
-          activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile}
+          activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile} sheetChanged={sheetChanged}
           data={{ ...data, unMappedProfileColumns: unMappedProfileColumns, unMappedRawColumns: unMappedRawColumns }}
           rawSheetColumnCount={selectedData[`${CommonMethods.getSelectedSheet("column_count")}`] ?? 0}
         />

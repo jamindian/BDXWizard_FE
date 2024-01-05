@@ -10,7 +10,7 @@ import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import CustomButton from "@components/CustomButton/CustomButton";
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
-import { IBasicObject, IUserProfile } from '@taskpaneutilities/Interface';
+import { IBasicObject, IStagingConstant, IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
 import { setLatestUserProfile } from '@redux/Actions/Process';
 import FormulaConstant from './FormulaConstant';
@@ -29,7 +29,8 @@ const Settings = () => {
     const [search, setSearch] = useState<string>("");
     const [createNew, setCreateNew] = useState<boolean>(false);
     const [selectionWithInSearch, setSelectionWithInSearch] = useState<{ add: string[]; remove: string[]; }>({ add: [], remove: [] });
-    const [staginConstants, setStaginConstants] = useState<{ columnName: string; constantValue: string; }[]>([]);
+    const [staginConstants, setStaginConstants] = useState<IStagingConstant[]>([]);
+    const [deleteStaginConstants, setDeleteStaginConstants] = useState<IStagingConstant[]>([]);
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; id: number; poc_columns: string[] }>({ name: "", selected: "", id: null, poc_columns: [] });
@@ -72,7 +73,7 @@ const Settings = () => {
             setDialogOpen(false);
 
             if (Object.keys(staginConstants).length > 0) {
-                tryCatch(adjustPreferenceStagingConstants(staginConstants));
+                tryCatch(adjustPreferenceStagingConstants([...staginConstants, ...deleteStaginConstants]));
             }
         }).catch(() => {
             toast.error(AlertsMsgs.somethingWentWrong);
@@ -126,6 +127,7 @@ const Settings = () => {
                             value={profile.selected as any[] | any}
                             onChange={(_e: any, value: any[] | any) => {
                                 onChangeProfileSelection(value);
+                                setDeleteStaginConstants([]);
                                 setCreateNew(false);
                             }}
                             options={CommonMethods.removeDublicatesInArray(userPreferences?.map(p => p.profile_name))}
@@ -159,7 +161,10 @@ const Settings = () => {
             <br />
 
             { stagingColumns.default.length > 0 && (
-                <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
+                <FormulaConstant stagingColumns={stagingColumns.default} 
+                    setStaginConstants={setStaginConstants} staginConstants={staginConstants} 
+                    onDelete={(c) => setDeleteStaginConstants([...deleteStaginConstants, c])}
+                />
             )}
 
             <Divider />

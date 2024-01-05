@@ -111,11 +111,10 @@
 
 // export default FormulaConstant;
 
-import React, { useState } from 'react';
+import React from 'react';
 
-import { Grid, Autocomplete, TextField, IconButton, Fab } from '@mui/material';
-import { IBasicObject, IStagingConstant } from '@taskpaneutilities/Interface';
-import CommonMethods from '@taskpaneutilities/CommonMethods';
+import { Grid, Autocomplete, TextField, IconButton, Fab, FormLabel } from '@mui/material';
+import { IStagingConstant } from '@taskpaneutilities/Interface';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -123,12 +122,14 @@ interface IProps {
     stagingColumns: string[];
     staginConstants: IStagingConstant[];
     setStaginConstants: (arg: IStagingConstant[]) => void;
+    onDelete: (arg: IStagingConstant) => void;
 }
 
-const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, setStaginConstants }) => {
+const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, setStaginConstants, onDelete }) => {
     
-    const handleRemoveClick = (index: number): void => {
+    const handleRemoveClick = (index: number, c: string): void => {
         setStaginConstants(staginConstants.filter((_, i) => i !== index));
+        onDelete({ columnName: c, constantValue: "" });
     };
 
     return (
@@ -137,29 +138,33 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
             { staginConstants?.map((v, index: number) => (            
                 <Grid key={v.columnName+index} container direction="row" justifyContent="space-between" alignItems="center" spacing={2} style={{ marginBottom: "15px" }}>
                     <Grid item xs={5} sm={5} md={5} lg={5}>
+                        { index === 0 && (<FormLabel component="legend" className='bold'>Staging Area Columns</FormLabel>)}
                         <Autocomplete
                             fullWidth id="stagingcolumn" filterSelectedOptions
                             value={v.columnName as any[] | any}
                             onChange={(_e: any, value: any[] | any) => {
-                                staginConstants[index] = { ...staginConstants[index], columnName: value };
-                                setStaginConstants([...staginConstants]);
+                                const dup = [...staginConstants];
+                                dup[index] = { ...dup[index], columnName: value };
+                                setStaginConstants([...dup]);
                             }}
                             options={stagingColumns.filter(f => !staginConstants.map(a => a.columnName).includes(f))} size="small" getOptionLabel={(option) => option}
-                            renderInput={(params) => <TextField {...params} label="Staging Area Columns" />}
+                            renderInput={(params) => <TextField {...params} label="Column" />}
                         />
                     </Grid>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
+                        { index === 0 && (<FormLabel component="legend" className='bold'>Constant Value</FormLabel>)}
                         <TextField 
-                            label={`${v.columnName} Constant Value`} name={`search_columns_${v.columnName.toLowerCase().split(' ').join()}`} 
+                            label={`${v.columnName}`} name={`search_columns_${v.columnName.toLowerCase().split(' ').join()}`} 
                             value={v.constantValue} size="small" variant="outlined" type="text" fullWidth
                             onChange={(e) => {
-                                staginConstants[index] = { ...staginConstants[index], constantValue: e.target.value };
-                                setStaginConstants([...staginConstants]);
+                                const dup = [...staginConstants];
+                                dup[index] = { ...dup[index], constantValue: e.target.value };
+                                setStaginConstants([...dup]);
                             }}
                         />
                     </Grid>
                     <Grid item xs={1} sm={1} md={1} lg={1}>
-                        <IconButton className="" color="secondary" onClick={() => handleRemoveClick(index)}>
+                        <IconButton className="" color="secondary" onClick={() => handleRemoveClick(index, v.columnName)}>
                             <DeleteIcon />
                         </IconButton>
                     </Grid>
