@@ -157,7 +157,7 @@ const Settings = () => {
             </div>
             <br />
 
-            <Divider />
+            <Divider sx={{ borderColor: "#808080" }} />
             <br />
 
             { stagingColumns.default.length > 0 && (
@@ -167,7 +167,7 @@ const Settings = () => {
                 />
             )}
 
-            <Divider />
+            <Divider sx={{ borderColor: "#808080" }} />
             <br />
 
             <Accordion>
