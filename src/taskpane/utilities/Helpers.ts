@@ -3,7 +3,7 @@ import { AppColors, Strings } from "@taskpaneutilities/Constants";
 import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enum";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
-import { IStagingAreaColumn, IUserProfile } from "@taskpaneutilities/Interface";
+import { IStagingAreaColumn, IStagingConstant, IUserProfile } from "@taskpaneutilities/Interface";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
 import { setUnMappedColumns } from "@redux/Actions/Process";
@@ -582,14 +582,14 @@ export async function getExcelColumnsResultsForFinalStagingArea(): Promise<{ pol
   return results;
 }
 
-export async function adjustPreferenceStagingConstants(staginConstants: { [key: string]: string; }): Promise<void> {
+export async function adjustPreferenceStagingConstants(staginConstants: IStagingConstant[]): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
     const stagingSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
     await context.sync();
 
-    for (const [key, value] of Object.entries(staginConstants)) {
-      const column: Excel.Range = stagingSheet.getUsedRange().find(key, { completeMatch: true }).load(ExcelLoadEnumerator.address);
+    for (const v of staginConstants) {
+      const column: Excel.Range = stagingSheet.getUsedRange().find(v.columnName, { completeMatch: true }).load(ExcelLoadEnumerator.address);
       const lastRow: Excel.Range = stagingSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
       await context.sync();
 
@@ -597,8 +597,8 @@ export async function adjustPreferenceStagingConstants(staginConstants: { [key: 
       const end: number = parseInt(lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]);
 
       const add: string = column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
-      stagingSheet.getRange(`${add}13`).values = [[value]];
-      stagingSheet.getRange(`${add}${start}:${add}${end}`).values = Array.from({ length: end - start + 1 }, () => [value]);;
+      stagingSheet.getRange(`${add}13`).values = [[v.constantValue]];
+      stagingSheet.getRange(`${add}${start}:${add}${end}`).values = Array.from({ length: end - start + 1 }, () => [v.constantValue]);;
     }
 
     await context.sync();

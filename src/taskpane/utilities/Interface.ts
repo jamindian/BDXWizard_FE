@@ -50,9 +50,11 @@ export interface IStagingAreaColumn {
 export interface IUserProfile {
   company_name: string; profile_name: string; poc_columns: string[];
   id: number; active: boolean;
-  staging_constants: IBasicObject;
+  staging_constants: IStagingConstant[];
 }
 
 export interface IBasicObject {
   [key: string]: string;
 }
+
+export interface IStagingConstant{ columnName: string; constantValue: string; }

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { FormLabel, Chip, Grid, Autocomplete, TextField, CircularProgress, Dialog,
-    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle, Divider, setRef
+    DialogActions, Button, DialogContent, ListItem, ListItemText, DialogTitle, Divider, Accordion, AccordionSummary, AccordionDetails,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
@@ -16,6 +16,7 @@ import { setLatestUserProfile } from '@redux/Actions/Process';
 import FormulaConstant from './FormulaConstant';
 import CommonMethods from '@taskpaneutilities/CommonMethods';
 import { adjustPreferenceStagingConstants, tryCatch } from '@taskpaneutilities/Helpers';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const Settings = () => {
 
@@ -28,7 +29,7 @@ const Settings = () => {
     const [search, setSearch] = useState<string>("");
     const [createNew, setCreateNew] = useState<boolean>(false);
     const [selectionWithInSearch, setSelectionWithInSearch] = useState<{ add: string[]; remove: string[]; }>({ add: [], remove: [] });
-    const [staginConstants, setStaginConstants] = useState<IBasicObject>({});
+    const [staginConstants, setStaginConstants] = useState<{ columnName: string; constantValue: string; }[]>([]);
     const [deletePreference, setDeletePreference] = useState<{ flag: boolean; id: number; }>({ flag: false, id: null });
     const [userPreferences, setUserPreferences] = useState<IUserProfile[]>([]);
     const [profile, setProfile] = useState<{ name: string; selected: string; id: number; poc_columns: string[] }>({ name: "", selected: "", id: null, poc_columns: [] });
@@ -46,7 +47,7 @@ const Settings = () => {
 
         setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
         setProfile({ name: activeProfile?.profile_name, selected: activeProfile?.profile_name, id: activeProfile?.id, poc_columns: activeProfile?.poc_columns });
-        setStaginConstants(activeProfile?.staging_constants ? activeProfile?.staging_constants : {});
+        setStaginConstants(activeProfile?.staging_constants?.length > 0 ? activeProfile?.staging_constants : []);
         setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !activeProfile?.poc_columns.includes(c)) ?? [], selected: activeProfile?.poc_columns ?? [] });
         setLoading(false);
         dispatch(setLatestUserProfile(activeProfile));
@@ -102,7 +103,7 @@ const Settings = () => {
     const onClickCreateNew = useCallback(async () => {
         const f: boolean = !createNew;
         if (f) {
-            setUserPreferences([{ active: true, poc_columns: [], staging_constants: {}, id: 0, profile_name: "New Profile 1", company_name: userPreferences[0].company_name }, ...userPreferences.map(f => { return { ...f, active: false } })]);
+            setUserPreferences([{ active: true, poc_columns: [], staging_constants: [], id: 0, profile_name: "New Profile 1", company_name: userPreferences[0].company_name }, ...userPreferences.map(f => { return { ...f, active: false } })]);
             setProfile({ ...profile, poc_columns: [], id: 0, name: "New Profile 1", selected: "New Profile 1" });
             setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default, selected: [] });
         } else {
@@ -154,32 +155,47 @@ const Settings = () => {
             </div>
             <br />
 
-            <div className="control-group">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <FormLabel component="legend" className='bold'>Staging area columns</FormLabel>
-                    <TextField 
-                        label="Search Columns" name="search_columns" variant="outlined" value={search} size="small"
-                        onChange={(e) => {
-                            const v: string = e.target.value;
-                            setSearch(v);      
-                            let obj = {
-                                default: stagingColumns.default, 
-                                remaining: stagingColumns.default.filter(c => !profile?.poc_columns.includes(c) && !selectionWithInSearch?.add.includes(c)) ?? [], 
-                                selected: [...profile?.poc_columns, ...selectionWithInSearch.add].filter(c => !selectionWithInSearch?.remove.includes(c)) ?? []
-                            }
+            <Divider />
+            <br />
 
-                            if (v) {
-                                obj = {
-                                    ...stagingColumns, selected: stagingColumns.selected.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; }),
-                                    remaining: stagingColumns.remaining.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; })
-                                }
-                            }
+            { stagingColumns.default.length > 0 && (
+                <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
+            )}
 
-                            setStagingColumns(obj);
-                        }} 
-                        type="text" style={{ width: "70%", margin: "0 auto" }} disabled={loading}                        
-                    />
-                </div>
+            <Divider />
+            <br />
+
+            <Accordion>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="lowconfidence-content"
+                    id="lowconfidence-header" sx={{ width: '100%' }}
+                >
+                    <FormLabel component="legend" className='bold'>Staging Area Columns to Automap</FormLabel>
+                </AccordionSummary>
+                <AccordionDetails sx={{ padding: "0px 0px 0px 10px", margin: 0 }}>
+                <TextField 
+                    label="Search Columns" name="search_columns" variant="outlined" value={search} size="small"
+                    onChange={(e) => {
+                        const v: string = e.target.value;
+                        setSearch(v);      
+                        let obj = {
+                            default: stagingColumns.default, 
+                            remaining: stagingColumns.default.filter(c => !profile?.poc_columns.includes(c) && !selectionWithInSearch?.add.includes(c)) ?? [], 
+                            selected: [...profile?.poc_columns, ...selectionWithInSearch.add].filter(c => !selectionWithInSearch?.remove.includes(c)) ?? []
+                        }
+
+                        if (v) {
+                            obj = {
+                                ...stagingColumns, selected: stagingColumns.selected.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; }),
+                                remaining: stagingColumns.remaining.filter(function (str: string) { return str.toLowerCase().indexOf(v.toLowerCase()) !== -1; })
+                            }
+                        }
+
+                        setStagingColumns(obj);
+                    }} 
+                    type="text" style={{ width: "50%", margin: "0 auto" }} disabled={loading} className='mb-3'                    
+                />
 
                 <div className="control-wrapper d-flex justify-content-between">
                     <div className="w-50">
@@ -196,7 +212,7 @@ const Settings = () => {
                     </div>
                     <div className="w-50">
                         <div className="control-group mt-0 h-100">
-                            <FormLabel component="legend" className='thin'>Selected columns for automapping</FormLabel><br />
+                            <FormLabel component="legend" className='thin'>Selected Columns for Automapping</FormLabel><br />
                             {stagingColumns?.selected?.map(column => (
                                 <Chip key={column + "s"} variant="outlined" size="medium" label={column} onDelete={() => onRemoveStagingColumn(column)} style={{ margin: 3 }}
                                 />
@@ -207,14 +223,8 @@ const Settings = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <Divider />
-            <br />
-
-            { stagingColumns.default.length > 0 && (
-                <FormulaConstant stagingColumns={stagingColumns.default} setStaginConstants={setStaginConstants} staginConstants={staginConstants} />
-            )}
+                </AccordionDetails>
+            </Accordion>
 
             <div className='d-flex d-flex-row-center'>
                 <CustomButton loading={btnLoading === "save"} onClick={() => !createNew && saveCurrentSettings("save")} title="Save" />
