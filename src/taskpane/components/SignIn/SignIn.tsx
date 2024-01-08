@@ -87,11 +87,11 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
       dispatch(setIsLoggedIn(true));
       setLoading(false);
       setIsLoginError(false);
-    }).catch((e) => {
+    }).catch(() => {
       setLoading(false);
       setIsLoginError(true);
       localStorage.removeItem("token");
-      toast.error(e.response.data.detail || AlertsMsgs.somethingWentWrong);
+      toast.error("Incorrect Email/Password" || AlertsMsgs.somethingWentWrong);
     });
   }
 

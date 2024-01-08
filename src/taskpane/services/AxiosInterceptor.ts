@@ -30,7 +30,6 @@ function httpErrorHandler(error) {
           toast.error(response.data?.message);
         } else {
           localStorage.clear();
-          toast.error("Please login to access this resource.");
           store.dispatch(setIsLoggedIn(false));
         }
       } else if (statusCode === 300) {

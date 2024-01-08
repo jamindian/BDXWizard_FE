@@ -142,7 +142,7 @@ export async function unmappedcolumn(
   sheetName: string,
   worksheetEvent: Excel.WorksheetChangedEventArgs
 ): Promise<void> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
