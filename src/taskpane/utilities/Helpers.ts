@@ -174,24 +174,24 @@ export async function unmappedcolumn(
   });
 }
 
-export async function getUnmappedColumns(sheetName: string): Promise<{ unMappedProfileColumns: string[]; unmappedRawSovColumns: string[]; }> {
-  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function getUnmappedColumns(): Promise<{ unMappedProfileColumns: string[]; unmappedRawSovColumns: string[]; }> {
   const args = await Excel.run(async (context: Excel.RequestContext) => {
     // get staging area sheet and sync the context
     const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
-    const sheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+    const sheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
     await context.sync();
 
     const selectedSheetData = store.getState().process.selectedSheetData;
-    const result_list = selectedSheetData[`${CommonMethods.getSelectedSheet("result_list")}`];
+    const sheetName: string = sheet.name.split("Staging Area")[0].trim();
+    const result_list = selectedSheetData[`result_list_${sheetName}`];
 
     // get the last used cell in staging area sheet
     let staging_last_cell = sheet.getCell(1, result_list.length);
     staging_last_cell.load(ExcelLoadEnumerator.address);
 
     // get tempdata sheet and get last header cell and sync the context
-    const columnCount: number = selectedSheetData[`${CommonMethods.getSelectedSheet("column_count")}`];
-    let temp_sheet = sheets.getItem(activeTempWorksheet);
+    const columnCount: number = selectedSheetData[`column_count_${sheetName}`];
+    let temp_sheet = sheets.getItem(sheetName + " TempSheet");
     let last_header_cell = temp_sheet.getCell(0, columnCount);
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();

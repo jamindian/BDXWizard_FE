@@ -94,7 +94,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   }
 
   async function getColumnsData(): Promise<void> {
-    const data = await getUnmappedColumns(global.selectedSheet);
+    const data = await getUnmappedColumns();
 
     const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);
     const r = await getUnMappedProfileColumnsColors(data.unMappedProfileColumns, global.selectedSheet);
