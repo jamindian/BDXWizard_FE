@@ -4,9 +4,7 @@ import { AlphabetsEnumerator, ExcelLoadEnumerator } from "@taskpaneutilities/Enu
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { differenceWith, isEqual } from "lodash";
 import { IStagingAreaColumn, IStagingConstant, IUserProfile } from "@taskpaneutilities/Interface";
-import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { store } from "@redux/Store";
-import { setUnMappedColumns } from "@redux/Actions/Process";
 
 /** Default helper for invoking an action and handling errors. */
 export async function tryCatch(callback) {
@@ -163,6 +161,41 @@ export async function unmappedcolumn(
     last_header_cell.load(ExcelLoadEnumerator.address);
     await context.sync();
 
+    // get tempdata header range and load values
+    let raw_sov_columns_range = temp_sheet.getRange(
+      "B1:" + last_header_cell.address
+    );
+    raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
+
+    if (onChange && hitPercentageFunction && worksheetEvent) {
+      await deleteUnMappedColumnValues(sheetName);
+      await stagingAreaPercentagesSet(sheetName, worksheetEvent);
+    }
+  });
+}
+
+export async function getUnmappedColumns(sheetName: string): Promise<{ unMappedProfileColumns: string[]; unmappedRawSovColumns: string[]; }> {
+  const { activeWorksheetStagingArea, activeTempWorksheet } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+  const args = await Excel.run(async (context: Excel.RequestContext) => {
+    // get staging area sheet and sync the context
+    const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
+    const sheet: Excel.Worksheet = sheets.getItem(activeWorksheetStagingArea);
+    await context.sync();
+
+    const selectedSheetData = store.getState().process.selectedSheetData;
+    const result_list = selectedSheetData[`${CommonMethods.getSelectedSheet("result_list")}`];
+
+    // get the last used cell in staging area sheet
+    let staging_last_cell = sheet.getCell(1, result_list.length);
+    staging_last_cell.load(ExcelLoadEnumerator.address);
+
+    // get tempdata sheet and get last header cell and sync the context
+    const columnCount: number = selectedSheetData[`${CommonMethods.getSelectedSheet("column_count")}`];
+    let temp_sheet = sheets.getItem(activeTempWorksheet);
+    let last_header_cell = temp_sheet.getCell(0, columnCount);
+    last_header_cell.load(ExcelLoadEnumerator.address);
+    await context.sync();
+
     const latestUserProfile: IUserProfile = store.getState().process.latestUserProfile;
 
     // get tempdata header range and load values
@@ -191,15 +224,11 @@ export async function unmappedcolumn(
           unMappedProfileColumns.push(latestUserProfile.poc_columns[i]);
         }
       }
-      
-      if (onChange && hitPercentageFunction && worksheetEvent) {
-        await deleteUnMappedColumnValues(sheetName);
-        await stagingAreaPercentagesSet(sheetName, worksheetEvent);
-      }
-      
-      await context.sync();
-      store.dispatch(setUnMappedColumns({ unMappedRawColumns: unmappedRawSovColumns, unMappedProfileColumns: unMappedProfileColumns }));
+            
+      return { unMappedProfileColumns, unmappedRawSovColumns };
   });
+
+  return args;
 }
 
 export async function deleteUnMappedColumnValues(sheetName: string): Promise<void> {
@@ -578,9 +607,7 @@ export async function adjustPreferenceStagingConstants(staginConstants: IStaging
       const lastRow: Excel.Range = stagingSheet.getUsedRange().getLastRow().load(ExcelLoadEnumerator.address);
       await context.sync();
 
-      const start: number = parseInt(column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]) + 1;
       const end: number = parseInt(lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]);
-
       const add: string = column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
 
       stagingSheet.getRange(`${add}13`).values = [[v.constantValue]];

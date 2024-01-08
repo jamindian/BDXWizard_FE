@@ -13,34 +13,21 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import { IUserProfile } from "@taskpaneutilities/Interface";
-import { getMappedWLowConfidenceColumns, getUnMappedProfileColumnsColors, goToColumnRow4 } from "@taskpaneutilities/Helpers";
+import { goToColumnRow4 } from "@taskpaneutilities/Helpers";
 
 interface IDialogContainer {
   activeModal: string;
   toggleModal: (name: string) => void;
-  data: { unMappedRawColumns: string[]; unMappedProfileColumns: string[]; policies: number; GWP: number; GEP: number; };
   userProfile: IUserProfile;
   rawSheetColumnCount: number;
-  sheetChanged: number;
+  unMappedProfileColumns: { color: string; column: string; }[];
+  mappedWLowConfidence: { lowConfidence: boolean; column: string; }[];
+  unMappedRawColumns: string[];
 }
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
 
-  const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
-  const [mappedWLowConfidence, setMappedWLowConfidence] = React.useState<{ lowConfidence: boolean; column: string; }[]>([]);
-
-  React.useEffect(() => {
-    if (props.activeModal) {
-      run();
-    }
-  }, [props.data.unMappedProfileColumns, props.sheetChanged, props.activeModal]);
-
-  async function run(): Promise<void> {
-    const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);
-    const r = await getUnMappedProfileColumnsColors(props.data.unMappedProfileColumns, global.selectedSheet);
-    setUnMappedProfileColumns(r);
-    setMappedWLowConfidence(ml);
-  }
+  const { mappedWLowConfidence, unMappedProfileColumns, unMappedRawColumns } = props;
 
   const toggleModal = (): void => {
     props.toggleModal("");
@@ -68,7 +55,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
               aria-controls="unmappedc-content"
               id="unmappedc-header" sx={{ width: '100%' }}
             >
-              <DialogTitle sx={{ padding: 0 }}>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile ({props.data.unMappedProfileColumns.length} of {props.userProfile.poc_columns.length})</DialogTitle>
+              <DialogTitle sx={{ padding: 0 }}>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile ({unMappedProfileColumns.length} of {props.userProfile.poc_columns.length})</DialogTitle>
             </AccordionSummary>
             <AccordionDetails sx={{ padding: 0, margin: 0 }}>
               <DialogContent style={{ overflowY: "visible" }}>
@@ -112,13 +99,13 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
               aria-controls="unmappeds-content"
               id="unmappeds-header" sx={{ width: '100%' }}
             >
-              <DialogTitle sx={{ padding: 0 }}>Unmapped Source Data Columns ({props.data.unMappedRawColumns.length} of {props.rawSheetColumnCount})</DialogTitle>
+              <DialogTitle sx={{ padding: 0 }}>Unmapped Source Data Columns ({unMappedRawColumns.length} of {props.rawSheetColumnCount})</DialogTitle>
             </AccordionSummary>
             <AccordionDetails sx={{ padding: 0, margin: 0 }}>
               <DialogContent style={{ overflowY: "visible" }}>
-                {props.data.unMappedRawColumns.length === 0 && <span>No columns found.</span>}
+                {unMappedRawColumns.length === 0 && <span>No columns found.</span>}
                 <List>
-                  {props.data.unMappedRawColumns.map((item, index: number) => (
+                  {unMappedRawColumns.map((item, index: number) => (
                     <ListItem key={index}>                  
                       <ListItemText primary={item}></ListItemText>
                     </ListItem>

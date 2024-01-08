@@ -72,12 +72,10 @@ const Settings = () => {
             dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
             setDialogOpen(false);
 
-            if (Object.keys(staginConstants).length > 0) {
-                tryCatch(adjustPreferenceStagingConstants([...staginConstants, ...deleteStaginConstants]));
-                setTimeout(() => {
-                    setDeleteStaginConstants([]);
-                }, 1000);
-            }
+            tryCatch(adjustPreferenceStagingConstants([...staginConstants, ...deleteStaginConstants]));
+            setTimeout(() => {
+                setDeleteStaginConstants([]);
+            }, 1000);
         }).catch(() => {
             toast.error(AlertsMsgs.somethingWentWrong);
             setBtnLoading("");

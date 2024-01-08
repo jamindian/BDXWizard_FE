@@ -4,10 +4,10 @@ import { useSelector } from "react-redux";
 import { Card, CardContent, Typography } from "@mui/material";
 import { ExcelLoadEnumerator, ModalTypesEnumerator } from "@taskpaneutilities/Enum";
 import DialogContainer from "./DialogContainer";
-import { isSheetChangedSelector, isUnMappedColumnsSelector, isLatestUserProfileSelector, isSelectedSheetDataSelector } from "@redux/Actions/Process";
+import { isSheetChangedSelector, isLatestUserProfileSelector, isSelectedSheetDataSelector } from "@redux/Actions/Process";
 import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { IUserProfile } from "@taskpaneutilities/Interface";
-import { getExcelColumnsResultsForFinalStagingArea } from "@taskpaneutilities/Helpers";
+import { getExcelColumnsResultsForFinalStagingArea, getMappedWLowConfidenceColumns, getUnMappedProfileColumnsColors, getUnmappedColumns } from "@taskpaneutilities/Helpers";
 
 interface IInfoCards {
   tabValue: number;
@@ -20,26 +20,31 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   const [data, setData] = React.useState<ICardsData>({ policies: 0, GEP: 0, GWP: 0 });
   const [showUnmappedOption, setShowUnmappedOption] = React.useState<boolean>(true);
 
+  const [unMappedRawColumns, setUnMappedRawColumns] = React.useState<string[]>([]);
+  const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
+  const [mappedWLowConfidence, setMappedWLowConfidence] = React.useState<{ lowConfidence: boolean; column: string; }[]>([]);
+
   const sheetChanged: number = useSelector(isSheetChangedSelector);
-  const { unMappedProfileColumns, unMappedRawColumns } = useSelector(isUnMappedColumnsSelector);
   const userProfile: IUserProfile = useSelector(isLatestUserProfileSelector);
   const selectedData = useSelector(isSelectedSheetDataSelector);
 
   React.useEffect(() => {
     if (sheetChanged !== 0 || tabValue) {
-      getExcelColumnsResults();
+      getColumnsResults();
+      getColumnsData();
     }
   }, [sheetChanged, tabValue]);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
-      getExcelColumnsResults();
+      getColumnsResults();
+      getColumnsData();
     }, 2000);
 
     return () => clearInterval(interval);
   }, []);
   
-  async function getExcelColumnsResults(): Promise<void> {
+  async function getColumnsResults(): Promise<void> {
     const results: ICardsData = await Excel.run(async (context: Excel.RequestContext) => {
       // get staging area sheet and sync the context
       const sheets: Excel.WorksheetCollection = context.workbook.worksheets;
@@ -86,6 +91,16 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     });
 
     setData(results);
+  }
+
+  async function getColumnsData(): Promise<void> {
+    const data = await getUnmappedColumns(global.selectedSheet);
+
+    const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);
+    const r = await getUnMappedProfileColumnsColors(data.unMappedProfileColumns, global.selectedSheet);
+    setUnMappedProfileColumns(r);
+    setMappedWLowConfidence(ml);
+    setUnMappedRawColumns(data.unmappedRawSovColumns);
   }
 
   const toggleModal = (name: string): void => {
@@ -181,8 +196,8 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
         )}
 
         <DialogContainer
-          activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile} sheetChanged={sheetChanged}
-          data={{ ...data, unMappedProfileColumns: unMappedProfileColumns, unMappedRawColumns: unMappedRawColumns }}
+          activeModal={activeModal} toggleModal={toggleModal} userProfile={userProfile} unMappedRawColumns={unMappedRawColumns}
+          unMappedProfileColumns={unMappedProfileColumns} mappedWLowConfidence={mappedWLowConfidence}
           rawSheetColumnCount={selectedData[`${CommonMethods.getSelectedSheet("column_count")}`] ?? 0}
         />
       </div>

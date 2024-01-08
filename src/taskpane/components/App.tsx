@@ -16,7 +16,6 @@ import InfoCards from "./InfoCards/InfoCards";
 import { appMainTabs } from "@taskpaneutilities/Constants";
 import TabPanel from "./TabPanel/TabPanel";
 import { useDispatch } from "react-redux";
-import { setUnMappedColumns } from "@redux/Actions/Process";
 
 interface IAppProps {
   token: string;
@@ -48,7 +47,6 @@ const App: React.FC<IAppProps> = () => {
   React.useEffect(() => {
     dispatch(setLoader(false));
     dispatch(setStopwatch("reset"));
-    dispatch(setUnMappedColumns({ unMappedRawColumns: [], unMappedProfileColumns: [] }));
   }, []);
 
   const handleChange = (_event, newValue: number): void => {
