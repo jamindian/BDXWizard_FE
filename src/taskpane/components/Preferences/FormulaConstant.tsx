@@ -155,7 +155,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
                         { index === 0 && (<FormLabel component="legend" className='bold'>Constant Value</FormLabel>)}
                         <TextField 
                             label={`${v.columnName}`} name={`search_columns_${v.columnName.toLowerCase().split(' ').join()}`} 
-                            value={v.constantValue} size="small" variant="outlined" type="text" fullWidth
+                            value={v.constantValue} size="small" variant="outlined" type="text" fullWidth required
                             onChange={(e) => {
                                 const dup = [...staginConstants];
                                 dup[index] = { ...dup[index], constantValue: e.target.value };

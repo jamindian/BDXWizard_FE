@@ -56,6 +56,11 @@ const Settings = () => {
 
     // Call redux action for save setting
     const saveCurrentSettings = useCallback(async (key: string) => {
+        if (staginConstants.find(f => !f.constantValue)) {
+            toast.error("Fields with (*) are required.");
+            return;
+        }
+        
         setBtnLoading(key);
         const u = await NetworkCalls.getCurrentActiveUser();
 
