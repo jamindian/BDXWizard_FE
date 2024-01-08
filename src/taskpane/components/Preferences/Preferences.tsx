@@ -74,6 +74,9 @@ const Settings = () => {
 
             if (Object.keys(staginConstants).length > 0) {
                 tryCatch(adjustPreferenceStagingConstants([...staginConstants, ...deleteStaginConstants]));
+                setTimeout(() => {
+                    setDeleteStaginConstants([]);
+                }, 1000);
             }
         }).catch(() => {
             toast.error(AlertsMsgs.somethingWentWrong);
@@ -95,10 +98,14 @@ const Settings = () => {
         }
     }, [stagingColumns, search, selectionWithInSearch]);
 
-    const onChangeProfileSelection = useCallback((value: string) => {
-        const selected: IUserProfile = userPreferences.find(f => f.profile_name === value);
-        setProfile({ name: selected.profile_name, selected: value, id: selected.id, poc_columns: selected?.poc_columns });
-        setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
+    const onChangeProfileSelection = useCallback((value: string | null) => {
+        if (value === null) {
+            setProfile({ name: "", selected: "", id: 0, poc_columns: [] });
+        } else {
+            const selected: IUserProfile = userPreferences.find(f => f.profile_name === value);
+            setProfile({ name: selected.profile_name, selected: value, id: selected.id, poc_columns: selected?.poc_columns });
+            setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default.filter(c => !selected.poc_columns.includes(c)), selected: selected.poc_columns });
+        }
     }, [stagingColumns, userPreferences]);
 
     const onClickCreateNew = useCallback(async () => {
