@@ -476,11 +476,10 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
 export async function goToColumnRow4(columnName: string, sheetName: string): Promise<void> {
   const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
   await Excel.run(async (context: Excel.RequestContext) => {
-    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
-    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address);
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
 
-    const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(columnName).getDataBodyRange().load(ExcelLoadEnumerator.address);
+    const currentColumn: Excel.Range = stagingSheet.getUsedRange().find(columnName, { completeMatch: true }).load(ExcelLoadEnumerator.address);
     await context.sync();
 
     const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];

@@ -47,7 +47,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
         {/* unmappedColumns */}
         <Dialog
           open={props.activeModal === ModalTypesEnumerator.UNMAPPED_COLUMNS}
-          onClose={toggleModal} fullWidth={true} maxWidth={"sm"}
+          onClose={toggleModal} fullWidth={true} maxWidth={"md"}
         >
           <Accordion>
             <AccordionSummary
@@ -55,7 +55,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
               aria-controls="unmappedc-content"
               id="unmappedc-header" sx={{ width: '100%' }}
             >
-              <DialogTitle sx={{ padding: 0 }}>Unmapped Columns for <b>{props.userProfile.profile_name}</b> Profile ({unMappedProfileColumns.length} of {props.userProfile.poc_columns.length})</DialogTitle>
+              <DialogTitle sx={{ padding: 0 }}>Unmapped Destination Columns for <b>{props.userProfile.profile_name}</b> Profile ({unMappedProfileColumns.length} of {props.userProfile.poc_columns.length})</DialogTitle>
             </AccordionSummary>
             <AccordionDetails sx={{ padding: 0, margin: 0 }}>
               <DialogContent style={{ overflowY: "visible" }}>
