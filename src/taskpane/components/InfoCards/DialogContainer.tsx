@@ -29,8 +29,8 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
   const [unMappedProfileColumns, setUnMappedProfileColumns] = React.useState<{ color: string; column: string; }[]>([]);
   const [mappedWLowConfidence, setMappedWLowConfidence] = React.useState<{ lowConfidence: boolean; column: string; }[]>([]);
 
-  React.useEffect(() => {   
-    if (props.activeModal && props.sheetChanged !== 0) {
+  React.useEffect(() => {
+    if (props.activeModal) {
       run();
     }
   }, [props.data.unMappedProfileColumns, props.sheetChanged, props.activeModal]);

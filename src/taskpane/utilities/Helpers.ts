@@ -172,22 +172,8 @@ export async function unmappedcolumn(
     raw_sov_columns_range.load(ExcelLoadEnumerator.values).load(ExcelLoadEnumerator.address);
 
       // get source data header rage in staging area sheet and load values
-      const range4: Excel.Range = sheet
-        .getRange(
-          `C4:${CommonMethods.columnAddressSlice(
-            staging_last_cell.address,
-            3
-          )}4`
-        )
-        .load(ExcelLoadEnumerator.values);
-      const range15: Excel.Range = sheet
-        .getRange(
-          `C15:${CommonMethods.columnAddressSlice(
-            staging_last_cell.address,
-            3
-          )}15`
-        )
-        .load(ExcelLoadEnumerator.values);
+      let range4: Excel.Range = sheet.getRange(`C4:${CommonMethods.columnAddressSlice(staging_last_cell.address,3)}4`).load(ExcelLoadEnumerator.values);
+      let range15: Excel.Range = sheet.getRange(`C15:${CommonMethods.columnAddressSlice(staging_last_cell.address,3)}15`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
       // find unmapped columns by checking mapped columns in raw SOV columns list
@@ -205,14 +191,13 @@ export async function unmappedcolumn(
           unMappedProfileColumns.push(latestUserProfile.poc_columns[i]);
         }
       }
-
+      
       if (onChange && hitPercentageFunction && worksheetEvent) {
         await deleteUnMappedColumnValues(sheetName);
-        await stagingAreaPercentagesSet(sheetName, worksheetEvent);      
+        await stagingAreaPercentagesSet(sheetName, worksheetEvent);
       }
       
       await context.sync();
-
       store.dispatch(setUnMappedColumns({ unMappedRawColumns: unmappedRawSovColumns, unMappedProfileColumns: unMappedProfileColumns }));
   });
 }
@@ -597,8 +582,9 @@ export async function adjustPreferenceStagingConstants(staginConstants: IStaging
       const end: number = parseInt(lastRow.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[1]);
 
       const add: string = column.address.split("!")[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
       stagingSheet.getRange(`${add}13`).values = [[v.constantValue]];
-      stagingSheet.getRange(`${add}${start}:${add}${end}`).values = Array.from({ length: end - start + 1 }, () => [v.constantValue]);;
+      stagingSheet.getRange(`${add}16:${add}${end}`).values = Array.from({ length: end - 15 }, () => [v.constantValue]);;
     }
 
     await context.sync();

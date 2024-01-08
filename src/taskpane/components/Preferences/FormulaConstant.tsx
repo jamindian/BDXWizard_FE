@@ -144,7 +144,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
                             value={v.columnName as any[] | any}
                             onChange={(_e: any, value: any[] | any) => {
                                 const dup = [...staginConstants];
-                                dup[index] = { ...dup[index], columnName: value };
+                                dup[index] = { ...dup[index], columnName: value ? value : "" };
                                 setStaginConstants([...dup]);
                             }}
                             options={stagingColumns.filter(f => !staginConstants.map(a => a.columnName).includes(f))} size="small" getOptionLabel={(option) => option}
