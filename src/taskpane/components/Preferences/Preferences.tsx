@@ -114,6 +114,7 @@ const Settings = () => {
     const onClickCreateNew = useCallback(async () => {
         const f: boolean = !createNew;
         if (f) {
+            setStaginConstants([]);
             setUserPreferences([{ active: true, poc_columns: [], staging_constants: [], id: 0, profile_name: "New Profile 1", company_name: userPreferences[0].company_name }, ...userPreferences.map(f => { return { ...f, active: false } })]);
             setProfile({ ...profile, poc_columns: [], id: 0, name: "New Profile 1", selected: "New Profile 1" });
             setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default, selected: [] });
@@ -121,6 +122,7 @@ const Settings = () => {
             const prefrences = await NetworkCalls.getAllUserPreference();
             setUserPreferences(prefrences?.data ?? []);
             onChangeProfileSelection(prefrences?.data?.find(f => f?.active).profile_name);
+            setStaginConstants(prefrences?.data?.find(f => f?.active)?.staging_constants ?? []);
         }
         setCreateNew(f);
     }, [stagingColumns, userPreferences, createNew]);
@@ -186,7 +188,7 @@ const Settings = () => {
                     aria-controls="lowconfidence-content"
                     id="lowconfidence-header" sx={{ width: '100%' }}
                 >
-                    <FormLabel component="legend" className='bold'>Staging Area Columns to Automap</FormLabel>
+                    <FormLabel component="legend" className='bold' sx={{ fontSize: "20px", fontWeight: 600, color: "#000" }}>Staging Area Columns to Automap</FormLabel>
                 </AccordionSummary>
                 <AccordionDetails sx={{ padding: "0px 0px 0px 10px", margin: 0 }}>
                 <TextField 

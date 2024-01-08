@@ -134,7 +134,8 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
 
     return (
         <React.Fragment>
-            
+            <FormLabel component="legend" className='bold' sx={{ fontSize: "20px", fontWeight: 600, color: "#000" }}>Constant Values</FormLabel>
+
             { staginConstants?.map((v, index: number) => (            
                 <Grid key={v.columnName+index} container direction="row" justifyContent="space-between" alignItems="center" spacing={2} style={{ marginBottom: "15px" }}>
                     <Grid item xs={5} sm={5} md={5} lg={5}>
@@ -152,7 +153,7 @@ const FormulaConstant: React.FC<IProps> = ({ stagingColumns, staginConstants, se
                         />
                     </Grid>
                     <Grid item xs={6} sm={6} md={6} lg={6}>
-                        { index === 0 && (<FormLabel component="legend" className='bold'>Constant Value</FormLabel>)}
+                        { index === 0 && (<FormLabel component="legend" className='bold'>Value</FormLabel>)}
                         <TextField 
                             label={`${v.columnName}`} name={`search_columns_${v.columnName.toLowerCase().split(' ').join()}`} 
                             value={v.constantValue} size="small" variant="outlined" type="text" fullWidth required
