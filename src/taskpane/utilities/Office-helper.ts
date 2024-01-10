@@ -626,7 +626,7 @@ export async function exportCurrentSheetToCSV(): Promise<void> {
       // setTimeout(() => {
       //   window.open(finalUrl, '_blank');
       // });
-      window.location.assign(finalUrl);
+      CommonMethods.makeAnchorTag(finalUrl);
       toast.success("Your requested file is successfully downloaded!");
       store.dispatch(setLoader(false));
     }).catch(() => {

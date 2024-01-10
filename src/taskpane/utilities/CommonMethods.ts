@@ -73,6 +73,15 @@ class Methods {
       : "0";
   };
 
+  public makeAnchorTag = (url: string): void => {
+    let a: any = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    a.href = url;
+    a.click();
+    document.body.removeChild(a);
+  };
+
   public arrayValuesSum = (array): number => {
     let sum = 0;
     for (let i = 0; i < array.length; i++) {
