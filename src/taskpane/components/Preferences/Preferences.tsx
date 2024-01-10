@@ -81,8 +81,8 @@ const Settings = ({ companyName }) => {
             setTimeout(() => {
                 setDeleteStaginConstants([]);
             }, 1000);
-        }).catch(() => {
-            toast.error(AlertsMsgs.somethingWentWrong);
+        }).catch((e) => {
+            toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
             setBtnLoading("");
         });
     }, [stagingColumns, profile, staginConstants]);
@@ -276,8 +276,8 @@ const Settings = ({ companyName }) => {
                         toast.success('Preferences has been deleted successfuly!');
                         setDeletePreference({ flag: false, id: null });
                         initialRun();
-                    }).catch(() => {
-                        toast.error(AlertsMsgs.somethingWentWrong);
+                    }).catch((e) => {
+                        toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
                     })} color="primary"> Delete </Button>
                 </DialogActions>
             </Dialog>

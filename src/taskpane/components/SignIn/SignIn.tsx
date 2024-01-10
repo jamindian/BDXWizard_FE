@@ -95,7 +95,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
       setLoading(false);
       setIsLoginError(true);
       localStorage.removeItem("token");
-      toast.error("Incorrect Email/Password" || AlertsMsgs.somethingWentWrong);
+      toast.error("Incorrect Email/Password");
     });
   }
 
@@ -111,7 +111,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
         setIsOtpRequired(true);
       }).catch((e) => {
         setLoading(false);
-        toast.error(e.response.data.error || AlertsMsgs.somethingWentWrong);
+        toast.error(e.response.data.error);
         setIsOtpRequired(false);
       });
     }
@@ -130,7 +130,7 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
         setIsOtpRequired(false);
       }).catch((e) => {
         setLoading(false);
-        toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
+        toast.error(e.response.data[0]);
       });
     }
   };
