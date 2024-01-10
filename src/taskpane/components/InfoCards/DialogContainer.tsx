@@ -62,7 +62,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
                 {unMappedProfileColumns.length === 0 && <span>No columns found.</span>}
                 <List>
                   {unMappedProfileColumns.map((item, index: number) => (
-                    <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
+                    <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column)}>
                       <ListItemText className="btn-hover" style={{ color: item.color }} primary={item.column}></ListItemText>
                     </ListItem>
                   ))}
@@ -84,7 +84,7 @@ const DialogContainer: React.FC<IDialogContainer> = (props) => {
                 {mappedWLowConfidence.length === 0 && <span>No columns found.</span>}
                 <List>
                   {mappedWLowConfidence.filter(f => f.lowConfidence).map((item, index: number) => (
-                    <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column, global.selectedSheet)}>
+                    <ListItem key={index} style={{ cursor: "pointer" }} onClick={() => goToColumnRow4(item.column)}>
                       <ListItemText className="btn-hover" primary={item.column}></ListItemText>
                     </ListItem>
                   ))}

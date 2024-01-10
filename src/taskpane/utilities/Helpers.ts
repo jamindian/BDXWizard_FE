@@ -473,8 +473,7 @@ export async function stateCityColumnsValuesMap(sheetName: string): Promise<void
   });
 }
 
-export async function goToColumnRow4(columnName: string, sheetName: string): Promise<void> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function goToColumnRow4(columnName: string): Promise<void> {
   await Excel.run(async (context: Excel.RequestContext) => {
     const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
@@ -489,16 +488,14 @@ export async function goToColumnRow4(columnName: string, sheetName: string): Pro
   });
 }
 
-export async function getUnMappedProfileColumnsColors(columnNames: string[], sheetName: string): Promise<{ color: string; column: string; }[]> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function getUnMappedProfileColumnsColors(columnNames: string[]): Promise<{ color: string; column: string; }[]> {
   const arr: { color: string; column: string; }[] = await Excel.run(async (context: Excel.RequestContext) => {
-    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
-    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address);
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
 
     const values: { color: string; column: string; }[] = [];
     for (const column of columnNames) {
-      const currentColumn: Excel.Range = stagingTable.columns.getItemOrNullObject(column).getDataBodyRange().load(ExcelLoadEnumerator.address).load(ExcelLoadEnumerator.values);
+      const currentColumn: Excel.Range = stagingSheet.getUsedRange().find(column, { completeMatch: true }).load(ExcelLoadEnumerator.address);
       await context.sync();
 
       const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
