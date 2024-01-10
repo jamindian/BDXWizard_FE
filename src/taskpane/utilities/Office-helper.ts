@@ -622,7 +622,9 @@ export async function exportCurrentSheetToCSV(): Promise<void> {
 
     NetworkCalls.exportToCsv(obj).then((res) => {
       const finalUrl: string = process.env.REACT_APP_BASE_URL + res.data?.file_url;
-      window.open(finalUrl);
+      setTimeout(() => {
+        window.open(finalUrl, '_blank');
+      });
       toast.success("Your requested file is successfully downloaded!");
       store.dispatch(setLoader(false));
     }).catch(() => {
