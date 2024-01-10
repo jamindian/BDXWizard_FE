@@ -27,13 +27,12 @@ interface IDialogContainer {
 
 const DialogContainer: React.FC<IDialogContainer> = (props) => {
 
-  const { mappedWLowConfidence, unMappedProfileColumns, unMappedRawColumns } = props;
-
   const toggleModal = (): void => {
     props.toggleModal("");
   };
 
   if (props.activeModal) {
+    const { mappedWLowConfidence, unMappedProfileColumns, unMappedRawColumns } = props;
     return (
       <>
         <Dialog

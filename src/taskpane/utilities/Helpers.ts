@@ -493,18 +493,23 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[]): Pr
     const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
 
+    const usedRange: Excel.Range = stagingSheet.getUsedRange();
+
     const values: { color: string; column: string; }[] = [];
     for (const column of columnNames) {
-      const currentColumn: Excel.Range = stagingSheet.getUsedRange().find(column, { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      const currentColumn: Excel.Range = usedRange.find(column, { completeMatch: true }).load(ExcelLoadEnumerator.address);
+      const lastRow = usedRange.getLastCell().load(ExcelLoadEnumerator.address);
       await context.sync();
 
       const add: string = currentColumn.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+      const lastAddNumber = lastRow.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[1];
 
+      const cColumn = stagingSheet.getRange(`${add}16:${add}${lastAddNumber}`).load(ExcelLoadEnumerator.values);
       const row4 = stagingSheet.getRange(`${add}4`).load(ExcelLoadEnumerator.values);
       const row13 = stagingSheet.getRange(`${add}13`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
-      if (row4.values.flat(1)[0] || row13.values.flat(1)[0] || currentColumn.values.flat(1).find(f => f)) {
+      if (row4.values.flat(1)[0] || row13.values.flat(1)[0] || cColumn.values.flat(1).find(f => f)) {
         values.push({ color: AppColors.primacy_green, column });
       }
       else {
@@ -518,28 +523,18 @@ export async function getUnMappedProfileColumnsColors(columnNames: string[]): Pr
   return arr;
 }
 
-export async function getMappedWLowConfidenceColumns(sheetName: string): Promise<{ column: string; lowConfidence: boolean; }[]> {
-  const { activeWorksheetStagingArea, activeWorksheetStagingAreaTableName } = CommonMethods.getActiveWorkSheetAndTableName(sheetName);
+export async function getMappedWLowConfidenceColumns(): Promise<{ column: string; lowConfidence: boolean; }[]> {
   const arr: { lowConfidence: boolean; column: string; }[] = await Excel.run(async (context: Excel.RequestContext) => {
-    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getItemOrNullObject(activeWorksheetStagingArea);
-    const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName).load(ExcelLoadEnumerator.address)
-    .load(ExcelLoadEnumerator.columns)
-    .load(ExcelLoadEnumerator.columnCount);
+    const stagingSheet: Excel.Worksheet = context.workbook.worksheets.getActiveWorksheet();
     await context.sync();
 
-    let colLength: number = stagingTable.columns.count;
-    let staging_last_cell = stagingSheet.getCell(1, colLength);
-    staging_last_cell.load(ExcelLoadEnumerator.address);
+    const usedRange: Excel.Range = stagingSheet.getUsedRange();
+    const lastRow = usedRange.getLastCell().load(ExcelLoadEnumerator.address);
     await context.sync();
 
-    const range11: Excel.Range = stagingSheet
-      .getRange(
-        `C11:${CommonMethods.columnAddressSlice(
-          staging_last_cell.address,
-          2
-        )}11`
-      )
-      .load(ExcelLoadEnumerator.values);
+    let staging_last_cell: string = lastRow.address.split('!')[1].match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+    const range11: Excel.Range = stagingSheet.getRange(`C11:${staging_last_cell}11`).load(ExcelLoadEnumerator.values);
     await context.sync();
 
     const values: { lowConfidence: boolean; column: string; }[] = [];
