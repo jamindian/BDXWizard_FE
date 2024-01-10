@@ -11,6 +11,7 @@ import CommonMethods from "@taskpaneutilities/CommonMethods";
 import { AlertsMsgs } from "@taskpaneutilities/Constants";
 import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
 import { setIsLoggedIn } from "@redux/Actions/Auth";
+import { setLatestUserProfile } from "@redux/Actions/Process";
 
 const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValue }) => {
 
@@ -81,10 +82,13 @@ const SignInPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
   };
 
   async function onUserLogin(account: { email: string, password: string, otp?: string; }): Promise<void> {
-    NetworkCalls.userSignIn(account).then((res) => {
-      toast.success("Logged in successfully!");
+    NetworkCalls.userSignIn(account).then(async (res) => {
       CommonMethods.setAccessToken(res.data.access);
-      dispatch(setIsLoggedIn(true));
+      
+      const u = await NetworkCalls.getCurrentActiveUser();
+      toast.success("Logged in successfully!");
+      dispatch(setIsLoggedIn({ isLoggedIn: true, currentUser: u?.data }));
+      dispatch(setLatestUserProfile(u?.data?.active_preference));
       setLoading(false);
       setIsLoginError(false);
     }).catch(() => {

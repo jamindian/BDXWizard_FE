@@ -30,7 +30,7 @@ function httpErrorHandler(error) {
           toast.error(response.data?.message);
         } else {
           localStorage.clear();
-          store.dispatch(setIsLoggedIn(false));
+          store.dispatch(setIsLoggedIn({ isLoggedIn: false, currentUser: undefined }));
         }
       } else if (statusCode === 300) {
         toast.warning(response.data?.message);

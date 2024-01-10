@@ -3,7 +3,8 @@ export const AuthInitialState = {
     isLoadData: 0,
     isSetManualMapped: false,
     stopwatchState: "",
-    isLoggedIn: false
+    isLoggedIn: false,
+    currentUser: undefined
 };
 
 export const ProcessInitialState = {

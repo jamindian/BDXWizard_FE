@@ -23,7 +23,8 @@ const authSlice = createSlice({
       state.stopwatchState = action.payload;
     },
     setIsLoggedIn: (state, action) => {
-      state.isLoggedIn = action.payload;
+      state.isLoggedIn = action.payload.isLoggedIn;
+      state.currentUser = action.payload.currentUser;
     }
   },
 });
@@ -49,6 +50,10 @@ export const isStopwatchSelector = createDraftSafeSelector(
 export const isLoggedInSelector = createDraftSafeSelector(
   selfSelect,
   (state) => state.isLoggedIn
+);
+export const isCurrentUserSelector = createDraftSafeSelector(
+  selfSelect,
+  (state) => state.currentUser
 );
 
 export const {
