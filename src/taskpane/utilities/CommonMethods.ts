@@ -122,22 +122,22 @@ class Methods {
   };
 
   public getLocalStorage = (key: string): any => {
-    let name: string = global.selectedSheet;
+    let name: string = global.selectedSheet?.split('_')?.join('');
     return localStorage.getItem(`${key}_${name}`);
   };
 
   public setLocalStorage = (key: string, value: string): void => {
-    let name: string = global.selectedSheet;
+    let name: string = global.selectedSheet?.split('_')?.join('');
     localStorage.setItem(`${key}_${name}`, value);
   };
 
   public removeLocalStorage = (key: string): void => {
-    let name: string = global.selectedSheet;
+    let name: string = global.selectedSheet?.split('_')?.join('');
     localStorage.removeItem(`${key}_${name}`);
   };
 
   public getSelectedSheet = (key: string): string => {
-    let name: string = global.selectedSheet;
+    let name: string = global.selectedSheet?.split('_')?.join('');
     return `${key}_${name}`;
   };
 
