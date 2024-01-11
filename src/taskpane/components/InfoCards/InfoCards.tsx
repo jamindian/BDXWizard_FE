@@ -96,8 +96,9 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
   async function getColumnsData(): Promise<void> {
     const data = await getUnmappedColumns();
 
-    const ml = await getMappedWLowConfidenceColumns(global.selectedSheet);
-    const r = await getUnMappedProfileColumnsColors(data.unMappedProfileColumns, global.selectedSheet);
+    const ml = await getMappedWLowConfidenceColumns();
+    const r = await getUnMappedProfileColumnsColors(data.unMappedProfileColumns);
+
     setUnMappedProfileColumns(r);
     setMappedWLowConfidence(ml);
     setUnMappedRawColumns(data.unmappedRawSovColumns);
@@ -210,6 +211,7 @@ const InfoCards: React.FC<IInfoCards> = ({ tabValue }) => {
     unMappedRawColumns,
     userProfile,
     showUnmappedOption,
+    mappedWLowConfidence
   ]);
 };
 

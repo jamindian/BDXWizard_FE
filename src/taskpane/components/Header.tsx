@@ -13,9 +13,9 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { appLogout, setIsLoggedIn } from "../redux/Actions/Auth";
+import { appLogout, isCurrentUserSelector, setIsLoggedIn } from "../redux/Actions/Auth";
 import { APP_TITLE } from "@taskpaneutilities/Constants";
-import NetworkCalls from "@taskpane/services/ApiNetworkCalls";
+import { useSelector } from "react-redux";
 
 export interface HeaderProps {
   title: string;
@@ -36,23 +36,11 @@ const Header: React.FC<HeaderProps> = (props: HeaderProps) => {
   const dispatch = useDispatch();
   const { title, logo } = props;
 
+  const currentUser = useSelector(isCurrentUserSelector);
+
   const [open, setOpen] = React.useState<boolean>(false);
   const [open1, setOpen1] = React.useState<boolean>(false);
-  const [currentUser, setCurrentUser] = React.useState<{ email: string; username: string; company: string; }>({
-    company: "", username: "", email: ""
-  });
-
-  React.useEffect(() => {
-    async function run(): Promise<void> {
-      const u = await NetworkCalls.getCurrentActiveUser();
-      setCurrentUser({ company: u.data?.company_name, email: u.data?.email, username: u.data?.username });
-    }
-
-    if (open){
-      run();
-    }
-  }, [open]);
-
+  
   const handleClickOpen = (): void => {
     setOpen(true);
   };
@@ -67,7 +55,7 @@ const Header: React.FC<HeaderProps> = (props: HeaderProps) => {
     localStorage.clear();
     toast.success("User logged out successfully.");
     setTimeout(() => {
-      dispatch(setIsLoggedIn(false));
+      dispatch(setIsLoggedIn({ isLoggedIn: false, currentUser: undefined }));
     }, 750);
   };
 
@@ -123,7 +111,7 @@ const Header: React.FC<HeaderProps> = (props: HeaderProps) => {
               </p>
               <p>
                 <strong className="cc-width65px">Company : </strong>{" "}
-                {currentUser?.company}
+                {currentUser?.company_name}
               </p>
             </div>
             <div className="d-flex align-items-center justify-content-center">

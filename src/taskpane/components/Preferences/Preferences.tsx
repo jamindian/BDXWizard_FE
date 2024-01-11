@@ -12,16 +12,18 @@ import CustomButton from "@components/CustomButton/CustomButton";
 import NetworkCalls from '@taskpane/services/ApiNetworkCalls';
 import { IBasicObject, IStagingConstant, IUserProfile } from '@taskpaneutilities/Interface';
 import { AlertsMsgs } from '@taskpaneutilities/Constants';
-import { setLatestUserProfile } from '@redux/Actions/Process';
+import { isLatestUserProfileSelector, setLatestUserProfile } from '@redux/Actions/Process';
 import FormulaConstant from './FormulaConstant';
 import CommonMethods from '@taskpaneutilities/CommonMethods';
 import { adjustPreferenceStagingConstants, tryCatch } from '@taskpaneutilities/Helpers';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useSelector } from 'react-redux';
 
-const Settings = () => {
+const Settings = ({ companyName }) => {
 
     const dispatch = useDispatch();
-    
+    const activeProfile: IUserProfile = useSelector(isLatestUserProfileSelector);
+
     const [stagingColumns, setStagingColumns] = useState<{ selected: string[]; default: string[]; remaining: string[]; }>({ selected: [], default: [], remaining: [] });
     const [loading, setLoading] = useState<boolean>(true);
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -43,7 +45,6 @@ const Settings = () => {
         const prefrences = await NetworkCalls.getAllUserPreference();
         const columnsResponse = await NetworkCalls.getStagingAreaColumnsForPOC();
 
-        const activeProfile: IUserProfile = prefrences.data?.find(f => f?.active) ?? prefrences.data[0];
         const StagingColumns: string[] = columnsResponse?.data?.map(c => c.column_name)?.filter(f => f !== "ID") ?? [];
 
         setUserPreferences(prefrences.data?.filter(f => f?.profile_name) ?? []);
@@ -51,7 +52,6 @@ const Settings = () => {
         setStaginConstants(activeProfile?.staging_constants?.length > 0 ? activeProfile?.staging_constants : []);
         setStagingColumns({ default: StagingColumns, remaining: StagingColumns.filter(c => !activeProfile?.poc_columns.includes(c)) ?? [], selected: activeProfile?.poc_columns ?? [] });
         setLoading(false);
-        dispatch(setLatestUserProfile(activeProfile));
     }
 
     // Call redux action for save setting
@@ -62,10 +62,9 @@ const Settings = () => {
         }
         
         setBtnLoading(key);
-        const u = await NetworkCalls.getCurrentActiveUser();
 
         NetworkCalls.createUserPreference({ 
-            company_name: u.data?.company_name, profile_name: profile.name, poc_columns: stagingColumns.selected,
+            company_name: companyName, profile_name: profile.name, poc_columns: stagingColumns.selected,
             staging_constants: staginConstants
         }).then(async () => {
             toast.success('Preference saved successfuly!');
@@ -73,16 +72,17 @@ const Settings = () => {
             setCreateNew(false);
             
             const prefrences = await NetworkCalls.getAllUserPreference();
+            const u = await NetworkCalls.getCurrentActiveUser();
             setUserPreferences(prefrences.data ?? []);
-            dispatch(setLatestUserProfile(prefrences.data?.find(f => f?.active)));
+            dispatch(setLatestUserProfile(u?.data?.active_preference));
             setDialogOpen(false);
 
             tryCatch(adjustPreferenceStagingConstants([...staginConstants, ...deleteStaginConstants]));
             setTimeout(() => {
                 setDeleteStaginConstants([]);
             }, 1000);
-        }).catch(() => {
-            toast.error(AlertsMsgs.somethingWentWrong);
+        }).catch((e) => {
+            toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
             setBtnLoading("");
         });
     }, [stagingColumns, profile, staginConstants]);
@@ -119,13 +119,12 @@ const Settings = () => {
             setProfile({ ...profile, poc_columns: [], id: 0, name: "New Profile 1", selected: "New Profile 1" });
             setStagingColumns({ ...stagingColumns, remaining: stagingColumns.default, selected: [] });
         } else {
-            const prefrences = await NetworkCalls.getAllUserPreference();
-            setUserPreferences(prefrences?.data ?? []);
-            onChangeProfileSelection(prefrences?.data?.find(f => f?.active).profile_name);
-            setStaginConstants(prefrences?.data?.find(f => f?.active)?.staging_constants ?? []);
+            setUserPreferences(userPreferences.filter(f => f.profile_name !== "New Profile 1"));
+            onChangeProfileSelection(activeProfile?.profile_name);
+            setStaginConstants(activeProfile?.staging_constants ?? []);
         }
         setCreateNew(f);
-    }, [stagingColumns, userPreferences, createNew]);
+    }, [stagingColumns, userPreferences, createNew, activeProfile]);
 
     return (
         <form noValidate autoComplete='off'>
@@ -277,8 +276,8 @@ const Settings = () => {
                         toast.success('Preferences has been deleted successfuly!');
                         setDeletePreference({ flag: false, id: null });
                         initialRun();
-                    }).catch(() => {
-                        toast.error(AlertsMsgs.somethingWentWrong);
+                    }).catch((e) => {
+                        toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
                     })} color="primary"> Delete </Button>
                 </DialogActions>
             </Dialog>

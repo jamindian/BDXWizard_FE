@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import { TextField } from "@mui/material";
 import FormGroup from "@mui/material/FormGroup";
@@ -60,7 +60,7 @@ const SignUpPage: React.FC<{ setTabValue: (n: number) => void }> = ({ setTabValu
           setLoading(false);
           setTabValue(0);
         }).catch((e) => {
-          toast.error(e.response.data[0] || AlertsMsgs.somethingWentWrong);
+          toast.error(e.response.data[0] || e.response.data.email[0] || AlertsMsgs.somethingWentWrong);
           setLoading(false);
         });
       }

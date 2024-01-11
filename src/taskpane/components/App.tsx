@@ -9,7 +9,7 @@ import Preferences from './Preferences/Preferences';
 import Timer from "./Timer/Timer";
 
 import { useSelector } from "react-redux";
-import { isLoaderSelector, setLoader, setStopwatch } from "@redux/Actions/Auth";
+import { isCurrentUserSelector, isLoaderSelector, setLoader, setStopwatch } from "@redux/Actions/Auth";
 import { Assets } from "@taskpane/utilities/Assets";
 import Header from "./Header";
 import InfoCards from "./InfoCards/InfoCards";
@@ -41,6 +41,7 @@ const App: React.FC<IAppProps> = () => {
   const dispatch = useDispatch();
 
   const loader: boolean = useSelector(isLoaderSelector);
+  const currentUser = useSelector(isCurrentUserSelector);
 
   const [tabValue, setTabValue] = React.useState<number>(0);
 
@@ -105,7 +106,7 @@ const App: React.FC<IAppProps> = () => {
           <Timer />
         </TabPanel>
         <TabPanel value={tabValue} index={3}>
-          <Preferences />
+          <Preferences companyName={currentUser?.company_name} />
         </TabPanel>
       </div>
     </div>

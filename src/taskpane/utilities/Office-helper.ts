@@ -385,9 +385,8 @@ export async function createStagingArea(buttonName: string, sheetName: string, s
           sheets_name: sheets_name.items.map(c => c.name).toString()
         });
 
-        const activePreference = await NetworkCalls.getActiveUserPreference();
-        tryCatch(adjustPreferenceStagingConstants(activePreference?.data[0]?.staging_constants ?? {}));
-        store.dispatch(setLatestUserProfile(activePreference?.data[0]));
+        const activePreference = store.getState().process?.latestUserProfile;
+        tryCatch(adjustPreferenceStagingConstants(activePreference?.staging_constants ?? {}));
       });
     }
     catch (error) {
@@ -597,19 +596,20 @@ export async function exportCurrentSheetToCSV(): Promise<void> {
       const activeSheet: Excel.Worksheet = sheets.getActiveWorksheet().load(ExcelLoadEnumerator.name);
       await context.sync();
 
-      const activeWorksheetStagingAreaTableName: string = CommonMethods.getActiveSheetTableName(activeSheet.name);
-      const stagingSheet: Excel.Worksheet = sheets.getItem(activeSheet.name);
-      const stagingTable: Excel.Table = stagingSheet.tables.getItem(activeWorksheetStagingAreaTableName);
+      const lastRow: Excel.Range = activeSheet.getUsedRange().getLastCell().load(ExcelLoadEnumerator.address);
       await context.sync();
 
-      const headers = stagingTable.getHeaderRowRange().load(ExcelLoadEnumerator.values);
-      const body = stagingTable.getDataBodyRange().load(ExcelLoadEnumerator.values);
+      const completeAddress: string = lastRow.address.split('!')[1];
+      const base: string = completeAddress.match(/[a-zA-Z]+|[0-9]+/g)[0];
+
+      const headers = activeSheet.getRange(`B15:${base}15`).load(ExcelLoadEnumerator.values);
+      const body = activeSheet.getRange(`B16:${completeAddress}`).load(ExcelLoadEnumerator.values);
       await context.sync();
 
       const dateColumnIndexes: number[] = headers.values[0].map((h, ind) => h.includes("Date") ? ind : undefined).filter((f) => f);
 
       const result = {
-        headers: headers.values[0],
+        headers: headers.values.flat(1),
         rows: CommonMethods.findDateColumnsAndModifyForExports(
           dateColumnIndexes,
           body.values
@@ -626,7 +626,6 @@ export async function exportCurrentSheetToCSV(): Promise<void> {
       setTimeout(() => {
         window.open(finalUrl, '_blank');
       });
-      // CommonMethods.makeAnchorTag(finalUrl);
       toast.success("Your requested file is successfully downloaded!");
       store.dispatch(setLoader(false));
     }).catch(() => {
