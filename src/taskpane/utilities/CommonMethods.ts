@@ -306,6 +306,40 @@ class Methods {
     return obj;
   };
 
+  public downloadJsonFile = (url: string, name: string): void => {
+    fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(jsonData => {
+      // Convert JSON to a string
+      var jsonString = JSON.stringify(jsonData);
+
+      // Create a Blob from the JSON string
+      var blob = new Blob([jsonString], { type: 'application/json' });
+
+      // Create a download link
+      var downloadLink = document.createElement('a');
+      downloadLink.href = window.URL.createObjectURL(blob);
+      downloadLink.download = name;
+
+      // Append the link to the document
+      document.body.appendChild(downloadLink);
+
+      // Trigger a click on the link to start the download
+      downloadLink.click();
+
+      // Remove the link from the document
+      document.body.removeChild(downloadLink);
+    })
+    .catch(error => {
+      console.error('Error fetching JSON:', error);
+    });
+  };
+
   public encryptDecryptPassword = (
     password: string,
     encryption: boolean
